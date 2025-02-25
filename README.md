@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Stock Manager
+
+Stock Manager is a powerful inventory and stock management application built with **Next.js, Electron, and MySQL**. This project can run as a web application or a desktop application, making it a versatile solution for managing inventory efficiently.
+
+## Features
+
+- 📦 **Inventory Management** – Track and manage stock levels easily.
+- 🖥️ **Desktop & Web Support** – Run as a web app or a desktop application.
+- ⚡ **Fast & Responsive** – Built with Next.js for optimized performance.
+- 🌙 **Dark Mode Support** – Switch between light and dark themes.
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
+Ensure you have the following installed:
+
+- [Node.js](https://nodejs.org/) (LTS Recommended)
+- [npm](https://www.npmjs.com/) (Included with Node.js)
+- [MySQL Community Server](https://dev.mysql.com/downloads/mysql/) (For local database setup)
+
+### Installation
+
+1. **Clone the Repository**
+
+   ```sh
+   git clone https://github.com/your-username/stock-manager.git
+   cd stock-manager
+   ```
+
+2. **Install Dependencies**
+
+   ```sh
+   npm install
+   ```
+
+3. **Set Up Environment Variables** Create a `.env.local` file in the root directory and add your database credentials:
+
+   ```env
+   DATABASE_URL=mysql://username:password@localhost:3306/stock_manager
+   ```
+
+### Running the Application
+
+#### Development Mode
+
+Run the project in development mode:
+
+```sh
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+This starts the app at `http://localhost:3000` with hot reloading.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+#### Production Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Generate a production build:
 
-## Learn More
+```sh
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
+Then start the production server:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```sh
+npm start
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+#### Electron Desktop Application
 
-## Deploy on Vercel
+To build the **Electron** version of the app:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```sh
+npm run electron-build
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This generates an installer for your desktop application.
+
+## Contributing
+
+Feel free to open issues or submit pull requests. Contributions are welcome!
+
+## License
+
+This project is licensed under the **MIT License**.
+
+---
+
+Happy Coding! 🚀
