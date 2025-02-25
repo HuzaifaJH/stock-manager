@@ -31,5 +31,29 @@
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
+  },
+  "build": {
+    "asar": true,
+    "compression": "maximum",
+    "appId": "com.hj.stockmanager",
+    "win": {
+      "target": "nsis",
+      "icon": "public/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "IMS.exe"
+    },
+    "npmRebuild": false,
+    "nodeGypRebuild": false,
+    "removePackageScripts": true,
+    "extraResources": [
+      {
+        "from": ".next/",
+        "to": ".next/"
+      }
+    ]
   }
 }
