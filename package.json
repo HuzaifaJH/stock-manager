@@ -2,26 +2,34 @@
   "name": "stock-manager",
   "version": "0.1.0",
   "private": true,
+  "main": "main.js",
+  "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "electron": "electron .",
+    "start": "concurrently \"next dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "lint": "next lint",
+    "electron-build": "npx electron-builder --dir --win"
   },
   "dependencies": {
+    "kill-port": "^2.0.1",
+    "next": "15.1.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "next": "15.1.7"
+    "react-icons": "^5.4.0"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@electron/remote": "^2.1.2",
+    "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
+    "electron": "^34.2.0",
     "eslint": "^9",
     "eslint-config-next": "15.1.7",
-    "@eslint/eslintrc": "^3"
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
   }
 }
