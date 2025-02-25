@@ -20,17 +20,19 @@
     "react-icons": "^5.4.0"
   },
   "devDependencies": {
-    "@electron/remote": "^2.1.2",
     "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^9.1.2",
     "electron": "^34.2.0",
+    "electron-builder": "^25.1.8",
     "eslint": "^9",
     "eslint-config-next": "15.1.7",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wait-on": "^8.0.2"
   },
   "build": {
     "asar": true,
