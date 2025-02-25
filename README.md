@@ -24,7 +24,7 @@ Ensure you have the following installed:
 1. **Clone the Repository**
 
    ```sh
-   git clone https://github.com/your-username/stock-manager.git
+   git clone https://github.com/HuzaifaJH/stock-manager.git
    cd stock-manager
    ```
 
