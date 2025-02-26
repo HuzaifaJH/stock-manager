@@ -25,6 +25,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "concurrently": "^9.1.2",
+    "daisyui": "^4.12.24",
     "electron": "^34.2.0",
     "electron-builder": "^25.1.8",
     "eslint": "^9",
