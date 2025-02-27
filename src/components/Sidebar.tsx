@@ -29,9 +29,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, isMobileOpen, setIsMobile
         <>
             {/* Sidebar */}
             <div
-                className={`fixed md:relative bg-gray-800 text-white transition-all duration-300 h-screen z-40 
-          ${isMobileOpen ? "left-0 w-60" : "left-[-100%] md:left-0"} 
-          ${shouldExpand ? "w-60" : "w-16"} md:block`}
+                className={`fixed md:relative transition-all duration-300 h-screen z-40 
+    bg-base-200 shadow-md border-r border-gray-300 dark:border-gray-700 
+    ${isMobileOpen ? "left-0 w-60" : "left-[-100%] md:left-0"} 
+    ${shouldExpand ? "w-60" : "w-16"} md:block`}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => { if (!isExpanded) setExpandedMenu(null); setIsHovered(false); }}
             >
@@ -45,8 +46,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, isMobileOpen, setIsMobile
                             <div key={item.name}>
                                 {/* Parent Menu Item */}
                                 <div
-                                    className={`flex items-center justify-between gap-4 px-6 py-3 rounded-md transition-colors duration-200 ${isActive ? "bg-blue-600" : "hover:bg-gray-700"
-                                        } cursor-pointer`}
+                                    className={`flex items-center justify-between gap-4 px-6 py-3 transition-colors duration-200 
+                ${isActive ? "bg-primary text-white" : "hover:bg-gray-600 hover:bg-opacity-20"}
+                cursor-pointer`}
                                     onClick={() => item.subItems ? toggleMenu(item.name) : setIsMobileOpen(false)}
                                 >
                                     {!item.subItems ? (
@@ -75,8 +77,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, isMobileOpen, setIsMobile
                                             <Link
                                                 key={subItem.name}
                                                 href={subItem.href ?? "#"}
-                                                className={`flex items-center gap-4 px-4 py-2 rounded-md transition-colors duration-200 ${pathname === subItem.href ? "bg-blue-500" : "hover:bg-gray-700"
-                                                    }`}
+                                                className={`flex items-center gap-4 px-4 py-2 transition-colors duration-200 
+                    ${pathname === subItem.href ? "bg-primary text-white" : "hover:bg-gray-600 hover:bg-opacity-20"}
+                    `}
                                                 onClick={() => setIsMobileOpen(false)}
                                             >
                                                 <span className="text-lg">{subItem.icon}</span>

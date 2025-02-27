@@ -14,16 +14,6 @@
   }
 } */
 
-[data-theme="light"] {
-  --background: #DCDFE8;
-  --foreground: #171717;
-}
-
-[data-theme="dark"] {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-}
-
 body {
   color: var(--foreground);
   background: var(--background);
