@@ -13,11 +13,16 @@
     "electron-build": "npx electron-builder --dir --win"
   },
   "dependencies": {
+    "dotenv": "^16.4.7",
     "kill-port": "^2.0.1",
+    "mysql2": "^3.12.0",
     "next": "15.1.7",
+    "pg-hstore": "^2.3.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.4.0",
+    "react-spinners": "^0.15.0",
+    "sequelize": "^6.37.5",
     "theme-change": "^2.5.0"
   },
   "devDependencies": {
@@ -25,6 +30,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/sequelize": "^4.28.20",
     "concurrently": "^9.1.2",
     "daisyui": "^4.12.24",
     "electron": "^34.2.0",
