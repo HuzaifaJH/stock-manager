@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { FiChevronDown, FiChevronRight } from "react-icons/fi";
-import { menuItems, MenuItem } from "./menuItems";
+import { FiCornerRightDown, FiMinus } from "react-icons/fi";
+import { menuItems } from "./menuItems";
 
 interface SidebarProps {
     isExpanded: boolean;
@@ -63,9 +63,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, isMobileOpen, setIsMobile
                                         </div>
                                     )}
                                     {/* Arrow Indicator for Parent Items */}
-                                    {item.subItems && (shouldExpand || isMobileOpen) && (
+                                    {/* {item.subItems && (shouldExpand || isMobileOpen) && (
                                         <span>
                                             {isMenuExpanded ? <FiChevronDown /> : <FiChevronRight />}
+                                        </span>
+                                    )} */}
+                                    {item.subItems && (shouldExpand || isMobileOpen) && (
+                                        <span
+                                            className={`transition-transform duration-300 ${isMenuExpanded ? "rotate-180" : "rotate-0"
+                                                }`}
+                                        >
+                                            <FiCornerRightDown />
                                         </span>
                                     )}
                                 </div>
@@ -82,7 +90,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, isMobileOpen, setIsMobile
                     `}
                                                 onClick={() => setIsMobileOpen(false)}
                                             >
-                                                <span className="text-lg">{subItem.icon}</span>
+                                                <span className="text-lg"><FiMinus /></span>
                                                 <span className="text-sm">{subItem.name}</span>
                                             </Link>
                                         ))}

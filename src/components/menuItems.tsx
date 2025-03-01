@@ -1,10 +1,10 @@
 import { JSX } from "react";
-import { FiHome, FiBox, FiShoppingCart, FiDollarSign, FiSettings } from "react-icons/fi";
+import { FiHome, FiCopy, FiShoppingCart, FiDollarSign, FiSettings, FiMinus, FiCreditCard, FiPieChart } from "react-icons/fi";
 
 export interface MenuItem {
     name: string;
     href?: string;
-    icon: JSX.Element;
+    icon?: JSX.Element;
     subItems?: MenuItem[];
 }
 
@@ -12,34 +12,34 @@ export const menuItems: MenuItem[] = [
     { name: "Dashboard", href: "/", icon: <FiHome /> },
     {
         name: "Products",
-        icon: <FiBox />,
+        icon: <FiShoppingCart />,
         subItems: [
-            { name: "Products List", href: "/products/product-list", icon: <FiBox /> },
-            { name: "Add Product", href: "/products/add-product", icon: <FiBox /> },
+            { name: "Products List", href: "/products/product-list" },
+            { name: "Add Product", href: "/products/add-product" },
         ],
     },
     {
         name: "Categories",
-        icon: <FiShoppingCart />,
+        icon: <FiCopy />,
         subItems: [
-            { name: "List Categories", href: "/categories/category-list", icon: <FiShoppingCart /> },
-            { name: "Add Category", href: "/categories/add-category", icon: <FiShoppingCart /> },
+            { name: "List Categories", href: "/categories/category-list" },
+            { name: "Add Category", href: "/categories/add-category" },
         ],
     },
     {
         name: "Sales",
-        icon: <FiShoppingCart />,
+        icon: <FiPieChart />,
         subItems: [
-            { name: "List Sales", href: "/sales/sales-list", icon: <FiShoppingCart /> },
-            { name: "Add Sales", href: "/sales/add-sales", icon: <FiShoppingCart /> },
+            { name: "List Sales", href: "/sales/sales-list" },
+            { name: "Add Sales", href: "/sales/add-sales" },
         ],
     },
     {
         name: "Purchases",
-        icon: <FiShoppingCart />,
+        icon: <FiCreditCard />,
         subItems: [
-            { name: "List Purchases", href: "/purchases/purchase-list", icon: <FiShoppingCart /> },
-            { name: "Add Purchase", href: "/purchases/add-purchase", icon: <FiShoppingCart /> },
+            { name: "List Purchases", href: "/purchases/purchase-list" },
+            { name: "Add Purchase", href: "/purchases/add-purchase" },
         ],
     },
     { name: "Settings", href: "/settings", icon: <FiSettings /> },

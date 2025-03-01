@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { FiSun, FiMoon, FiMenu, FiX } from "react-icons/fi";
+import "theme-change";
 
 interface NavbarProps {
     toggleSidebar: () => void;
@@ -13,11 +14,13 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, toggleMobileMenu, isSidebarExpanded, isMobileOpen }) => {
     // const { theme, toggleTheme } = useTheme();
     const [theme, setTheme] = useState<string>(() => {
-        return localStorage.getItem("theme") || "forest";
+        if (typeof window !== "undefined") {
+            return localStorage.getItem("theme") || "forest";
+        }
+        return "forest"; // Default theme
     });
 
     useEffect(() => {
-        require("theme-change");
         document.documentElement.setAttribute("data-theme", theme);
         localStorage.setItem("theme", theme);
     }, [theme]);
