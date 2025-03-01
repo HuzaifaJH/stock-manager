@@ -1,8 +1,24 @@
-export default function SalesPage() {
+"use client";
+import { useEffect, useState } from "react";
+
+export default function ProductList() {
+    const [products, setProducts] = useState([]);
+
+    useEffect(() => {
+        fetch("/api/products")
+            .then((res) => res.json())
+            .then((data) => setProducts(data))
+            .catch((error) => console.error("Error:", error));
+    }, []);
+
     return (
-        <div className="p-6">
-            <h1 className="text-2xl font-semibold">Product List</h1>
-            <p>Manage your Products here.</p>
+        <div>
+            <h2>Product List</h2>
+            <ul>
+                {products.map((product: any) => (
+                    <li key={product.id}>{product.name} - ${product.price}</li>
+                ))}
+            </ul>
         </div>
     );
 }

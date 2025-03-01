@@ -1,0 +1,35 @@
+import { Sequelize } from "sequelize";
+import dotenv from "dotenv";
+import mysql2 from "mysql2";
+
+dotenv.config();
+
+export const sequelize = new Sequelize(
+  process.env.DB_NAME as string,
+  process.env.DB_USER as string,
+  process.env.DB_PASS as string,
+  {
+    host: process.env.DB_HOST as string,
+    dialect: "mysql",
+    dialectModule: mysql2, // ✅ Explicitly define MySQL driver
+    logging: false,
+  }
+);
+
+export async function testDBConnection() {
+  try {
+    await sequelize.authenticate();
+    console.log("✅ Database connected successfully.");
+  } catch (error) {
+    console.error("❌ Unable to connect to the database:", error);
+  }
+}
+
+export async function syncDatabase() {
+  try {
+    await sequelize.sync({ alter: true });
+    console.log("✅ Database synced successfully.");
+  } catch (error) {
+    console.error("❌ Error syncing database:", error);
+  }
+}
