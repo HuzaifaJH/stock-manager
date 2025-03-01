@@ -1,5 +1,5 @@
 import { JSX } from "react";
-import { FiHome, FiCopy, FiShoppingCart, FiDollarSign, FiSettings, FiMinus, FiCreditCard, FiPieChart } from "react-icons/fi";
+import { FiHome, FiCopy, FiShoppingCart, FiSettings, FiCreditCard, FiPieChart } from "react-icons/fi";
 
 export interface MenuItem {
     name: string;

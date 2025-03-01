@@ -48,7 +48,7 @@
     "appId": "com.hj.stockmanager",
     "win": {
       "target": "nsis",
-      "icon": "public/icon.png"
+      "icon": "public/logo.png"
     },
     "nsis": {
       "oneClick": false,

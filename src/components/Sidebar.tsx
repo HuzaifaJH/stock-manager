@@ -63,11 +63,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, isMobileOpen, setIsMobile
                                         </div>
                                     )}
                                     {/* Arrow Indicator for Parent Items */}
-                                    {/* {item.subItems && (shouldExpand || isMobileOpen) && (
-                                        <span>
-                                            {isMenuExpanded ? <FiChevronDown /> : <FiChevronRight />}
-                                        </span>
-                                    )} */}
                                     {item.subItems && (shouldExpand || isMobileOpen) && (
                                         <span
                                             className={`transition-transform duration-300 ${isMenuExpanded ? "rotate-180" : "rotate-0"

@@ -10,8 +10,9 @@ export const sequelize = new Sequelize(
   process.env.DB_PASS as string,
   {
     host: process.env.DB_HOST as string,
+    port: Number(process.env.DB_PORT) || 3306,
     dialect: "mysql",
-    dialectModule: mysql2, // ✅ Explicitly define MySQL driver
+    dialectModule: mysql2,
     logging: false,
   }
 );
@@ -19,17 +20,17 @@ export const sequelize = new Sequelize(
 export async function testDBConnection() {
   try {
     await sequelize.authenticate();
-    console.log("✅ Database connected successfully.");
+    console.log("Database connected successfully.");
   } catch (error) {
-    console.error("❌ Unable to connect to the database:", error);
+    console.error("Unable to connect to the database:", error);
   }
 }
 
 export async function syncDatabase() {
   try {
     await sequelize.sync({ alter: true });
-    console.log("✅ Database synced successfully.");
+    console.log("Database synced successfully.");
   } catch (error) {
-    console.error("❌ Error syncing database:", error);
+    console.error("Error syncing database:", error);
   }
 }

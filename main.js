@@ -36,7 +36,7 @@ const createSplash = () => {
     frame: false,
     alwaysOnTop: true,
     // backgroundColor: "#ffffff",
-    webPreferences: { nodeIntegration: false },
+    webPreferences: { nodeIntegration: false, contextIsolation: true },
   });
 
   splashWindow.loadFile(path.join(app.getAppPath(), "public", "splash.html"));
