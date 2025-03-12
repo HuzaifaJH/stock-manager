@@ -25,12 +25,3 @@ export async function testDBConnection() {
     console.error("Unable to connect to the database:", error);
   }
 }
-
-export async function syncDatabase() {
-  try {
-    await sequelize.sync({ alter: true });
-    console.log("Database synced successfully.");
-  } catch (error) {
-    console.error("Error syncing database:", error);
-  }
-}

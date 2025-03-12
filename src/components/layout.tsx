@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Sidebar from "@/components/Sidebar";
-import Navbar from "@/components/Navbar";
-// import { usePathname } from "next/navigation";
-import Loader from "./loader";
+import Sidebar from "@/components/sidebar";
+import Navbar from "@/components/navbar";
 import { usePathname } from "next/navigation";
+import Loader from "./loader";
+import { Toaster } from "react-hot-toast";
 
 export default function LayoutProvider({ children }: { children: React.ReactNode }) {
 
@@ -25,11 +25,12 @@ export default function LayoutProvider({ children }: { children: React.ReactNode
     }, [pathname]);
 
     return (
-        <div className="flex flex-col h-screen">
+        <div className="flex flex-col">
             <Navbar toggleSidebar={toggleSidebar} toggleMobileMenu={toggleMobileMenu} isSidebarExpanded={isSidebarExpanded} isMobileOpen={isMobileOpen} />
             <div className="flex flex-1">
                 <Sidebar isExpanded={isSidebarExpanded} isMobileOpen={isMobileOpen} setIsMobileOpen={() => setIsMobileOpen(false)} />
-                <main className="flex-1 p-6">
+                <main className="flex-1 overflow-auto p-6">
+                    <Toaster />
                     {loading && <Loader />}
                     {children}</main>
             </div>

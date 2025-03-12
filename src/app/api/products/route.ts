@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
+import Category from "@/lib/models/Category";
 import Product from "@/lib/models/Product";
 
 // GET all products
 export async function GET() {
   try {
-    const products = await Product.findAll();
+    const products = await Product.findAll({
+      include: { model: Category, attributes: ["name"] },
+    //   order: [["createdAt", "DESC"]],
+    });
     return NextResponse.json(products);
   } catch (error) {
     return NextResponse.json(
@@ -17,8 +21,8 @@ export async function GET() {
 // POST create a new product
 export async function POST(req: Request) {
   try {
-    const { name, price, stock } = await req.json();
-    const newProduct = await Product.create({ name, price, stock });
+    const { name, price, stock, categoryId } = await req.json();
+    const newProduct = await Product.create({ name, price, stock, categoryId });
     return NextResponse.json(newProduct, { status: 201 });
   } catch (error) {
     return NextResponse.json(

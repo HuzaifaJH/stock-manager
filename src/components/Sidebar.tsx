@@ -81,7 +81,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, isMobileOpen, setIsMobile
                                                 key={subItem.name}
                                                 href={subItem.href ?? "#"}
                                                 className={`flex items-center gap-4 px-4 py-2 transition-colors duration-200 
-                    ${pathname === subItem.href ? "bg-primary text-white" : "hover:bg-gray-600 hover:bg-opacity-20"}
+                    ${pathname === subItem.href ? "bg-gray-400 text-white" : "hover:bg-gray-600 hover:bg-opacity-20"}
                     `}
                                                 onClick={() => setIsMobileOpen(false)}
                                             >
