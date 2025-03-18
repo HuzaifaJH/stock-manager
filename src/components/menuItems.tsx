@@ -41,7 +41,11 @@ export const menuItems: MenuItem[] = [
     {
         name: "Purchases",
         href: "/purchases",
-        icon: <FiCreditCard />
+        icon: <FiCreditCard />,
+        // subItems: [
+        //     { name: "Purchase List", href: "/purchases/purchase-list" },
+        //     { name: "Add Purchase", href: "/purchases/add-purchase" },
+        // ],
     },
     { name: "Settings", href: "/settings", icon: <FiSettings /> },
 ];

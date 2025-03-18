@@ -6,7 +6,6 @@ import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiTrash2 } from "react-i
 interface Product {
     id: number;
     name: string;
-    price: number;
     stock: number;
     categoryId: number;
     Category: Category;
@@ -14,7 +13,6 @@ interface Product {
 
 interface ProductSort {
     name: string;
-    price: number;
     stock: number;
     category: string;
 }
@@ -134,9 +132,6 @@ export default function ProductList() {
                             <th className="cursor-pointer" onClick={() => handleSort("name")}>
                                 Name {sortKey === "name" && (sortOrder === "asc" ? "↑" : "↓")}
                             </th>
-                            <th className="cursor-pointer" onClick={() => handleSort("price")}>
-                                Price {sortKey === "price" && (sortOrder === "asc" ? "↑" : "↓")}
-                            </th>
                             <th className="cursor-pointer" onClick={() => handleSort("stock")}>
                                 Stock {sortKey === "stock" && (sortOrder === "asc" ? "↑" : "↓")}
                             </th>
@@ -152,7 +147,6 @@ export default function ProductList() {
                                 {/* <td>{product.id}</td> */}
                                 <td className="">{(currentPage - 1) * rowsPerPage + index + 1}</td>
                                 <td className="">{product.name}</td>
-                                <td className="">${product.price.toFixed(2)}</td>
                                 <td className="">{product.stock}</td>
                                 <td className="">{product.Category?.name || "No Category"}</td>
                                 <td className="flex items-center space-x-2">
@@ -229,7 +223,6 @@ export default function ProductList() {
                                 const formData = new FormData(e.target as HTMLFormElement);
                                 const newProduct = {
                                     name: formData.get("name"),
-                                    price: Number(formData.get("price")),
                                     stock: Number(formData.get("stock")),
                                     categoryId: Number(formData.get("categoryId"))
                                 };
@@ -262,8 +255,8 @@ export default function ProductList() {
                                     toast.error(`Error ${selectedProduct ? "updating" : "adding"} product: ` + error);
                                 } finally {
                                     setIsLoading(false);
-                                    setIsModalOpen(false); // ✅ Close modal
-                                    setSelectedProduct(null); // Reset product selection
+                                    setIsModalOpen(false);
+                                    setSelectedProduct(null); 
                                 }
                             }}
                         >
@@ -272,12 +265,8 @@ export default function ProductList() {
                                 <input name="name" defaultValue={selectedProduct?.name || ""} className="input input-bordered w-full" required />
                             </label>
                             <label className="block my-2">
-                                Price:
-                                <input name="price" type="number" defaultValue={selectedProduct?.price || ""} className="input input-bordered w-full" required />
-                            </label>
-                            <label className="block my-2">
                                 Stock:
-                                <input name="stock" type="number" defaultValue={selectedProduct?.stock || ""} className="input input-bordered w-full" required />
+                                <input name="stock" type="number" defaultValue={selectedProduct?.stock ?? ""} className="input input-bordered w-full" required />
                             </label>
                             <label className="block my-2">
                                 Category:

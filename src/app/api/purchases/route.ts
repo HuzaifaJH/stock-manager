@@ -2,18 +2,58 @@ import { NextResponse } from "next/server";
 import Product from "@/lib/models/Product";
 import Purchase from "@/lib/models/Purchase";
 import Supplier from "@/lib/models/Supplier";
+import PurchaseItem from "@/lib/models/PurchaseItem";
 
-// GET: Fetch all purchases with associated supplier & product names
+interface PurchaseItem {
+  productId: number;
+  quantity: number;
+  purchasePrice: number;
+}
+
 export async function GET() {
   try {
     const purchases = await Purchase.findAll({
       include: [
-        { model: Supplier, attributes: ["name"] },
-        { model: Product, attributes: ["name"] },
+        {
+          model: Supplier,
+          attributes: ["name"],
+        },
+        {
+          model: PurchaseItem,
+          include: [
+            {
+              model: Product,
+              attributes: ["name"],
+            },
+          ],
+        },
       ],
-      // order: [["createdAt", "DESC"]],
+      // order: [["createdAt", "DESC"]], // Optional ordering
     });
-    return NextResponse.json(purchases);
+
+    const formattedPurchases = purchases.map((purchase) => {
+      const purchaseJSON = purchase.toJSON();
+
+      let totalPrice = 0;
+
+      const updatedPurchaseItems = purchaseJSON.PurchaseItems.map((item: { purchasePrice: number; quantity: number; }) => {
+        const totalPurchasePrice = item.purchasePrice * item.quantity;
+        totalPrice += totalPurchasePrice;
+
+        return {
+          ...item,
+          totalPurchasePrice,
+        };
+      });
+
+      return {
+        ...purchaseJSON,
+        PurchaseItems: updatedPurchaseItems,
+        totalPrice,
+      };
+    });
+
+    return NextResponse.json(formattedPurchases);
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to fetch purchases: " + error },
@@ -22,39 +62,44 @@ export async function GET() {
   }
 }
 
-// POST: Create a new purchase
 export async function POST(req: Request) {
   try {
-    const { supplierId, productId, quantity, purchasePrice, date } =
-      await req.json();
+    const { supplierId, date, items } = await req.json();
 
-    // Validate input
-    if (!supplierId || !productId || !quantity || !purchasePrice || !date) {
-      return NextResponse.json(
-        { error: "All fields are required" },
-        { status: 400 }
-      );
-    }
+    // Create the main Purchase record
+    const newPurchase = await Purchase.create(
+      {
+        supplierId,
+        date,
+      },
+      { returning: true }
+    );
 
-    // Create purchase entry
-    const newPurchase = await Purchase.create({
-      supplierId,
-      productId,
-      quantity,
-      purchasePrice,
-      date,
-    });
+    // Create the related purchase items
+    const purchaseItems = await Promise.all(
+      items.map(async (item: PurchaseItem) => {
+        const purchaseItem = await PurchaseItem.create({
+          purchaseId: newPurchase.getDataValue("id"),
+          productId: item.productId,
+          quantity: item.quantity,
+          purchasePrice: item.purchasePrice,
+        });
 
-    // Update product stock
-    await Product.increment("stock", {
-      by: quantity,
-      where: { id: productId },
-    });
+        // Deduct stock from the Product table
+        await Product.increment("stock", {
+          by: item.quantity ?? 0,
+          where: { id: item.productId },
+        });
 
-    return NextResponse.json(newPurchase, { status: 201 });
+        return purchaseItem;
+      })
+    );
+
+    return NextResponse.json({ purchase: newPurchase, items: purchaseItems });
   } catch (error) {
+    console.error(error);
     return NextResponse.json(
-      { error: "Failed to create purchase: " + error },
+      { error: "Failed to create purchase" },
       { status: 500 }
     );
   }
