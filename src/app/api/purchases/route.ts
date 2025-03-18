@@ -97,9 +97,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ purchase: newPurchase, items: purchaseItems });
   } catch (error) {
-    console.error(error);
     return NextResponse.json(
-      { error: "Failed to create purchase" },
+      { error: "Failed to create purchase: " + error },
       { status: 500 }
     );
   }

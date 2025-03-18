@@ -47,5 +47,5 @@ export const menuItems: MenuItem[] = [
         //     { name: "Add Purchase", href: "/purchases/add-purchase" },
         // ],
     },
-    { name: "Settings", href: "/settings", icon: <FiSettings /> },
+    // { name: "Settings", href: "/settings", icon: <FiSettings /> },
 ];

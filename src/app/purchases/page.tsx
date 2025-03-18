@@ -62,7 +62,6 @@ export default function PurchasesPage() {
             setPurchases(purchasesData);
             setSuppliers(suppliersData);
             setProducts(productsData);
-            console.log("purchases: " + purchases);
         } catch (error) {
             console.error("Error fetching data: ", error);
         } finally {
@@ -72,7 +71,7 @@ export default function PurchasesPage() {
 
     useEffect(() => {
         fetchData();
-    });
+    }, []);
 
     const handleDelete = async (id: number) => {
         if (!confirm("Are you sure you want to delete this purchase?")) return;
@@ -86,7 +85,6 @@ export default function PurchasesPage() {
                 toast.error("Failed to delete purchase");
             }
         } catch (error) {
-            console.log("Error deleting purchase: " + error)
             toast.error("Error deleting purchase");
         } finally {
             setIsLoading(false);
@@ -113,12 +111,12 @@ export default function PurchasesPage() {
 
     const updateItem = (index: number, field: keyof PurchaseItem, value: number | null) => {
         const newItems = [...purchaseItems];
-        
+
         // newItems[index][field] = value as never;
         if (field === "quantity" || field === "purchasePrice") {
             newItems[index][field] = value;
         } else if (field === "productId" && value !== null) {
-            newItems[index][field] = value; 
+            newItems[index][field] = value;
         }
 
         setPurchaseItems(newItems);

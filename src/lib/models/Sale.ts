@@ -1,36 +1,18 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "@/lib/sequelize";
-import Product from "@/lib/models/Product";
+import SaleItem from "@/lib/models/SaleItem";
 
 const Sale = sequelize.define(
   "Sale",
   {
-    productId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: Product,
-        key: "id",
-      },
-    },
-    quantity: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      validate: {
-        min: 1,
-      },
-    },
-    price: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
-      validate: {
-        min: 0,
-      },
-    },
     date: {
       type: DataTypes.DATEONLY,
       allowNull: false,
       defaultValue: DataTypes.NOW,
+    },
+    customerName: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
   },
   {
@@ -38,8 +20,7 @@ const Sale = sequelize.define(
   }
 );
 
-// Associations
-Product.hasMany(Sale, { foreignKey: "productId", onDelete: "RESTRICT" });
-Sale.belongsTo(Product, { foreignKey: "productId" });
+Sale.hasMany(SaleItem, { foreignKey: "saleId", onDelete: "CASCADE" });
+SaleItem.belongsTo(Sale, { foreignKey: "saleId" });
 
 export default Sale;

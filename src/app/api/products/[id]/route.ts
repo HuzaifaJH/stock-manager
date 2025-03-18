@@ -1,6 +1,8 @@
 import Category from "@/lib/models/Category";
 import Product from "@/lib/models/Product";
 import Purchase from "@/lib/models/Purchase";
+import PurchaseItem from "@/lib/models/PurchaseItem";
+import SaleItem from "@/lib/models/SaleItem";
 
 // GET a product by ID
 export async function GET(
@@ -68,17 +70,26 @@ export async function DELETE(
   }
 
   try {
-    const existingPurchases = await Purchase.count({
+    // Check if any purchase item references this product
+    const existingPurchaseItems = await PurchaseItem.count({
       where: { productId: id },
     });
 
-    if (existingPurchases > 0) {
+    // Check if any sale item references this product
+    const existingSaleItems = await SaleItem.count({
+      where: { productId: id },
+    });
+
+    if (existingPurchaseItems > 0 || existingSaleItems > 0) {
       return Response.json(
-        { error: "Cannot delete product with existing purchases" },
+        {
+          error: "Cannot delete product with existing purchase or sale records",
+        },
         { status: 400 }
       );
     }
 
+    // Find and delete the product
     const product = await Product.findByPk(Number(id));
     if (!product) {
       return Response.json({ error: "Product not found" }, { status: 404 });

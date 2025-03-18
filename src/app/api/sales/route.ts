@@ -1,12 +1,49 @@
-import { NextRequest, NextResponse } from "next/server";
-import Sale from "@/lib/models/Sale";
+import { NextResponse } from "next/server";
+import { sequelize } from "@/lib/sequelize";
+import SaleItem from "@/lib/models/SaleItem";
 import Product from "@/lib/models/Product";
+import Sale from "@/lib/models/Sale";
 
 // GET all sales
 export async function GET() {
   try {
-    const sales = await Sale.findAll({ include: Product });
-    return NextResponse.json(sales);
+    const sales = await Sale.findAll({
+      include: [
+        {
+          model: SaleItem,
+          include: [
+            {
+              model: Product,
+              attributes: ["name"],
+            },
+          ],
+        },
+      ],
+    });
+
+    const formattedSales = sales.map((sales) => {
+      const saleJSON = sales.toJSON();
+
+      let totalPrice = 0;
+
+      const updatedSaleItems = saleJSON.SaleItems.map((item: { price: number; quantity: number; }) => {
+        const totalSalePrice = item.price * item.quantity;
+        totalPrice += totalSalePrice;
+
+        return {
+          ...item,
+          totalSalePrice,
+        };
+      });
+
+      return {
+        ...saleJSON,
+        SaleItems: updatedSaleItems,
+        totalPrice,
+      };
+    });
+
+    return NextResponse.json(formattedSales);
   } catch (error) {
     return NextResponse.json(
       { error: "Error fetching sales: " + error },
@@ -16,35 +53,46 @@ export async function GET() {
 }
 
 // POST create a new sale
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
+  const transaction = await sequelize.transaction();
   try {
-    const { productId, quantity, price, date } = await req.json();
+    const { items, date, customerName } = await req.json();
 
-    // Check if product exists
-    const product = await Product.findByPk(productId);
-    if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
-    }
+    // Create Sale entry
+    const newSale = await Sale.create({ date, customerName }, { transaction });
 
-    // Check if stock is sufficient
-    if (product.dataValues.stock < quantity) {
-      return NextResponse.json(
-        { error: "Insufficient stock" },
-        { status: 400 }
-      );
-    }
+    // Process sale items
+    const saleItems = await Promise.all(
+      items.map(async (item: any) => {
+        const product = await Product.findByPk(item.productId, { transaction });
+        if (!product || product.getDataValue("stock") < item.quantity) {
+          throw new Error("Insufficient stock or product not found");
+        }
 
-    // Create sale and update stock in a transaction
-    await Sale.create({ productId, quantity, price, date });
+        const saleItem = await SaleItem.create(
+          {
+            saleId: newSale.getDataValue("id"),
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.price,
+          },
+          { transaction }
+        );
 
-    // Update product stock
-    await product.update({ stock: product.dataValues.stock - quantity });
+        // Deduct stock
+        await product.update(
+          { stock: product.getDataValue("stock") - item.quantity },
+          { transaction }
+        );
 
-    return NextResponse.json(
-      { message: "Sale recorded successfully" },
-      { status: 201 }
+        return saleItem;
+      })
     );
+
+    await transaction.commit();
+    return NextResponse.json({newSale, saleItems}, { status: 201 });
   } catch (error) {
+    await transaction.rollback();
     return NextResponse.json(
       { error: "Error recording sale: " + error },
       { status: 500 }
