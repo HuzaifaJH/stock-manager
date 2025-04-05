@@ -7,7 +7,7 @@ export async function GET() {
   try {
     const products = await Product.findAll({
       include: { model: Category, attributes: ["name"] },
-    //   order: [["createdAt", "DESC"]],
+      //   order: [["createdAt", "DESC"]],
     });
     return NextResponse.json(products);
   } catch (error) {
@@ -21,8 +21,13 @@ export async function GET() {
 // POST create a new product
 export async function POST(req: Request) {
   try {
-    const { name, stock, categoryId } = await req.json();
-    const newProduct = await Product.create({ name, stock, categoryId });
+    const { name, stock, categoryId, subCategoryId } = await req.json();
+    const newProduct = await Product.create({
+      name,
+      stock,
+      categoryId,
+      subCategoryId,
+    });
     return NextResponse.json(newProduct, { status: 201 });
   } catch (error) {
     return NextResponse.json(

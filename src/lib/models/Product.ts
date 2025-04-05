@@ -1,6 +1,7 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "@/lib/sequelize";
 import Category from "@/lib/models/Category";
+import SubCategory from "@/lib/models/SubCategory";
 
 const Product = sequelize.define(
   "Product",
@@ -25,6 +26,14 @@ const Product = sequelize.define(
         key: "id",
       },
     },
+    subCategoryId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: SubCategory,
+        key: "id",
+      },
+    },
   },
   {
     timestamps: true,
@@ -34,5 +43,8 @@ const Product = sequelize.define(
 // Associations
 Product.belongsTo(Category, { foreignKey: "categoryId" });
 Category.hasMany(Product, { foreignKey: "categoryId" });
+
+SubCategory.hasMany(Product, { foreignKey: "subCategoryId" });
+Product.belongsTo(SubCategory, { foreignKey: "subCategoryId" });
 
 export default Product;

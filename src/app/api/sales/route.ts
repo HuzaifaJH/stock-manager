@@ -1,16 +1,25 @@
 import { NextResponse } from "next/server";
 import { sequelize } from "@/lib/sequelize";
-import SaleItem from "@/lib/models/SaleItem";
+import SalesItem from "@/lib/models/SalesItem";
 import Product from "@/lib/models/Product";
-import Sale from "@/lib/models/Sale";
+import Sales from "@/lib/models/Sales";
+import updateAccountBalances from "../update-account-balances";
+import Transaction from "@/lib/models/Transaction";
+import JournalEntry from "@/lib/models/JournalEntry";
+
+interface PurchaseItem {
+  productId: number;
+  quantity: number;
+  price: number;
+}
 
 // GET all sales
 export async function GET() {
   try {
-    const sales = await Sale.findAll({
+    const sales = await Sales.findAll({
       include: [
         {
-          model: SaleItem,
+          model: SalesItem,
           include: [
             {
               model: Product,
@@ -26,19 +35,21 @@ export async function GET() {
 
       let totalPrice = 0;
 
-      const updatedSaleItems = saleJSON.SaleItems.map((item: { price: number; quantity: number; }) => {
-        const totalSalePrice = item.price * item.quantity;
-        totalPrice += totalSalePrice;
+      const updatedSalesItems = saleJSON.SalesItems.map(
+        (item: { price: number; quantity: number }) => {
+          const totalSalePrice = item.price * item.quantity;
+          totalPrice += totalSalePrice;
 
-        return {
-          ...item,
-          totalSalePrice,
-        };
-      });
+          return {
+            ...item,
+            totalSalePrice,
+          };
+        }
+      );
 
       return {
         ...saleJSON,
-        SaleItems: updatedSaleItems,
+        SalesItems: updatedSalesItems,
         totalPrice,
       };
     });
@@ -52,26 +63,29 @@ export async function GET() {
   }
 }
 
-// POST create a new sale
+// POST create a new sales
 export async function POST(req: Request) {
   const transaction = await sequelize.transaction();
   try {
-    const { items, date, customerName } = await req.json();
+    const { items, date, customerName, paymentMethod } = await req.json();
 
-    // Create Sale entry
-    const newSale = await Sale.create({ date, customerName }, { transaction });
+    // Create sales entry
+    const newSale = await Sales.create({ date, customerName }, { transaction });
 
-    // Process sale items
-    const saleItems = await Promise.all(
-      items.map(async (item: any) => {
+    let totalAmount = 0;
+    const salesItems = await Promise.all(
+      items.map(async (item: PurchaseItem) => {
         const product = await Product.findByPk(item.productId, { transaction });
-        if (!product || product.getDataValue("stock") < item.quantity) {
-          throw new Error("Insufficient stock or product not found");
+        if (!product) {
+          throw new Error("Product not found");
+        }
+        else if(product.getDataValue("stock") < item.quantity){
+          throw new Error("Insufficient stock");
         }
 
-        const saleItem = await SaleItem.create(
+        const salesItem = await SalesItem.create(
           {
-            saleId: newSale.getDataValue("id"),
+            salesId: newSale.getDataValue("id"),
             productId: item.productId,
             quantity: item.quantity,
             price: item.price,
@@ -85,16 +99,51 @@ export async function POST(req: Request) {
           { transaction }
         );
 
-        return saleItem;
+        totalAmount += item.quantity * item.price;
+        return salesItem;
       })
     );
 
+    // Create transaction record
+    const newTransaction = await Transaction.create(
+      {
+        date,
+        type: "Sale",
+        referenceId: newSale.getDataValue("id"),
+        totalAmount,
+      },
+      { transaction }
+    );
+
+    // Journal Entries
+    const journalEntries = [
+      {
+        accountId: paymentMethod === "Cash" ? 1 : 2, // Cash (1) or Accounts Receivable (2)
+        description: `Sale to ${customerName}`,
+        amount: totalAmount,
+        type: "Debit",
+        transactionId: newTransaction.getDataValue("id"),
+      },
+      {
+        accountId: 4, // Sales Revenue Account
+        description: `Revenue from sale to ${customerName}`,
+        amount: totalAmount,
+        type: "Credit",
+        transactionId: newTransaction.getDataValue("id"),
+      },
+    ];
+
+    await JournalEntry.bulkCreate(journalEntries, { transaction });
+
+    // Update account balances
+    await updateAccountBalances(journalEntries, transaction);
+
     await transaction.commit();
-    return NextResponse.json({newSale, saleItems}, { status: 201 });
+    return NextResponse.json({ newSale, salesItems }, { status: 201 });
   } catch (error) {
     await transaction.rollback();
     return NextResponse.json(
-      { error: "Error recording sale: " + error },
+      { error: "Error recording sales: " + error },
       { status: 500 }
     );
   }

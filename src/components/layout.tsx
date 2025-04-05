@@ -29,7 +29,7 @@ export default function LayoutProvider({ children }: { children: React.ReactNode
             <Navbar toggleSidebar={toggleSidebar} toggleMobileMenu={toggleMobileMenu} isSidebarExpanded={isSidebarExpanded} isMobileOpen={isMobileOpen} />
             <div className="flex flex-1">
                 <Sidebar isExpanded={isSidebarExpanded} isMobileOpen={isMobileOpen} setIsMobileOpen={() => setIsMobileOpen(false)} />
-                <main className="flex-1 overflow-auto p-6">
+                <main className="flex-1 p-6">
                     <Toaster />
                     {loading && <Loader />}
                     {children}</main>

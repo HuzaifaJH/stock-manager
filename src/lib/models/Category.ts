@@ -7,11 +7,15 @@ const Category = sequelize.define(
     name: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
+      unique: {
+        name: "unique_category_name",
+        msg: ""
+      },
     },
   },
   {
     timestamps: true,
+    indexes: [], // Ensure no additional indexes are auto-generated
   }
 );
 

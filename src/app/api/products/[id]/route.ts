@@ -1,8 +1,7 @@
 import Category from "@/lib/models/Category";
 import Product from "@/lib/models/Product";
-import Purchase from "@/lib/models/Purchase";
 import PurchaseItem from "@/lib/models/PurchaseItem";
-import SaleItem from "@/lib/models/SaleItem";
+import SalesItem from "@/lib/models/SalesItem";
 
 // GET a product by ID
 export async function GET(
@@ -76,11 +75,11 @@ export async function DELETE(
     });
 
     // Check if any sale item references this product
-    const existingSaleItems = await SaleItem.count({
+    const existingSalesItems = await SalesItem.count({
       where: { productId: id },
     });
 
-    if (existingPurchaseItems > 0 || existingSaleItems > 0) {
+    if (existingPurchaseItems > 0 || existingSalesItems > 0) {
       return Response.json(
         {
           error: "Cannot delete product with existing purchase or sale records",

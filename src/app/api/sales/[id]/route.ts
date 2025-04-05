@@ -1,39 +1,39 @@
-import { NextRequest, NextResponse } from "next/server";
-import SaleItem from "@/lib/models/SaleItem";
+import { NextResponse } from "next/server";
+import SalesItem from "@/lib/models/SalesItem";
 import Product from "@/lib/models/Product";
-import Sale from "@/lib/models/Sale";
+import Sales from "@/lib/models/Sales";
 import { sequelize } from "@/lib/sequelize";
 
-// GET a single sale by ID
+// GET a single sales by ID
 export async function GET(
   req: Request,
   context: { params: Promise<{ id: string[] }> }
 ) {
   const { id } = await context.params;
   try {
-    const sale = await Sale.findByPk(Number(id), {
+    const sales = await Sales.findByPk(Number(id), {
       include: [
         {
-          model: SaleItem,
+          model: SalesItem,
           include: [{ model: Product, attributes: ["name"] }],
         },
       ],
     });
 
-    if (!sale) {
-      return NextResponse.json({ error: "Sale not found" }, { status: 404 });
+    if (!sales) {
+      return NextResponse.json({ error: "Sales not found" }, { status: 404 });
     }
 
-    return NextResponse.json(sale);
+    return NextResponse.json(sales);
   } catch (error) {
     return NextResponse.json(
-      { error: "Error fetching sale: " + error },
+      { error: "Error fetching sales: " + error },
       { status: 500 }
     );
   }
 }
 
-// PUT update a sale
+// PUT update a sales
 export async function PUT(
   req: Request,
   context: { params: Promise<{ id: string[] }> }
@@ -44,18 +44,18 @@ export async function PUT(
   try {
     const { items, date, customerName } = await req.json();
 
-    const sale = await Sale.findByPk(Number(id), {
-      include: SaleItem,
+    const sales = await Sales.findByPk(Number(id), {
+      include: SalesItem,
       transaction,
     });
 
-    if (!sale) {
+    if (!sales) {
       await transaction.rollback();
-      return NextResponse.json({ error: "Sale not found" }, { status: 404 });
+      return NextResponse.json({ error: "Sales not found" }, { status: 404 });
     }
 
     // Restore previous stock
-    for (const item of sale.getDataValue("SaleItems") ?? []) {
+    for (const item of sales.getDataValue("SalesItems") ?? []) {
       await Product.increment("stock", {
         by: item.quantity,
         where: { id: item.productId },
@@ -63,13 +63,13 @@ export async function PUT(
       });
     }
 
-    // Delete old sale items
-    await SaleItem.destroy({ where: { saleId: id }, transaction });
+    // Delete old sales items
+    await SalesItem.destroy({ where: { saleId: id }, transaction });
 
-    // Update sale details
-    await sale.update({ date, customerName }, { transaction });
+    // Update sales details
+    await sales.update({ date, customerName }, { transaction });
 
-    // Process new sale items
+    // Process new sales items
     for (const item of items) {
       const product = await Product.findByPk(item.productId, { transaction });
 
@@ -81,7 +81,7 @@ export async function PUT(
         );
       }
 
-      await SaleItem.create(
+      await SalesItem.create(
         {
           saleId: id,
           productId: item.productId,
@@ -99,17 +99,17 @@ export async function PUT(
     }
 
     await transaction.commit();
-    return NextResponse.json({ message: "Sale updated successfully" });
+    return NextResponse.json({ message: "Sales updated successfully" });
   } catch (error) {
     await transaction.rollback();
     return NextResponse.json(
-      { error: "Error updating sale: " + error },
+      { error: "Error updating sales: " + error },
       { status: 500 }
     );
   }
 }
 
-// DELETE a sale
+// DELETE a sales
 export async function DELETE(
   req: Request,
   context: { params: Promise<{ id: string[] }> }
@@ -118,18 +118,18 @@ export async function DELETE(
   const transaction = await sequelize.transaction();
 
   try {
-    const sale = await Sale.findByPk(Number(id), {
-      include: SaleItem,
+    const sales = await Sales.findByPk(Number(id), {
+      include: SalesItem,
       transaction,
     });
 
-    if (!sale) {
+    if (!sales) {
       await transaction.rollback();
-      return NextResponse.json({ error: "Sale not found" }, { status: 404 });
+      return NextResponse.json({ error: "Sales not found" }, { status: 404 });
     }
 
     // Restore stock before deleting
-    for (const item of sale.getDataValue("SaleItems") ?? []) {
+    for (const item of sales.getDataValue("SalesItems") ?? []) {
       await Product.increment("stock", {
         by: item.quantity,
         where: { id: item.productId },
@@ -137,19 +137,19 @@ export async function DELETE(
       });
     }
 
-    // Delete sale items and sale
-    await SaleItem.destroy({ where: { saleId: id }, transaction });
-    await sale.destroy({ transaction });
+    // Delete sales items and sales
+    await SalesItem.destroy({ where: { saleId: id }, transaction });
+    await sales.destroy({ transaction });
 
     await transaction.commit();
     return NextResponse.json(
-      { message: "Sale deleted and stock restored" },
+      { message: "Sales deleted and stock restored" },
       { status: 200 }
     );
   } catch (error) {
     await transaction.rollback();
     return NextResponse.json(
-      { error: "Error deleting sale: " + error },
+      { error: "Error deleting sales: " + error },
       { status: 500 }
     );
   }
