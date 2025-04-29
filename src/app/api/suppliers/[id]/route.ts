@@ -43,15 +43,15 @@ export async function PUT(
         { status: 404 }
       );
 
-    const { name, phone } = await req.json();
-    if (!name || !phone) {
+    const { name, phoneNumber } = await req.json();
+    if (!name || !phoneNumber) {
       return NextResponse.json(
         { error: "Name and phone are required" },
         { status: 400 }
       );
     }
 
-    await supplier.update({ name, phone });
+    await supplier.update({ name, phoneNumber });
     return NextResponse.json(supplier);
   } catch (error) {
     return NextResponse.json(

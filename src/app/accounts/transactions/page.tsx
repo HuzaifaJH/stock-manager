@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiEye, FiPlusCircle, FiTrash2 } from "react-icons/fi";
-
+import { accountTypes } from "@/app/utils/accountType";
 interface Transaction {
     id: number;
     date: string;
@@ -14,15 +14,28 @@ interface Transaction {
 }
 
 interface JournalEntry {
-    accountId: number | "";
+    ledgerId: number | "";
     description: string | null;
     amount: number | null;
     type: "Debit" | "Credit" | "";
+    LedgerAccount?: LedgerAccount
+    accountGroup: number | "";
+    accountType: number | "";
+    filteredAccountGroups?: AccountGroup[];
+    filteredLedgerAccount?: LedgerAccount[];
 }
 
-interface Account {
+interface LedgerAccount {
     id: number;
     name: string;
+    accountGroup: number;
+    AccountGroup: AccountGroup;
+}
+
+interface AccountGroup {
+    id: number;
+    name: string;
+    accountType: number;
 }
 
 export default function TransactionsPage() {
@@ -36,23 +49,29 @@ export default function TransactionsPage() {
     const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
     const [viewMode, setViewMode] = useState(false);
 
-    const [account, setAccount] = useState<Account[]>([]);
-    const [transactionType, setTransactionType] = useState<string | "">("Manual Entry");
+    const [accountGroups, setAccountGroups] = useState<AccountGroup[]>([]);
+    const [ledgerAccount, setLedgerAccount] = useState<LedgerAccount[]>([]);
+    // const [transactionType, setTransactionType] = useState<string | "">("Manual Entry");
+
+    const fixTransactionTypes = ["Sale", "Purchase", "Sales Return", "Purchase Return"];
 
 
     const fetchTransactions = async () => {
         setIsLoading(true);
         try {
-            const [transactionsRes, accountRes] = await Promise.all([
+            const [transactionsRes, accountGroupRes, ledgerAccountsRes] = await Promise.all([
                 fetch("/api/transactions"),
-                fetch("/api/accounts"),
+                fetch("/api/account-groups"),
+                fetch("/api/ledger-accounts"),
             ]);
-            const [transactionsData, accountData] = await Promise.all([
+            const [transactionsData, accountGroupData, ledgerAccountsData] = await Promise.all([
                 transactionsRes.json(),
-                accountRes.json(),
+                accountGroupRes.json(),
+                ledgerAccountsRes.json(),
             ]);
             setTransactions(transactionsData);
-            setAccount(accountData);
+            setAccountGroups(accountGroupData);
+            setLedgerAccount(ledgerAccountsData);
         } catch (error) {
             console.error("Error fetching data: ", error);
         } finally {
@@ -68,10 +87,7 @@ export default function TransactionsPage() {
         if (!confirm("Are you sure you want to delete this transaction?")) return;
         setIsLoading(true);
         try {
-            const res = await fetch(`/api/transactions`, {
-                method: "DELETE", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({id}),
-            });
+            const res = await fetch(`/api/transactions/${id}`, { method: "DELETE" });
             if (res.ok) {
                 toast.success("Transaction deleted successfully");
                 fetchTransactions();
@@ -79,7 +95,7 @@ export default function TransactionsPage() {
                 toast.error("Failed to delete transaction");
             }
         } catch (error) {
-            toast.error("Error deleting transaction");
+            toast.error("Error deleting transaction: " + error);
         } finally {
             setIsLoading(false);
         }
@@ -100,7 +116,7 @@ export default function TransactionsPage() {
     );
 
     const addItem = () => {
-        setJournalEntries([...journalEntries, { accountId: "", description: null, amount: null, type: "" }]);
+        setJournalEntries([...journalEntries, { ledgerId: "", description: null, amount: null, type: "", accountType: "", accountGroup: "" }]);
     };
 
     const updateItem = (index: number, field: keyof JournalEntry, value: string | number | null) => {
@@ -126,7 +142,7 @@ export default function TransactionsPage() {
         const formData = new FormData(e.target as HTMLFormElement);
         const transactionData = {
             date: formData.get("date"),
-            type: transactionType,
+            type: "Manual Entry",
             referenceId: formData.get("referenceId"),
             totalAmount: selectedTransaction?.totalAmount,
             journalEntries: journalEntries,
@@ -146,11 +162,11 @@ export default function TransactionsPage() {
             if (res.ok) {
                 toast.success(`Purchase ${selectedTransaction?.id ? "updated" : "added"} successfully`);
                 setJournalEntries([]);
-                setTransactionType("");
+                // setTransactionType("");
                 setSelectedTransaction(null);
                 fetchTransactions();
             } else {
-                toast.error("Failed to add transaction");
+                toast.error(`Failed to ${selectedTransaction?.id ? "update" : "add"} transaction`);
             }
         } catch (error) {
             console.error("Error adding transaction:", error);
@@ -177,6 +193,27 @@ export default function TransactionsPage() {
         setSelectedTransaction(prev => prev ? { ...prev, totalAmount: newTotal ?? null } : prev);
     }, [journalEntries]);
 
+    const handleAccountTypeChange = (index: number, accountType: number) => {
+        const newItems = [...journalEntries];
+
+        newItems[index].accountType = accountType;
+        newItems[index].accountGroup = "";
+        newItems[index].ledgerId = "";
+        newItems[index].filteredAccountGroups = accountGroups.filter(ag => ag.accountType === accountType);
+        newItems[index].filteredLedgerAccount = [];
+
+        setJournalEntries(newItems);
+    };
+
+    const handleAccountGroupChange = (index: number, accountGroup: number) => {
+        const newItems = [...journalEntries];
+
+        newItems[index].accountGroup = accountGroup;
+        newItems[index].ledgerId = "";
+        newItems[index].filteredLedgerAccount = ledgerAccount.filter(p => p.accountGroup === accountGroup);
+
+        setJournalEntries(newItems);
+    };
 
     return (
         <div className="p-6">
@@ -217,25 +254,46 @@ export default function TransactionsPage() {
                                             setSelectedTransaction(transaction);
                                             setViewMode(true);
                                             setJournalEntries(transaction.JournalEntries || []);
-                                            setTransactionType(transaction.type);
+                                            // setTransactionType(transaction.type);
                                         }}
                                     />
-                                    <FiEdit
-                                        className="text-warning cursor-pointer mx-1"
-                                        size={18}
-                                        onClick={() => {
-                                            setSelectedTransaction(transaction);
-                                            setViewMode(false);
-                                            setJournalEntries(transaction.JournalEntries || []);
-                                            setTransactionType(transaction.type);
-                                        }
-                                        }
-                                    />
-                                    <FiTrash2
-                                        className="text-error cursor-pointer mx-1"
-                                        size={18}
-                                        onClick={() => handleDelete(transaction.id)}
-                                    />
+                                    {!fixTransactionTypes.includes(transaction.type) && (
+                                        <>
+                                            <FiEdit
+                                                className="text-warning cursor-pointer mx-1"
+                                                size={18}
+                                                onClick={() => {
+                                                    setSelectedTransaction(transaction);
+                                                    setViewMode(false);
+
+                                                    const enrichedItems = transaction.JournalEntries?.map((item) => {
+                                                        const itemFilteredgroupAccounts = accountGroups.filter(
+                                                            (ag) => ag.accountType === item.accountType
+                                                        );
+
+                                                        const itemFilteredLedgerAccount = ledgerAccount.filter(
+                                                            (la) => la.accountGroup === item.accountGroup
+                                                        );
+
+                                                        return {
+                                                            ...item,
+                                                            filteredAccountGroups: itemFilteredgroupAccounts,
+                                                            filteredLedgerAccount: itemFilteredLedgerAccount,
+                                                        };
+                                                    });
+
+                                                    setJournalEntries(enrichedItems || []);
+                                                    // setTransactionType(transaction.type);
+                                                }
+                                                }
+                                            />
+                                            <FiTrash2
+                                                className="text-error cursor-pointer mx-1"
+                                                size={18}
+                                                onClick={() => handleDelete(transaction.id)}
+                                            />
+                                        </>
+                                    )}
                                 </td>
                             </tr>
                         ))}
@@ -276,7 +334,7 @@ export default function TransactionsPage() {
 
             {selectedTransaction && (
                 <div className="modal modal-open flex items-center justify-center">
-                    <div className="modal-box w-[80%] h-[80%] max-w-[90vw] max-h-[90vh] flex flex-col">
+                    <div className="modal-box w-[90%] h-[90%] max-w-[90vw] max-h-[90vh] flex flex-col">
                         <h3 className="font-bold text-lg">
                             {viewMode ? "View Transaction" : selectedTransaction.id ? "Edit Transaction" : "Add Transaction"}
                         </h3>
@@ -284,74 +342,85 @@ export default function TransactionsPage() {
                         <form onSubmit={handleSubmit} className="flex flex-col flex-grow">
                             <div className="flex gap-6 mt-3 items-center justify-between">
                                 {/* Type */}
-                                <div className="w-full">
-                                    {viewMode ? (
-                                        <span>{selectedTransaction.type || "N/A"}</span>
-                                    ) : (
-                                        <select
-                                            value={transactionType}
-                                            onChange={(e) => setTransactionType(e.target.value)}
-                                            required
-                                            className="select select-bordered w-full"
-                                        >
-                                            <option value="" disabled>Select Transaction Type</option>
-                                            {["Sale", "Purchase", "Sales Return", "Purchase Return", "Manual Entry"].map((type) => (
-                                                <option key={type} value={type}>{type}</option>
-                                            ))}
-                                        </select>
-                                    )}
+                                <div className="flex items-center gap-2 w-full">
+                                    <label className="font-medium whitespace-nowrap">Type:</label>
+                                    <div className="w-full">
+                                        {viewMode ? (
+                                            <span>{selectedTransaction.type || "N/A"}</span>
+                                        ) : (
+                                            <span>Manual Entry</span>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Date */}
-                                <div className="w-full">
-                                    {viewMode ? (
-                                        <span>{new Date(selectedTransaction.date).toLocaleDateString("en-GB")}</span>
-                                    ) : (
-                                        <input
-                                            type="date"
-                                            className="input input-bordered w-full"
-                                            name="date"
-                                            value={selectedTransaction.date ? new Date(selectedTransaction.date).toISOString().split("T")[0] : ""}
-                                            required
-                                            min={new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().split("T")[0]}
-                                            max={new Date().toISOString().split("T")[0]}
-                                            placeholder="Date"
-                                            onChange={(e) => setSelectedTransaction((prev) => prev ? { ...prev, date: e.target.value } : null)}
-                                        />
-                                    )}
+                                <div className="flex items-center gap-2 w-full">
+                                    <label className="font-medium whitespace-nowrap">Date:</label>
+                                    <div className="w-full">
+                                        {viewMode ? (
+                                            <span>{new Date(selectedTransaction.date).toLocaleDateString("en-GB")}</span>
+                                        ) : (
+                                            <input
+                                                type="date"
+                                                className="input input-bordered w-full"
+                                                name="date"
+                                                value={
+                                                    selectedTransaction.date
+                                                        ? new Date(selectedTransaction.date).toISOString().split("T")[0]
+                                                        : ""
+                                                }
+                                                required
+                                                min={new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().split("T")[0]}
+                                                max={new Date().toISOString().split("T")[0]}
+                                                placeholder="Date"
+                                                onChange={(e) =>
+                                                    setSelectedTransaction((prev) =>
+                                                        prev ? { ...prev, date: e.target.value } : null
+                                                    )
+                                                }
+                                            />
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Reference ID */}
-                                <div className="w-full">
-                                    {viewMode ? (
-                                        <span>{selectedTransaction.referenceId}</span>
-                                    ) : (
-                                        <input
-                                            type="text"
-                                            name="referenceId"
-                                            className="input input-bordered w-full"
-                                            defaultValue={selectedTransaction.referenceId || ""}
-                                            placeholder="Enter Reference ID (Optional)"
-                                        />
-                                    )}
+                                <div className="flex items-center gap-2 w-full">
+                                    <label className="font-medium whitespace-nowrap">Reference ID:</label>
+                                    <div className="w-full">
+                                        {viewMode ? (
+                                            <span>{selectedTransaction.referenceId || "—"}</span>
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                name="referenceId"
+                                                className="input input-bordered w-full"
+                                                defaultValue={selectedTransaction.referenceId || ""}
+                                                placeholder="Enter Reference ID (Optional)"
+                                            />
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Total Amount */}
-                                <div className="w-full">
-                                    {viewMode ? (
-                                        <span>{Number(selectedTransaction.totalAmount)}</span>
-                                    ) : (
-                                        <input
-                                            type="number"
-                                            name="totalAmount"
-                                            className="input input-bordered w-full"
-                                            value={Number(selectedTransaction.totalAmount) ?? ""}
-                                            placeholder="Total Amount"
-                                            disabled
-                                        />
-                                    )}
+                                <div className="flex items-center gap-2 w-full">
+                                    <label className="font-medium whitespace-nowrap">Total Amount:</label>
+                                    <div className="w-full">
+                                        {viewMode ? (
+                                            <span>{Number(selectedTransaction.totalAmount)}</span>
+                                        ) : (
+                                            <input
+                                                type="number"
+                                                name="totalAmount"
+                                                className="input input-bordered w-full"
+                                                value={Number(selectedTransaction.totalAmount) ?? ""}
+                                                placeholder="Total Amount"
+                                                disabled
+                                            />
+                                        )}
+                                    </div>
                                 </div>
                             </div>
+
 
                             <div className="flex mt-4">
                                 <h4 className="font-semibold">Journal Entries</h4>
@@ -361,34 +430,78 @@ export default function TransactionsPage() {
                             <table className="table w-full mt-3">
                                 <thead>
                                     <tr>
-                                        <th>Account</th>
-                                        <th>Description</th>
-                                        <th>Amount (Rs)</th>
-                                        <th>Type</th>
-                                        {!viewMode && <th>Actions</th>}
+                                        <th className="w-[14.28%]">Account Type</th>
+                                        <th className="w-[14.28%]">Account Group</th>
+                                        <th className="w-[14.28%]">Account Ledger</th>
+                                        <th className="w-[14.28%]">Description</th>
+                                        <th className="w-[14.28%]">Amount (Rs)</th>
+                                        <th className="w-[14.28%]">Type</th>
+                                        {!viewMode && <th className="w-[14.28%]">Actions</th>}
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {journalEntries?.map((item, index) => (
                                         <tr key={index}>
-                                            <td>
+                                            <td className="p-2">
                                                 {viewMode ? (
-                                                    <span>{account.find((p) => p.id === item.accountId)?.name || "N/A"}</span>
+                                                    <span>{accountTypes.find((at) => at.code == item.LedgerAccount?.AccountGroup.accountType)?.account || "N/A"}</span>
                                                 ) : (
                                                     <select
-                                                        className="select select-bordered"
-                                                        value={item.accountId}
-                                                        onChange={(e) => updateItem(index, "accountId", Number(e.target.value))}
+                                                        className="select select-bordered w-full"
+                                                        value={item.accountType || ""}
+                                                        onChange={(e) => {
+                                                            const value = Number(e.target.value);
+                                                            updateItem(index, "accountType", value);
+                                                            handleAccountTypeChange(index, value);
+                                                        }}
                                                         required
                                                     >
-                                                        <option value="" disabled>Select account</option>
-                                                        {account.map((a) => (
-                                                            <option key={a.id} value={a.id}>{a.name}</option>
+                                                        <option value="" disabled>Select Type</option>
+                                                        {accountTypes.map((type) => (
+                                                            <option key={type.code} value={type.code}>{type.account}</option>
                                                         ))}
                                                     </select>
                                                 )}
                                             </td>
-                                            <td>
+                                            <td className="p-2">
+                                                {viewMode ? (
+                                                    <span>{item.LedgerAccount?.AccountGroup.name || "N/A"}</span>
+                                                ) : (
+                                                    <select
+                                                        className="select select-bordered w-full"
+                                                        value={item.accountGroup || ""}
+                                                        onChange={(e) => {
+                                                            const value = Number(e.target.value);
+                                                            updateItem(index, "accountGroup", value);
+                                                            handleAccountGroupChange(index, value);
+                                                        }}
+                                                        required
+                                                    >
+                                                        <option value="" disabled>Select Group</option>
+                                                        {item.filteredAccountGroups?.map((ag) => (
+                                                            <option key={ag.id} value={ag.id}>{ag.name}</option>
+                                                        ))}
+                                                    </select>
+                                                )}
+                                            </td>
+                                            <td className="p-2">
+                                                {viewMode ? (
+                                                    <span>{item.LedgerAccount?.name || "N/A"}</span>
+                                                ) : (
+                                                    <select
+                                                        className="select select-bordered"
+                                                        value={item.ledgerId}
+                                                        onChange={(e) => updateItem(index, "ledgerId", Number(e.target.value))}
+                                                        required
+                                                    >
+                                                        <option value="" disabled>Select Ledger</option>
+                                                        {item.filteredLedgerAccount?.map((la) => (
+                                                            <option key={la.id} value={la.id}>{la.name}</option>
+                                                        ))}
+                                                    </select>
+                                                )}
+                                            </td>
+                                            <td className="p-2">
                                                 {viewMode ? (
                                                     <span>{item.description}</span>
                                                 ) : (
@@ -402,7 +515,7 @@ export default function TransactionsPage() {
                                                     />
                                                 )}
                                             </td>
-                                            <td>
+                                            <td className="p-2">
                                                 {viewMode ? (
                                                     <span>{item.amount}</span>
                                                 ) : (
@@ -422,7 +535,7 @@ export default function TransactionsPage() {
                                                     />
                                                 )}
                                             </td>
-                                            <td>
+                                            <td className="p-2">
                                                 {viewMode ? (
                                                     <span>{item.type}</span>
                                                 ) : (
@@ -440,7 +553,7 @@ export default function TransactionsPage() {
                                                 )}
                                             </td>
                                             {!viewMode && (
-                                                <td>
+                                                <td className="p-2">
                                                     <FiTrash2 className="text-error cursor-pointer" size={20} onClick={() => removeItem(index)} />
                                                 </td>
                                             )}
@@ -458,7 +571,7 @@ export default function TransactionsPage() {
                                         setSelectedTransaction(null);
                                         setJournalEntries([]);
                                         setViewMode(false);
-                                        setTransactionType("");
+                                        // setTransactionType("");
                                     }}
                                 >
                                     {viewMode ? "Close" : "Cancel"}

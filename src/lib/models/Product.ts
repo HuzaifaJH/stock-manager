@@ -41,10 +41,13 @@ const Product = sequelize.define(
 );
 
 // Associations
-Product.belongsTo(Category, { foreignKey: "categoryId" });
+Product.belongsTo(Category, { foreignKey: "categoryId", onDelete: "RESTRICT" });
 Category.hasMany(Product, { foreignKey: "categoryId" });
 
+Product.belongsTo(SubCategory, {
+  foreignKey: "subCategoryId",
+  onDelete: "RESTRICT",
+});
 SubCategory.hasMany(Product, { foreignKey: "subCategoryId" });
-Product.belongsTo(SubCategory, { foreignKey: "subCategoryId" });
 
 export default Product;

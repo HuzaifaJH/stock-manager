@@ -3,11 +3,12 @@ import { sequelize } from "@/lib/sequelize";
 import SalesItem from "@/lib/models/SalesItem";
 import Product from "@/lib/models/Product";
 import Sales from "@/lib/models/Sales";
-import updateAccountBalances from "../update-account-balances";
 import Transaction from "@/lib/models/Transaction";
 import JournalEntry from "@/lib/models/JournalEntry";
+import Category from "@/lib/models/Category";
+import SubCategory from "@/lib/models/SubCategory";
 
-interface PurchaseItem {
+interface SalesItem {
   productId: number;
   quantity: number;
   price: number;
@@ -23,19 +24,44 @@ export async function GET() {
           include: [
             {
               model: Product,
-              attributes: ["name"],
+              include: [
+                {
+                  model: Category,
+                  attributes: ["id", "name"],
+                },
+                {
+                  model: SubCategory,
+                  attributes: ["id", "name"],
+                },
+              ],
+              attributes: ["id", "name", "categoryId", "subCategoryId"],
             },
           ],
         },
       ],
     });
 
-    const formattedSales = sales.map((sales) => {
-      const saleJSON = sales.toJSON();
+    const result = sales.map((sales) => {
+      const plainSales = sales.get({ plain: true });
 
+      plainSales.SalesItems = plainSales.SalesItems.map(
+        (item: { Product: { categoryId: number; subCategoryId: number } }) => {
+          const { categoryId, subCategoryId } = item.Product;
+          return {
+            ...item,
+            categoryId,
+            subCategoryId,
+          };
+        }
+      );
+
+      return plainSales;
+    });
+
+    const formattedSales = result.map((sales) => {
       let totalPrice = 0;
 
-      const updatedSalesItems = saleJSON.SalesItems.map(
+      const updatedSalesItems = sales.SalesItems.map(
         (item: { price: number; quantity: number }) => {
           const totalSalePrice = item.price * item.quantity;
           totalPrice += totalSalePrice;
@@ -48,7 +74,7 @@ export async function GET() {
       );
 
       return {
-        ...saleJSON,
+        ...sales,
         SalesItems: updatedSalesItems,
         totalPrice,
       };
@@ -67,19 +93,20 @@ export async function GET() {
 export async function POST(req: Request) {
   const transaction = await sequelize.transaction();
   try {
-    const { items, date, customerName, paymentMethod } = await req.json();
+    const { items, date, customerName, isPaymentMethodCash } = await req.json();
 
     // Create sales entry
-    const newSale = await Sales.create({ date, customerName }, { transaction });
+    const newSale = await Sales.create({ date, customerName, isPaymentMethodCash }, { transaction });
 
     let totalAmount = 0;
     const salesItems = await Promise.all(
-      items.map(async (item: PurchaseItem) => {
+      items.map(async (item: SalesItem) => {
         const product = await Product.findByPk(item.productId, { transaction });
         if (!product) {
+          await transaction.rollback();
           throw new Error("Product not found");
-        }
-        else if(product.getDataValue("stock") < item.quantity){
+        } else if (product.getDataValue("stock") < item.quantity) {
+          await transaction.rollback();
           throw new Error("Insufficient stock");
         }
 
@@ -118,14 +145,14 @@ export async function POST(req: Request) {
     // Journal Entries
     const journalEntries = [
       {
-        accountId: paymentMethod === "Cash" ? 1 : 2, // Cash (1) or Accounts Receivable (2)
+        ledgerId: isPaymentMethodCash === true ? 7 : 5, // Cash (1) or Accounts Receivable (2)
         description: `Sale to ${customerName}`,
         amount: totalAmount,
         type: "Debit",
         transactionId: newTransaction.getDataValue("id"),
       },
       {
-        accountId: 4, // Sales Revenue Account
+        ledgerId: 1, // Sales Revenue Account
         description: `Revenue from sale to ${customerName}`,
         amount: totalAmount,
         type: "Credit",
@@ -134,9 +161,6 @@ export async function POST(req: Request) {
     ];
 
     await JournalEntry.bulkCreate(journalEntries, { transaction });
-
-    // Update account balances
-    await updateAccountBalances(journalEntries, transaction);
 
     await transaction.commit();
     return NextResponse.json({ newSale, salesItems }, { status: 201 });

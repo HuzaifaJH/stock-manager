@@ -1,5 +1,6 @@
 "use client";
 
+import { SearchDropdown } from "@/components/search-dropdown";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiEye, FiPlusCircle, FiTrash2 } from "react-icons/fi";
@@ -7,23 +8,43 @@ import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiEye, FiPlusCircle, FiT
 interface Product {
     id: number;
     name: string;
+    subCategoryId: number;
+    categoryId: number;
+    Category: Category;
+    SubCategory: Subcategory;
 }
 
 interface SalesReturn {
     id: number;
     date: string;
-    salesReturnItems?: salesReturnItem[];
+    SalesReturnItems?: salesReturnItem[];
     totalPrice?: number;
     customerName: string;
-    paymentMehthod: string;
+    isPaymentMethodCash: boolean;
     reason: string;
 }
 
 interface salesReturnItem {
     productId: number | "";
+    categoryId: number | "";
+    subCategoryId: number | "";
     quantity: number | null;
     returnPrice: number | null;
     Product?: Product;
+    filteredSubcategories?: Subcategory[];
+    filteredProducts?: Product[];
+}
+
+interface Category {
+    id: number;
+    name: string;
+}
+
+interface Subcategory {
+    id: number;
+    name: string;
+    categoryId: number;
+    Category?: Category;
 }
 
 export default function SalesReturnPage() {
@@ -40,22 +61,31 @@ export default function SalesReturnPage() {
     const [customerName, setCustomerName] = useState<string>("");
     const [reason, setReason] = useState<string>("");
     const [date, setDate] = useState<string>(new Date().toISOString().split("T")[0]);
-    const [paymentMethod, setPaymentMethod] = useState<string | "">("");
+    const [isPaymentMethodCash, setIsPaymentMethodCash] = useState<boolean>(true);
     const [viewMode, setViewMode] = useState(false);
+
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
 
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const [salesReturnRes, productsRes] = await Promise.all([
+            const [salesReturnRes, productsRes, categoriesRes, subcategoriesRes] = await Promise.all([
                 fetch("/api/sales-returns"),
                 fetch("/api/products"),
+                fetch("/api/categories"),
+                fetch("/api/subcategories"),
             ]);
-            const [salesReturnData, productsData] = await Promise.all([
+            const [salesReturnData, productsData, categoriesData, subcategoriesData] = await Promise.all([
                 salesReturnRes.json(),
                 productsRes.json(),
+                categoriesRes.json(),
+                subcategoriesRes.json()
             ]);
             setSalesReturn(salesReturnData);
             setProducts(productsData);
+            setCategories(categoriesData);
+            setSubcategories(subcategoriesData);
         } catch (error) {
             console.error("Error fetching data: ", error);
         } finally {
@@ -100,7 +130,7 @@ export default function SalesReturnPage() {
     );
 
     const addItem = () => {
-        setsalesReturnItems([...salesReturnItems, { productId: "", quantity: null, returnPrice: null }]);
+        setsalesReturnItems([...salesReturnItems, { productId: "", quantity: null, returnPrice: null, categoryId: "", subCategoryId: "" }]);
     };
 
     const updateItem = (index: number, field: keyof salesReturnItem, value: number | null) => {
@@ -133,14 +163,14 @@ export default function SalesReturnPage() {
                 {
                     method: selectedSaleReturn?.id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ date, items: salesReturnItems, customerName, paymentMethod, reason }),
+                    body: JSON.stringify({ date, items: salesReturnItems, customerName, isPaymentMethodCash, reason }),
                 });
             if (res.ok) {
                 toast.success(`Sales Return ${selectedSaleReturn?.id ? "updated" : "added"} successfully`);
                 setDate(new Date().toISOString().split("T")[0]);
                 setCustomerName("");
                 setReason("");
-                setPaymentMethod("");
+                setIsPaymentMethodCash(true);
                 setsalesReturnItems([]);
                 setSelectedSaleReturn(null);
                 fetchData();
@@ -155,11 +185,33 @@ export default function SalesReturnPage() {
         }
     };
 
+    const handleCategoryChange = (index: number, categoryId: number) => {
+        const newItems = [...salesReturnItems];
+
+        newItems[index].categoryId = categoryId;
+        newItems[index].subCategoryId = "";
+        newItems[index].productId = "";
+        newItems[index].filteredSubcategories = subcategories.filter(sc => sc.categoryId === categoryId);
+        newItems[index].filteredProducts = [];
+
+        setsalesReturnItems(newItems);
+    };
+
+    const handleSubCategoryChange = (index: number, subCategoryId: number) => {
+        const newItems = [...salesReturnItems];
+
+        newItems[index].subCategoryId = subCategoryId;
+        newItems[index].productId = "";
+        newItems[index].filteredProducts = products.filter(p => p.subCategoryId === subCategoryId);
+
+        setsalesReturnItems(newItems);
+    };
+
     return (
         <div className="p-6">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Sales Return</h2>
-                <button className="btn btn-primary" onClick={() => setSelectedSaleReturn({ id: 0, date: date, customerName: "", paymentMehthod: paymentMethod, reason: reason })}>
+                <button className="btn btn-primary" onClick={() => setSelectedSaleReturn({ id: 0, date: date, customerName: "", isPaymentMethodCash: isPaymentMethodCash, reason: reason })}>
                     Add Sales Return
                 </button>
             </div>
@@ -191,9 +243,9 @@ export default function SalesReturnPage() {
                                         onClick={() => {
                                             setSelectedSaleReturn(salesReturn);
                                             setViewMode(true);
-                                            setsalesReturnItems(salesReturn.salesReturnItems || []);
+                                            setsalesReturnItems(salesReturn.SalesReturnItems || []);
                                             setDate(new Date(salesReturn.date).toISOString().split("T")[0]);
-                                            setPaymentMethod(salesReturn.paymentMehthod);
+                                            setIsPaymentMethodCash(salesReturn.isPaymentMethodCash);
                                             setCustomerName(salesReturn.customerName);
                                             setReason(salesReturn.reason);
                                         }}
@@ -204,9 +256,26 @@ export default function SalesReturnPage() {
                                         onClick={() => {
                                             setSelectedSaleReturn(salesReturn);
                                             setViewMode(false);
-                                            setsalesReturnItems(salesReturn.salesReturnItems || []);
+
+                                            const enrichedItems = salesReturn.SalesReturnItems?.map((item) => {
+                                                const itemFilteredSubcategories = subcategories.filter(
+                                                    (sc) => sc.categoryId === item.categoryId
+                                                );
+
+                                                const itemFilteredProducts = products.filter(
+                                                    (p) => p.subCategoryId === item.subCategoryId
+                                                );
+
+                                                return {
+                                                    ...item,
+                                                    filteredSubcategories: itemFilteredSubcategories,
+                                                    filteredProducts: itemFilteredProducts,
+                                                };
+                                            });
+
+                                            setsalesReturnItems(enrichedItems || []);
                                             setDate(new Date(salesReturn.date).toISOString().split("T")[0]);
-                                            setPaymentMethod(salesReturn.paymentMehthod);
+                                            setIsPaymentMethodCash(salesReturn.isPaymentMethodCash);
                                             setCustomerName(salesReturn.customerName);
                                             setReason(salesReturn.reason);
                                         }
@@ -257,7 +326,7 @@ export default function SalesReturnPage() {
 
             {selectedSaleReturn && (
                 <div className="modal modal-open flex items-center justify-center">
-                    <div className="modal-box w-[80%] h-[80%] max-w-[90vw] max-h-[90vh] flex flex-col">
+                    <div className="modal-box w-[90%] h-[90%] max-w-[90vw] max-h-[90vh] flex flex-col">
                         <h3 className="font-bold text-lg">
                             {viewMode ? "View Sales Return" : selectedSaleReturn.id ? "Edit Sales Return" : "Add Sales Return"}
                         </h3>
@@ -315,23 +384,25 @@ export default function SalesReturnPage() {
                                 </div>
 
                                 {/* Payment Method */}
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-4">
                                     <span className="font-medium">Payment Method:</span>
                                     {viewMode ? (
-                                        <span>
-                                            {/* {selectedPurchase.paymentMehthod || "N/A"} */}
-                                        </span>
+                                        <span>{isPaymentMethodCash ? "CASH" : "CREDIT"}</span>
                                     ) : (
-                                        <select
-                                            value={paymentMethod}
-                                            onChange={(e) => setPaymentMethod(e.target.value)}
-                                            required
-                                            className="select select-bordered w-52"
-                                        >
-                                            <option value="" disabled>Select Payment Method</option>
-                                            <option value="Cash">Cash</option>
-                                            <option value="Accounts Payable">Accounts Payable</option>
-                                        </select>
+                                        <div className="form-control">
+                                            <label className="label cursor-pointer gap-4">
+                                                <span className="label-text">Credit</span>
+                                                <input
+                                                    type="checkbox"
+                                                    className="toggle toggle-primary"
+                                                    checked={isPaymentMethodCash === true}
+                                                    onChange={(e) =>
+                                                        setIsPaymentMethodCash(e.target.checked ? true : false)
+                                                    }
+                                                />
+                                                <span className="label-text">Cash</span>
+                                            </label>
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -343,35 +414,68 @@ export default function SalesReturnPage() {
 
                             <table className="table w-full mt-3">
                                 <thead>
-                                    <tr>
-                                        <th>Product</th>
-                                        <th>Quantity</th>
-                                        <th>Price (Rs)</th>
-                                        <th>Total Price (Rs)</th>
-                                        {!viewMode && <th>Actions</th>}
+                                    <tr className="text-sm">
+                                        <th className="w-[14.28%]">Category</th>
+                                        <th className="w-[14.28%]">Sub Category</th>
+                                        <th className="w-[14.28%]">Product</th>
+                                        <th className="w-[14.28%]">Quantity</th>
+                                        <th className="w-[14.28%]">Price (Rs)</th>
+                                        <th className="w-[14.28%]">Total Price (Rs)</th>
+                                        {!viewMode && <th className="w-[14.28%]">Actions</th>}
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {salesReturnItems?.map((item, index) => (
                                         <tr key={index}>
-                                            <td>
+                                            <td className="p-2">
                                                 {viewMode ? (
-                                                    <span>{products.find((p) => p.id === item.productId)?.name || "N/A"}</span>
+                                                    <span>{item.Product?.Category.name || "N/A"}</span>
                                                 ) : (
-                                                    <select
-                                                        className="select select-bordered"
-                                                        value={item.productId}
-                                                        onChange={(e) => updateItem(index, "productId", Number(e.target.value))}
-                                                        required
-                                                    >
-                                                        <option value="" disabled>Select product</option>
-                                                        {products.map((p) => (
-                                                            <option key={p.id} value={p.id}>{p.name}</option>
-                                                        ))}
-                                                    </select>
+                                                    <SearchDropdown
+                                                        placeholder={"Select Category"}
+                                                        index={index}
+                                                        items={categories || []}
+                                                        selectedItemId={item.categoryId || ""}
+                                                        onChange={(i, val) => {
+                                                            updateItem(i, "categoryId", val);
+                                                            handleCategoryChange(index, Number(val));
+                                                        }}
+                                                        required={true}
+                                                    />
                                                 )}
                                             </td>
-                                            <td>
+                                            <td className="p-2">
+                                                {viewMode ? (
+                                                    <span>{item.Product?.SubCategory.name || "N/A"}</span>
+                                                ) : (
+                                                    <SearchDropdown
+                                                        placeholder={"Select Sub Category"}
+                                                        index={index}
+                                                        items={item.filteredSubcategories || []}
+                                                        selectedItemId={item.subCategoryId || ""}
+                                                        onChange={(i, val) => {
+                                                            updateItem(i, "subCategoryId", val);
+                                                            handleSubCategoryChange(index, Number(val));
+                                                        }}
+                                                        required={true}
+                                                    />
+                                                )}
+                                            </td>
+                                            <td className="p-2">
+                                                {viewMode ? (
+                                                    <span>{item.Product?.name || "N/A"}</span>
+                                                ) : (
+                                                    <SearchDropdown
+                                                        placeholder={"Select Product"}
+                                                        index={index}
+                                                        items={item.filteredProducts || []}
+                                                        selectedItemId={item.productId || ""}
+                                                        onChange={(i, val) => updateItem(i, "productId", val)}
+                                                        required={true}
+                                                    />
+                                                )}
+                                            </td>
+                                            <td className="p-2">
                                                 {viewMode ? (
                                                     <span>{item.quantity}</span>
                                                 ) : (
@@ -391,7 +495,7 @@ export default function SalesReturnPage() {
                                                     />
                                                 )}
                                             </td>
-                                            <td>
+                                            <td className="p-2">
                                                 {viewMode ? (
                                                     <span>Rs{item.returnPrice}</span>
                                                 ) : (
@@ -402,7 +506,7 @@ export default function SalesReturnPage() {
                                                         onChange={(e) => updateItem(index, "returnPrice", e.target.value ? Number(e.target.value) : null)}
                                                         onBlur={() => {
                                                             if (item.returnPrice === null || item.returnPrice <= 0) {
-                                                                toast.error("Price must be greater than zero");
+                                                                toast.error("Sales Return price must be greater than zero");
                                                                 updateItem(index, "returnPrice", null);
                                                             }
                                                         }}
@@ -411,9 +515,9 @@ export default function SalesReturnPage() {
                                                     />
                                                 )}
                                             </td>
-                                            <td>Rs{(item.quantity || 0) * (item.returnPrice || 0)}</td>
+                                            <td className="p-2">Rs{(item.quantity || 0) * (item.returnPrice || 0)}</td>
                                             {!viewMode && (
-                                                <td>
+                                                <td className="p-2">
                                                     <FiTrash2 className="text-error cursor-pointer" size={20} onClick={() => removeItem(index)} />
                                                 </td>
                                             )}
@@ -438,7 +542,7 @@ export default function SalesReturnPage() {
                                         setDate(new Date().toISOString().split("T")[0]);
                                         setViewMode(false);
                                         setCustomerName("");
-                                        setPaymentMethod("");
+                                        setIsPaymentMethodCash(true);
                                         setReason("");
                                     }}
                                 >

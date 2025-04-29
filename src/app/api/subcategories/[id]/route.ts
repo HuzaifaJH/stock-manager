@@ -1,17 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import SubCategory from "@/lib/models/SubCategory";
 
 // PUT - Update Subcategory
 export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  req: Request,
+  context: { params: Promise<{ id: string[] }> }
 ) {
+  const { id } = await context.params;
   try {
-    const id = parseInt(params.id);
     const body = await req.json();
     const { name, categoryId } = body;
 
-    const subcategory = await SubCategory.findByPk(id);
+    const subcategory = await SubCategory.findByPk(Number(id));
     if (!subcategory) {
       return NextResponse.json(
         { error: "Subcategory not found" },
@@ -32,12 +32,12 @@ export async function PUT(
 
 // DELETE - Remove Subcategory
 export async function DELETE(
-  _: NextRequest,
-  { params }: { params: { id: string } }
+  req: Request,
+  context: { params: Promise<{ id: string[] }> }
 ) {
+  const { id } = await context.params;
   try {
-    const id = parseInt(params.id);
-    const subcategory = await SubCategory.findByPk(id);
+    const subcategory = await SubCategory.findByPk(Number(id));
 
     if (!subcategory) {
       return NextResponse.json(
@@ -49,9 +49,8 @@ export async function DELETE(
     await subcategory.destroy();
     return NextResponse.json({ message: "Subcategory deleted successfully" });
   } catch (error) {
-    console.error("DELETE Subcategory Error:", error);
     return NextResponse.json(
-      { error: "Failed to delete subcategory" },
+      { error: "Failed to delete subcategory: " + error },
       { status: 500 }
     );
   }

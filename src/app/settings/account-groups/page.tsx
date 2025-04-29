@@ -2,52 +2,53 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiEdit, FiTrash2, FiArrowLeftCircle, FiArrowRightCircle } from "react-icons/fi";
+import { accountTypes } from "@/app/utils/accountType";
 
-interface Account {
+interface AccountGroup {
     id: number;
     name: string;
-    type: string;
+    accountType: number | null;
     code: number | null;
-    balance: number | null;
+    accountTypeName?: string;
 }
 
-export default function AccountsPage() {
-    const [accounts, setAccounts] = useState<Account[]>([]);
+export default function AccountGroups() {
+    const [accountGroups, setAccountGroups] = useState<AccountGroup[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+    const [selectedAccountGroup, setSelectedAccountGroup] = useState<AccountGroup | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
     useEffect(() => {
-        fetchAccounts();
+        fetchAccountGroups();
     }, []);
 
-    const fetchAccounts = async () => {
+    const fetchAccountGroups = async () => {
         setIsLoading(true);
         try {
-            const res = await fetch("/api/accounts");
+            const res = await fetch("/api/account-groups");
             const data = await res.json();
-            setAccounts(data);
+            setAccountGroups(data);
         } catch (error) {
-            console.error("Error fetching accounts: ", error);
+            console.error("Error fetching account groups: ", error);
         } finally {
             setIsLoading(false);
         }
     };
 
     const handleDelete = async (id: number) => {
-        if (!confirm("Are you sure you want to delete this account?")) return;
+        if (!confirm("Are you sure you want to delete this account group?")) return;
         setIsLoading(true);
         try {
-            const res = await fetch(`/api/accounts/${id}`, { method: "DELETE" });
+            const res = await fetch(`/api/account-groups/${id}`, { method: "DELETE" });
             if (res.ok) {
                 toast.success("Account deleted successfully");
-                fetchAccounts();
+                fetchAccountGroups();
             } else {
-                toast.error("Failed to delete account");
+                toast.error("Failed to delete account group");
             }
         } catch (error) {
-            toast.error("Error deleting account");
+            toast.error("Error deleting account group: " + error);
         } finally {
             setIsLoading(false);
         }
@@ -57,44 +58,42 @@ export default function AccountsPage() {
         e.preventDefault();
         setIsLoading(true);
         const formData = new FormData(e.target as HTMLFormElement);
-        const accountData = {
+        const accountGroupData = {
             name: formData.get("name"),
-            type: formData.get("type"),
-            code: formData.get("code"),
-            balance: Number(formData.get("balance")),
+            accountType: formData.get("accountType"),
         };
         try {
             const res = await fetch(
-                selectedAccount?.id ? `/api/accounts/${selectedAccount.id}` : "/api/accounts",
+                selectedAccountGroup?.id ? `/api/account-groups/${selectedAccountGroup.id}` : "/api/account-groups",
                 {
-                    method: selectedAccount?.id ? "PUT" : "POST",
+                    method: selectedAccountGroup?.id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(accountData),
+                    body: JSON.stringify(accountGroupData),
                 }
             );
             if (res.ok) {
-                toast.success(`Account ${selectedAccount?.id ? "updated" : "added"} successfully`);
-                fetchAccounts();
+                toast.success(`Account ${selectedAccountGroup?.id ? "updated" : "added"} successfully`);
+                fetchAccountGroups();
             } else {
-                toast.error("Failed to save account");
+                toast.error("Failed to save account group");
             }
         } catch (error) {
-            toast.error("Error saving account");
+            toast.error("Error saving account group: " + error);
         } finally {
             setIsLoading(false);
-            setSelectedAccount(null);
+            setSelectedAccountGroup(null);
         }
     }
 
-    const totalPages = Math.ceil(accounts.length / rowsPerPage) == 0 ? 1 : Math.ceil(accounts.length / rowsPerPage);
-    const paginatedAccounts = accounts.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
+    const totalPages = Math.ceil(accountGroups.length / rowsPerPage) == 0 ? 1 : Math.ceil(accountGroups.length / rowsPerPage);
+    const paginatedAccounts = accountGroups.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
     return (
         <div className="p-6">
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold">Accounts</h2>
-                <button className="btn btn-primary" onClick={() => setSelectedAccount({ id: 0, name: "", type: "Asset", code: null, balance: null })}>
-                    Add Account
+                <h2 className="text-2xl font-bold">Account Groups</h2>
+                <button className="btn btn-primary" onClick={() => setSelectedAccountGroup({ id: 0, name: "", accountType: null, code: null })}>
+                    Add Account Group
                 </button>
             </div>
 
@@ -103,23 +102,21 @@ export default function AccountsPage() {
                     <tr>
                         <th>#</th>
                         <th>Name</th>
-                        <th>Type</th>
+                        <th>Account Type</th>
                         <th>Code</th>
-                        <th>Balance (Rs)</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {paginatedAccounts.map((account: Account, index) => (
-                        <tr key={account.id}>
+                    {paginatedAccounts.map((accountGroup: AccountGroup, index) => (
+                        <tr key={accountGroup.id}>
                             <td>{(currentPage - 1) * rowsPerPage + index + 1}</td>
-                            <td>{account.name}</td>
-                            <td>{account.type}</td>
-                            <td>{account.code}</td>
-                            <td>{account.balance !== null ? (account.balance < 0 ? `(${Math.abs(account.balance).toFixed(2)})` : account.balance) : "N/A"}</td>
+                            <td>{accountGroup.name}</td>
+                            <td>{accountGroup.accountTypeName}</td>
+                            <td>{accountGroup.code}</td>
                             <td className="flex items-center space-x-2">
-                                <FiEdit className="text-warning cursor-pointer" size={18} onClick={() => setSelectedAccount(account)} />
-                                <FiTrash2 className="text-error cursor-pointer" size={18} onClick={() => handleDelete(account.id)} />
+                                <FiEdit className="text-warning cursor-pointer" size={18} onClick={() => setSelectedAccountGroup(accountGroup)} />
+                                <FiTrash2 className="text-error cursor-pointer" size={18} onClick={() => handleDelete(accountGroup.id)} />
                             </td>
                         </tr>
                     ))}
@@ -155,37 +152,38 @@ export default function AccountsPage() {
                 </div>
             </div>
 
-            {selectedAccount && (
+            {selectedAccountGroup && (
                 <div className="modal modal-open">
                     <div className="modal-box">
-                        <h3 className="font-bold text-lg">{selectedAccount.id ? "Edit Account" : "Add Account"}</h3>
+                        <h3 className="font-bold text-lg">{selectedAccountGroup.id ? "Edit Account Group" : "Add Account Group"}</h3>
                         <form
                             onSubmit={handleSubmit}
                         >
                             {/* <label className="block my-2">Name: */}
-                            <input name="name" placeholder="Name" defaultValue={selectedAccount.name} className="input input-bordered w-full my-2" required />
+                            <input name="name" placeholder="Name" defaultValue={selectedAccountGroup.name} className="input input-bordered w-full my-2" required />
                             {/* </label> */}
                             {/* <label className="block my-2">Type: */}
-                            <select name="type" defaultValue={selectedAccount.type} className="select select-bordered w-full my-2" required>
-                                {['Asset', 'Liability', 'Equity', 'Revenue', 'Expense'].map(type => (
-                                    <option key={type} value={type}>{type}</option>
+                            <select name="accountType" defaultValue={selectedAccountGroup?.accountType || ""} className="select select-bordered w-full my-2" required disabled={selectedAccountGroup.id != 0}>
+                                <option value="" disabled>Select a Account Type</option>
+                                {accountTypes.map(type => (
+                                    <option key={type.code} value={type.code}>{type.account}</option>
                                 ))}
                             </select>
                             {/* </label> */}
-                            <input
+                            {/* <input
                                 type="number"
                                 name="code"
                                 placeholder="Account Code"
                                 className="input input-bordered w-full my-2"
                                 defaultValue={selectedAccount.code === null ? "" : selectedAccount.code}
                                 required
-                            />
+                            /> */}
                             {/* <label className="block my-2">Initial Balance: */}
-                            <input name="balance" placeholder="Initial Balance" type="number" defaultValue={selectedAccount.balance === null ? "" : selectedAccount.balance} className="input input-bordered w-full my-2" required />
+                            {/* <input name="balance" placeholder="Initial Balance" type="number" defaultValue={selectedAccount.balance === null ? "" : selectedAccount.balance} className="input input-bordered w-full my-2" required /> */}
                             {/* </label> */}
                             <div className="modal-action">
                                 <button type="submit" className="btn btn-primary" disabled={isLoading}>Save</button>
-                                <button type="button" className="btn" onClick={() => setSelectedAccount(null)}>Cancel</button>
+                                <button type="button" className="btn" onClick={() => setSelectedAccountGroup(null)}>Cancel</button>
                             </div>
                         </form>
                     </div>

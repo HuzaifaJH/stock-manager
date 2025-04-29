@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { FiCornerRightDown, FiMinus } from "react-icons/fi";
-import { menuItems } from "./menuItems";
+import { menuItems } from "../app/utils/menuItems";
 
 interface SidebarProps {
     isExpanded: boolean;

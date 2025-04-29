@@ -4,9 +4,10 @@ import Product from "@/lib/models/Product";
 import PurchaseReturn from "@/lib/models/PurchaseReturn";
 import Supplier from "@/lib/models/Supplier";
 import PurchaseReturnItem from "@/lib/models/PurchaseReturnItem";
-import updateAccountBalances from "../update-account-balances";
 import Transaction from "@/lib/models/Transaction";
 import JournalEntry from "@/lib/models/JournalEntry";
+import Category from "@/lib/models/Category";
+import SubCategory from "@/lib/models/SubCategory";
 
 interface PurchaseReturnItem {
   productId: number;
@@ -27,35 +28,63 @@ export async function GET() {
           include: [
             {
               model: Product,
-              attributes: ["name"],
+              include: [
+                {
+                  model: Category,
+                  attributes: ["id", "name"],
+                },
+                {
+                  model: SubCategory,
+                  attributes: ["id", "name"],
+                },
+              ],
+              attributes: ["id", "name", "categoryId", "subCategoryId"],
             },
           ],
         },
       ],
-      // order: [["createdAt", "DESC"]], // Optional ordering
+      attributes: ["id", "supplierId", "date", "reason", "isPaymentMethodCash"],
+      // order: [["createdAt", "DESC"]],
     });
 
-    const formattedPurchaseReturns = purchaseReturns.map((purchaseReturn) => {
-      const purchaseReturnsJSON = purchaseReturn.toJSON();
+    const result = purchaseReturns.map((purchaseReturn) => {
+      const plainPurchaseReturn = purchaseReturn.get({ plain: true });
 
-      let totalPrice = 0;
-
-      const updatedPurchaseReturnItems =
-        purchaseReturnsJSON.PurchaseReturnItems.map(
-          (item: { purchaseReturnPrice: number; quantity: number }) => {
-            const totalPurchaseReturnPrice =
-              item.purchaseReturnPrice * item.quantity;
-            totalPrice += totalPurchaseReturnPrice;
-
+      plainPurchaseReturn.PurchaseReturnItems =
+        plainPurchaseReturn.PurchaseReturnItems.map(
+          (item: {
+            Product: { categoryId: number; subCategoryId: number };
+          }) => {
+            const { categoryId, subCategoryId } = item.Product;
             return {
               ...item,
-              totalPurchaseReturnPrice,
+              categoryId,
+              subCategoryId,
             };
           }
         );
 
+      return plainPurchaseReturn;
+    });
+
+    const formattedPurchaseReturns = result.map((purchaseReturn) => {
+      let totalPrice = 0;
+
+      const updatedPurchaseReturnItems = purchaseReturn.PurchaseReturnItems.map(
+        (item: { purchaseReturnPrice: number; quantity: number }) => {
+          const totalPurchaseReturnPrice =
+            item.purchaseReturnPrice * item.quantity;
+          totalPrice += totalPurchaseReturnPrice;
+
+          return {
+            ...item,
+            totalPurchaseReturnPrice,
+          };
+        }
+      );
+
       return {
-        ...purchaseReturnsJSON,
+        ...purchaseReturn,
         PurchaseReturnItems: updatedPurchaseReturnItems,
         totalPrice,
       };
@@ -73,7 +102,7 @@ export async function GET() {
 export async function POST(req: Request) {
   const transaction = await sequelize.transaction();
   try {
-    const { supplierId, date, items, paymentMethod, reason } = await req.json();
+    const { supplierId, date, items, isPaymentMethodCash, reason } = await req.json();
 
     // Calculate total purchase amount
     const totalAmount = items.reduce(
@@ -84,7 +113,7 @@ export async function POST(req: Request) {
 
     // Create the main Purchase Return record
     const newPurchaseReturn = await PurchaseReturn.create(
-      { supplierId, date, reason },
+      { supplierId, date, reason, isPaymentMethodCash },
       { returning: true, transaction }
     );
 
@@ -119,14 +148,14 @@ export async function POST(req: Request) {
       })
     );
 
-    // Determine payment account (Cash or Accounts Receivable)
-    const paymentAccountId = paymentMethod === "Cash" ? 1 : 2; // Cash (1) or Accounts Receivable (2)
+    // Determine payment account (Cash or Accounts Payable)
+    const paymentAccountId = isPaymentMethodCash === true ? 7 : 6; // Cash (1) or Accounts Payable (2)
 
     // Create Transaction record
     const newTransaction = await Transaction.create(
       {
         date,
-        type: "Purchase",
+        type: "Purchase Return",
         referenceId: newPurchaseReturn.getDataValue("id"),
         totalAmount,
       },
@@ -137,14 +166,14 @@ export async function POST(req: Request) {
     const journalEntries = [
       {
         transactionId: newTransaction.getDataValue("id"),
-        accountId: paymentAccountId, // Cash or Accounts Payable
+        ledgerId: paymentAccountId, // Cash or Accounts Payable
         description: "Refund from Purchase Return",
         amount: totalAmount,
         type: "Debit",
       },
       {
         transactionId: newTransaction.getDataValue("id"),
-        accountId: 3, // Inventory Account
+        ledgerId: 4, // Inventory Return Account
         description: "Inventory Returned",
         amount: totalAmount,
         type: "Credit",
@@ -153,9 +182,6 @@ export async function POST(req: Request) {
 
     // Save Journal Entries
     await JournalEntry.bulkCreate(journalEntries, { transaction });
-
-    // Update Account Balances
-    await updateAccountBalances(journalEntries, transaction);
 
     await transaction.commit();
 

@@ -1,5 +1,5 @@
 import { JSX } from "react";
-import { FiHome, FiCopy, FiCreditCard, FiPieChart, FiUsers, FiBox, FiBook, FiDollarSign, FiBookOpen } from "react-icons/fi";
+import { FiHome, FiCopy, FiCreditCard, FiPieChart, FiUsers, FiBox, FiBook, FiSettings, FiDollarSign } from "react-icons/fi";
 
 export interface MenuItem {
     name: string;
@@ -29,6 +29,11 @@ export const menuItems: MenuItem[] = [
         // ],
     },
     {
+        name: "Sub Categories",
+        icon: <FiCopy />,
+        href: "/POS/sub-categories",
+    },
+    {
         name: "Suppliers",
         href: "/POS/suppliers",
         icon: <FiUsers />
@@ -40,7 +45,7 @@ export const menuItems: MenuItem[] = [
     },
     {
         name: "Sales Return",
-        href: "/POS/sales-return",
+        href: "/POS/sales-returns",
         icon: <FiPieChart />
     },
     {
@@ -54,24 +59,29 @@ export const menuItems: MenuItem[] = [
     },
     {
         name: "Purchase Return",
-        href: "/POS/purchase-return",
+        href: "/POS/purchase-returns",
         icon: <FiCreditCard />
     },
-    // { name: "Settings", href: "/settings", icon: <FiSettings /> },
     {
         name: "Transactions",
         href: "/accounts/transactions",
         icon: <FiDollarSign />
     },
     {
+        name: "Settings", icon: <FiSettings />, subItems: [
+            { name: "Account Groups", href: "/settings/account-groups" },
+            { name: "Ledger Accounts", href: "/settings/ledger-accounts" }
+        ]
+    },
+    {
         name: "Financials",
         icon: <FiBook />,
         subItems: [
-            { name: "Chart of Accounts", href: "/accounts/chart-of-accounts" },
-            { name: "General Ledger", href: "/accounts/general-ledger" },
-            { name: "Trial Balance", href: "/accounts/trial-balance" },
-            { name: "Income Statement", href: "/accounts/income-statement" },
-            { name: "Balance Sheet", href: "/accounts/balance-sheet" },
+            // { name: "Chart of Accounts", href: "/accounts/chart-of-accounts" },
+            { name: "General Entries", href: "/accounts/general-ledger" },
+            // { name: "Trial Balance", href: "/accounts/trial-balance" },
+            // { name: "Income Statement", href: "/accounts/income-statement" },
+            // { name: "Balance Sheet", href: "/accounts/balance-sheet" },
         ],
     },
 ];

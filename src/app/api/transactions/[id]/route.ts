@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import Transaction from "@/lib/models/Transaction";
 import JournalEntry from "@/lib/models/JournalEntry";
-import updateAccountBalances from "@/app/api/update-account-balances";
+import { sequelize } from "@/lib/sequelize";
+// import updateAccountBalances from "@/app/utils/update-account-balances";
 
 // Update a transaction
 export async function PUT(
@@ -15,57 +16,56 @@ export async function PUT(
       { status: 400 }
     );
   }
+
+  const T = await sequelize.transaction();
+
   try {
     const { date, type, referenceId, totalAmount, journalEntries } =
       await req.json();
 
-    const transaction = await Transaction.findByPk(Number(id));
+    const transaction = await Transaction.findByPk(Number(id), {
+      transaction: T,
+    });
     if (!transaction) {
+      await T.rollback();
       return NextResponse.json(
         { error: "Transaction not found" },
         { status: 404 }
       );
     }
 
-    // Fetch existing journal entries for balance reversal
-    const oldJournalEntries = await JournalEntry.findAll({
+    await JournalEntry.destroy({
       where: { transactionId: id },
+      transaction: T,
     });
 
-    // Reverse the effect of old journal entries
-    await updateAccountBalances(
-      oldJournalEntries.map((entry: any) => ({
-        ...entry.toJSON(),
-        amount: -entry.amount, // Reversing previous effect
-      }))
-    );
-
-    await JournalEntry.destroy({ where: { transactionId: id } });
     if (journalEntries && journalEntries.length > 0) {
       for (const entry of journalEntries) {
-        await JournalEntry.create({
-          date,
-          description: entry.description,
-          amount: entry.amount,
-          type: entry.type,
-          accountId: entry.accountId,
-          transactionId: id,
-        });
+        await JournalEntry.create(
+          {
+            date,
+            description: entry.description,
+            amount: entry.amount,
+            type: entry.type,
+            ledgerId: entry.ledgerId,
+            transactionId: id,
+          },
+          { transaction: T }
+        );
       }
     }
 
-    // Apply the effect of new journal entries
-    await updateAccountBalances(journalEntries);
+    await transaction.update(
+      { date, type, referenceId, totalAmount },
+      { transaction: T }
+    );
 
-    // Update transaction details
-    await transaction.update({ date, type, referenceId, totalAmount });
-
-    return NextResponse.json(transaction);
-
+    await T.commit();
     return NextResponse.json(transaction);
   } catch (error) {
+    await T.rollback();
     return NextResponse.json(
-      { error: "Failed to update transaction" },
+      { error: "Failed to update transaction: " + error },
       { status: 500 }
     );
   }
@@ -83,22 +83,34 @@ export async function DELETE(
       { status: 400 }
     );
   }
+
+  const T = await sequelize.transaction();
+
   try {
-    const transaction = await Transaction.findByPk(Number(id));
+    const transaction = await Transaction.findByPk(Number(id), {
+      transaction: T,
+    });
     if (!transaction) {
+      await T.rollback();
       return NextResponse.json(
         { error: "Transaction not found" },
         { status: 404 }
       );
     }
 
-    await JournalEntry.destroy({ where: { transactionId: id } });
-    await transaction.destroy();
+    await JournalEntry.destroy({
+      where: { transactionId: id },
+      transaction: T,
+    });
+    await transaction.destroy({ transaction: T });
+
+    await T.commit();
 
     return NextResponse.json({ message: "Transaction deleted successfully" });
   } catch (error) {
+    await T.rollback();
     return NextResponse.json(
-      { error: "Failed to delete transaction" },
+      { error: "Failed to delete transaction: " + error },
       { status: 500 }
     );
   }

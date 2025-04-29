@@ -65,9 +65,19 @@ const createMainWindow = () => {
 app.whenReady().then(async () => {
   createSplash();
 
-  // Start Next.js
-  const nextPath = path.join(process.resourcesPath);
-  nextServer = exec(`npx next start -p ${port}`, { cwd: nextPath });
+  // // Start Next.js
+  // const nextPath = path.join(process.resourcesPath);
+  // // nextServer = exec(`npx next start -p ${port}`, { cwd: nextPath });
+  // nextServer = exec(`node .next/standalone/server.js`, {
+  //   cwd: nextPath,
+  //   env: { ...process.env, PORT: port.toString() },
+  // });
+
+  const nextPath = app.isPackaged
+    ? path.join(process.resourcesPath, "next")
+    : process.cwd();
+
+  nextServer = exec(`node server.js`, { cwd: nextPath, env: { ...process.env, PORT: port.toString() }});
 
   nextServer.stdout.on("data", (data) => console.log(`Next.js: ${data}`));
   nextServer.stderr.on("data", (data) =>

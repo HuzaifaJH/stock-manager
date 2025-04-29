@@ -23,6 +23,8 @@ export default function SubcategoriesPage() {
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedCategory, setSelectedCategory] = useState<number | "">("");
 
     useEffect(() => {
         fetchSubcategories();
@@ -52,11 +54,15 @@ export default function SubcategoriesPage() {
         }
     };
 
-    const sortedSubcategories = [...subcategories].sort((a, b) => {
-        return sortOrder === "asc"
-            ? a.name.localeCompare(b.name)
-            : b.name.localeCompare(a.name);
+    const filteredSubcategories = subcategories.filter(sub => {
+        const matchesSearch = sub.name.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory = selectedCategory === "" || sub.categoryId === selectedCategory;
+        return matchesSearch && matchesCategory;
     });
+
+    const sortedSubcategories = [...filteredSubcategories].sort((a, b) =>
+        sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+    );
 
     const totalPages = Math.ceil(sortedSubcategories.length / rowsPerPage);
     const paginatedSubcategories = sortedSubcategories.slice(
@@ -77,7 +83,7 @@ export default function SubcategoriesPage() {
                 toast.error("Failed to delete subcategory");
             }
         } catch (error) {
-            toast.error("Error deleting subcategory");
+            toast.error("Error deleting subcategory: " + error);
         } finally {
             setIsLoading(false);
         }
@@ -95,6 +101,34 @@ export default function SubcategoriesPage() {
                 >
                     Add Subcategory
                 </button>
+            </div>
+
+            <div className="flex flex-wrap gap-4 mb-4 items-center">
+                <input
+                    type="text"
+                    placeholder="Search by subcategory name"
+                    className="input input-bordered w-full sm:max-w-sm"
+                    value={searchQuery}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                />
+
+                <select
+                    className="select select-bordered w-full sm:max-w-xs"
+                    value={selectedCategory}
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        setSelectedCategory(value === "" ? "" : Number(value));
+                        setCurrentPage(1);
+                    }}
+                >
+                    <option value="">All Categories</option>
+                    {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                </select>
             </div>
 
             <div className="overflow-x-auto">
@@ -140,7 +174,7 @@ export default function SubcategoriesPage() {
                     </div>
                     <span>Page {currentPage} of {totalPages}</span>
                     <div>
-                        <button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} disabled={currentPage === 1}><FiArrowLeftCircle size={24} /></button>
+                        <button className="mr-4" onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} disabled={currentPage === 1}><FiArrowLeftCircle size={24} /></button>
                         <button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}><FiArrowRightCircle size={24} /></button>
                     </div>
                 </div>
@@ -177,6 +211,7 @@ export default function SubcategoriesPage() {
                                     }
                                 } catch (error) {
                                     toast.error("Error saving subcategory");
+                                    console.log(error);
                                 } finally {
                                     setIsLoading(false);
                                     setSelectedSubcategory(null);
@@ -191,7 +226,7 @@ export default function SubcategoriesPage() {
                                 Category:
                                 <select
                                     name="categoryId"
-                                    defaultValue={selectedSubcategory.categoryId}
+                                    defaultValue={selectedSubcategory.categoryId || ""}
                                     className="select select-bordered w-full"
                                     required
                                 >

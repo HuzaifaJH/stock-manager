@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "@/lib/sequelize";
-import Account from "@/lib/models/Account";
 import Transaction from "@/lib/models/Transaction";
+import LedgerAccounts from "@/lib/models/LedgerAccount";
 
 const JournalEntry = sequelize.define(
   "JournalEntry",
@@ -22,7 +22,7 @@ const JournalEntry = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    accountId: {
+    ledgerId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       // references: {
@@ -46,9 +46,14 @@ const JournalEntry = sequelize.define(
   }
 );
 
-JournalEntry.belongsTo(Account, { foreignKey: "accountId", onDelete: "CASCADE" });
+JournalEntry.belongsTo(LedgerAccounts, {
+  foreignKey: "ledgerId",
+  onDelete: 'RESTRICT'
+});
 JournalEntry.belongsTo(Transaction, { foreignKey: "transactionId" });
-Transaction.hasMany(JournalEntry, { foreignKey: "transactionId", onDelete: "CASCADE" });
-
+Transaction.hasMany(JournalEntry, {
+  foreignKey: "transactionId",
+  onDelete: "CASCADE",
+});
 
 export default JournalEntry;

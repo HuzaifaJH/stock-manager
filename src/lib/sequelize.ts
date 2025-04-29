@@ -5,9 +5,9 @@ import mysql2 from "mysql2";
 dotenv.config();
 
 export const sequelize = new Sequelize(
-  process.env.DB_NAME as string,
-  process.env.DB_USER as string,
-  process.env.DB_PASS as string,
+  "ims",
+  "root",
+  "root",
   {
     host: process.env.DB_HOST as string,
     port: Number(process.env.DB_PORT) || 3306,

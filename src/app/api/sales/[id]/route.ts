@@ -3,6 +3,14 @@ import SalesItem from "@/lib/models/SalesItem";
 import Product from "@/lib/models/Product";
 import Sales from "@/lib/models/Sales";
 import { sequelize } from "@/lib/sequelize";
+import Transaction from "@/lib/models/Transaction";
+import JournalEntry from "@/lib/models/JournalEntry";
+
+interface SalesItem {
+  productId: number;
+  quantity: number;
+  price: number;
+}
 
 // GET a single sales by ID
 export async function GET(
@@ -42,72 +50,159 @@ export async function PUT(
   const transaction = await sequelize.transaction();
 
   try {
-    const { items, date, customerName } = await req.json();
+    const salesId = Number(id);
+    const { items, date, customerName, isPaymentMethodCash } = await req.json();
 
-    const sales = await Sales.findByPk(Number(id), {
-      include: SalesItem,
+    const existingSale = await Sales.findByPk(salesId, {
+      include: [SalesItem],
+      transaction,
+    });
+    if (!existingSale) {
+      await transaction.rollback();
+      return NextResponse.json({ error: "Sale not found" }, { status: 404 });
+    }
+
+    const oldItems = await SalesItem.findAll({
+      where: { salesId },
       transaction,
     });
 
-    if (!sales) {
-      await transaction.rollback();
-      return NextResponse.json({ error: "Sales not found" }, { status: 404 });
-    }
-
-    // Restore previous stock
-    for (const item of sales.getDataValue("SalesItems") ?? []) {
+    for (const item of oldItems) {
       await Product.increment("stock", {
-        by: item.quantity,
-        where: { id: item.productId },
+        by: item.getDataValue("quantity"),
+        where: { id: item.getDataValue("productId") },
         transaction,
       });
     }
 
     // Delete old sales items
-    await SalesItem.destroy({ where: { saleId: id }, transaction });
+    await SalesItem.destroy({ where: { salesId }, transaction });
 
-    // Update sales details
-    await sales.update({ date, customerName }, { transaction });
+    // Recreate sales items
+    let totalAmount = 0;
+    const newSalesItems = await Promise.all(
+      items.map(async (item: SalesItem) => {
+        const product = await Product.findByPk(item.productId, { transaction });
+        if (!product) {
+          await transaction.rollback();
+          throw new Error("Product not found");
+        }
+        if (product.getDataValue("stock") < item.quantity) {
+          await transaction.rollback();
+          throw new Error("Insufficient stock");
+        }
 
-    // Process new sales items
-    for (const item of items) {
-      const product = await Product.findByPk(item.productId, { transaction });
-
-      if (!product || product.getDataValue("stock") < item.quantity) {
-        await transaction.rollback();
-        return NextResponse.json(
-          { error: "Insufficient stock or product not found" },
-          { status: 400 }
+        const salesItem = await SalesItem.create(
+          {
+            salesId,
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.price,
+          },
+          { transaction }
         );
-      }
 
-      await SalesItem.create(
-        {
-          saleId: id,
-          productId: item.productId,
-          quantity: item.quantity,
-          price: item.price,
-        },
-        { transaction }
-      );
+        // Deduct new stock
+        await product.update(
+          { stock: product.getDataValue("stock") - item.quantity },
+          { transaction }
+        );
 
-      // Deduct new stock
-      await product.update(
-        { stock: product.getDataValue("stock") - item.quantity },
-        { transaction }
-      );
+        totalAmount += item.quantity * item.price;
+        return salesItem;
+      })
+    );
+
+    // Update sale info
+    await existingSale.update({ date, customerName, isPaymentMethodCash }, { transaction });
+
+    // Delete old transaction and journal entries
+    const oldTransaction = await Transaction.findOne({
+      where: { referenceId: salesId, type: "Sale" },
+      transaction,
+    });
+
+    if (oldTransaction) {
+      await JournalEntry.destroy({
+        where: { transactionId: oldTransaction.getDataValue("id") },
+        transaction,
+      });
+      await oldTransaction.destroy({ transaction });
     }
 
+    const newTransaction = await Transaction.create(
+      {
+        date,
+        type: "Sale",
+        referenceId: salesId,
+        totalAmount,
+      },
+      { transaction }
+    );
+
+    const journalEntries = [
+      {
+        ledgerId: isPaymentMethodCash === true ? 7 : 5,
+        description: `Updated sale to ${customerName}`,
+        amount: totalAmount,
+        type: "Debit",
+        transactionId: newTransaction.getDataValue("id"),
+      },
+      {
+        ledgerId: 1,
+        description: `Updated revenue from sale to ${customerName}`,
+        amount: totalAmount,
+        type: "Credit",
+        transactionId: newTransaction.getDataValue("id"),
+      },
+    ];
+
+    await JournalEntry.bulkCreate(journalEntries, { transaction });
+
     await transaction.commit();
-    return NextResponse.json({ message: "Sales updated successfully" });
+    return NextResponse.json({ sale: existingSale, items: newSalesItems });
   } catch (error) {
     await transaction.rollback();
     return NextResponse.json(
-      { error: "Error updating sales: " + error },
+      { error: "Error updating sale: " + error },
       { status: 500 }
     );
   }
 }
+
+// // Update transaction record
+// const existingTransaction = await Transaction.findOne({
+//   where: { referenceId: id, type: "Sale" },
+//   transaction,
+// });
+
+// if (existingTransaction) {
+//   await JournalEntry.destroy({
+//     where: { transactionId: existingTransaction.id },
+//     transaction,
+//   });
+
+//   await existingTransaction.update({ date, totalAmount }, { transaction });
+
+//   const journalEntries = [
+//     {
+//       ledgerId: paymentMethod === "Cash" ? 7 : 5,
+//       description: `Updated sale to ${customerName}`,
+//       amount: totalAmount,
+//       type: "Debit",
+//       transactionId: existingTransaction.id,
+//     },
+//     {
+//       ledgerId: 1,
+//       description: `Updated revenue from sale to ${customerName}`,
+//       amount: totalAmount,
+//       type: "Credit",
+//       transactionId: existingTransaction.id,
+//     },
+//   ];
+
+//   await JournalEntry.bulkCreate(journalEntries, { transaction });
+// }
 
 // DELETE a sales
 export async function DELETE(
@@ -118,38 +213,56 @@ export async function DELETE(
   const transaction = await sequelize.transaction();
 
   try {
-    const sales = await Sales.findByPk(Number(id), {
-      include: SalesItem,
+    const salesId = Number(id);
+    const sale = await Sales.findByPk(salesId, {
+      include: [SalesItem],
       transaction,
     });
 
-    if (!sales) {
+    if (!sale) {
       await transaction.rollback();
-      return NextResponse.json({ error: "Sales not found" }, { status: 404 });
+      return NextResponse.json({ error: "Sale not found" }, { status: 404 });
     }
 
-    // Restore stock before deleting
-    for (const item of sales.getDataValue("SalesItems") ?? []) {
+    const salesItems = await SalesItem.findAll({
+      where: { salesId },
+      transaction,
+    });
+
+    // Restore stock for each sale item
+    for (const item of salesItems) {
       await Product.increment("stock", {
-        by: item.quantity,
-        where: { id: item.productId },
+        by: item.getDataValue("quantity"),
+        where: { id: item.getDataValue("productId") },
         transaction,
       });
     }
 
-    // Delete sales items and sales
-    await SalesItem.destroy({ where: { saleId: id }, transaction });
-    await sales.destroy({ transaction });
+    // Delete SalesItems
+    await SalesItem.destroy({ where: { salesId }, transaction });
+    await Sales.destroy({ where: { id: salesId }, transaction });
+
+    // Delete associated journal entries
+    const saleTransaction = await Transaction.findOne({
+      where: { referenceId: salesId, type: "Sale" },
+      transaction,
+    });
+
+    if (saleTransaction) {
+      await JournalEntry.destroy({
+        where: { transactionId: saleTransaction.getDataValue("id") },
+        transaction,
+      });
+
+      await saleTransaction.destroy({ transaction });
+    }
 
     await transaction.commit();
-    return NextResponse.json(
-      { message: "Sales deleted and stock restored" },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: "Sale deleted successfully" });
   } catch (error) {
     await transaction.rollback();
     return NextResponse.json(
-      { error: "Error deleting sales: " + error },
+      { error: "Failed to delete sale: " + error },
       { status: 500 }
     );
   }

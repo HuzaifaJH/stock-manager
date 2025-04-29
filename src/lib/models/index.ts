@@ -8,10 +8,10 @@ import Sales from "./Sales";
 import SalesItem from "./SalesItem";
 import PurchaseReturn from "./PurchaseReturn";
 import SalesReturn from "./SalesReturn";
-import Account from "./Account";
+import AccountGroup from "./AccountGroup";
+import LedgerAccount from "./LedgerAccount";
 import JournalEntry from "./JournalEntry";
 import Transaction from "./Transaction";
-import Payment from "./Payment";
 import SubCategory from "./SubCategory";
 import SalesReturnItem from "./SalesReturnItem";
 import PurchaseReturnItem from "./PurchaseReturnItem";
@@ -27,11 +27,11 @@ export {
   SalesItem,
   PurchaseReturn,
   SalesReturn,
-  Account,
-  Transaction,
-  JournalEntry,
-  Payment,
   SubCategory,
   SalesReturnItem,
   PurchaseReturnItem,
+  AccountGroup,
+  LedgerAccount,
+  Transaction,
+  JournalEntry,
 };

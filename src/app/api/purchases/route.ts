@@ -4,9 +4,11 @@ import Product from "@/lib/models/Product";
 import Purchase from "@/lib/models/Purchase";
 import Supplier from "@/lib/models/Supplier";
 import PurchaseItem from "@/lib/models/PurchaseItem";
-import updateAccountBalances from "../update-account-balances";
 import Transaction from "@/lib/models/Transaction";
 import JournalEntry from "@/lib/models/JournalEntry";
+import Category from "@/lib/models/Category";
+import SubCategory from "@/lib/models/SubCategory";
+
 interface PurchaseItem {
   productId: number;
   quantity: number;
@@ -26,20 +28,46 @@ export async function GET() {
           include: [
             {
               model: Product,
-              attributes: ["name"],
+              include: [
+                {
+                  model: Category,
+                  attributes: ["id", "name"],
+                },
+                {
+                  model: SubCategory,
+                  attributes: ["id", "name"],
+                },
+              ],
+              attributes: ["id", "name", "categoryId", "subCategoryId"],
             },
           ],
         },
       ],
-      // order: [["createdAt", "DESC"]], // Optional ordering
+      attributes: ["id", "supplierId", "date", "isPaymentMethodCash"],
+      // order: [["createdAt", "DESC"]],
     });
 
-    const formattedPurchases = purchases.map((purchase) => {
-      const purchaseJSON = purchase.toJSON();
+    const result = purchases.map((purchase) => {
+      const plainPurchase = purchase.get({ plain: true });
 
+      plainPurchase.PurchaseItems = plainPurchase.PurchaseItems.map(
+        (item: { Product: { categoryId: number; subCategoryId: number } }) => {
+          const { categoryId, subCategoryId } = item.Product;
+          return {
+            ...item,
+            categoryId,
+            subCategoryId,
+          };
+        }
+      );
+
+      return plainPurchase;
+    });
+
+    const formattedPurchases = result.map((purchase) => {
       let totalPrice = 0;
 
-      const updatedPurchaseItems = purchaseJSON.PurchaseItems.map(
+      const updatedPurchaseItems = purchase.PurchaseItems.map(
         (item: { purchasePrice: number; quantity: number }) => {
           const totalPurchasePrice = item.purchasePrice * item.quantity;
           totalPrice += totalPurchasePrice;
@@ -52,7 +80,7 @@ export async function GET() {
       );
 
       return {
-        ...purchaseJSON,
+        ...purchase,
         PurchaseItems: updatedPurchaseItems,
         totalPrice,
       };
@@ -71,7 +99,7 @@ export async function POST(req: Request) {
   const transaction = await sequelize.transaction();
 
   try {
-    const { supplierId, date, items, paymentMethod } = await req.json();
+    const { supplierId, date, items, isPaymentMethodCash } = await req.json();
 
     // Calculate total purchase amount
     const totalAmount = items.reduce(
@@ -82,7 +110,7 @@ export async function POST(req: Request) {
 
     // Create the main Purchase record
     const newPurchase = await Purchase.create(
-      { supplierId, date },
+      { supplierId, date, isPaymentMethodCash },
       { returning: true, transaction }
     );
 
@@ -111,7 +139,7 @@ export async function POST(req: Request) {
     );
 
     // Determine payment account (Cash or Accounts Payable)
-    const paymentAccountId = paymentMethod === "Cash" ? 1 : 4; // Example: Cash = 1, Accounts Payable = 4
+    const paymentAccountId = isPaymentMethodCash === true ? 7 : 6;
 
     // Create Transaction record
     const newTransaction = await Transaction.create(
@@ -128,14 +156,14 @@ export async function POST(req: Request) {
     const journalEntries = [
       {
         transactionId: newTransaction.getDataValue("id"),
-        accountId: 3, // Inventory Account
+        ledgerId: 3, // Inventory Account
         description: "Purchase Inventory",
         amount: totalAmount,
         type: "Debit",
       },
       {
         transactionId: newTransaction.getDataValue("id"),
-        accountId: paymentAccountId, // Cash or Accounts Payable
+        ledgerId: paymentAccountId, // Cash or Accounts Payable
         description: "Payment for Purchase",
         amount: totalAmount,
         type: "Credit",
@@ -144,9 +172,6 @@ export async function POST(req: Request) {
 
     // Save Journal Entries
     await JournalEntry.bulkCreate(journalEntries, { transaction });
-
-    // Update Account Balances
-    await updateAccountBalances(journalEntries, transaction);
 
     await transaction.commit();
 

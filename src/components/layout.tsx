@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Sidebar from "@/components/sidebar";
 import Navbar from "@/components/navbar";
 import { usePathname } from "next/navigation";
-import Loader from "./loader";
+import Loader from "../app/utils/loader";
 import { Toaster } from "react-hot-toast";
 
 export default function LayoutProvider({ children }: { children: React.ReactNode }) {

@@ -15,6 +15,7 @@ export default function CategoriesPage() {
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         fetchCategories();
@@ -38,7 +39,12 @@ export default function CategoriesPage() {
         setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     };
 
-    const sortedCategories = [...categories].sort((a, b) => {
+    const filteredCategories = categories.filter(cat =>
+        cat.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    // Sort Filtered Categories
+    const sortedCategories = [...filteredCategories].sort((a, b) => {
         return sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
     });
 
@@ -79,6 +85,19 @@ export default function CategoriesPage() {
                 </button>
             </div>
 
+            <div className="mb-4">
+                <input
+                    type="text"
+                    placeholder="Search by category name"
+                    className="input input-bordered w-full sm:max-w-sm"
+                    value={searchQuery}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                />
+            </div>
+
             <div className="overflow-x-auto">
                 <table className="table w-full table-zebra">
                     <thead>
@@ -96,20 +115,6 @@ export default function CategoriesPage() {
                                 <td className="">{(currentPage - 1) * rowsPerPage + index + 1}</td>
                                 <td className="">{category.name}</td>
                                 <td className="flex items-center space-x-2">
-                                    {/* <button
-                                        className="btn btn-warning btn-xs mx-1"
-                                        onClick={() => setSelectedCategory(category)}
-                                        disabled={isLoading}
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        className="btn btn-error btn-xs mx-1"
-                                        onClick={() => handleDelete(category.id)}
-                                        disabled={isLoading}
-                                    >
-                                        Delete
-                                    </button> */}
                                     <FiEdit
                                         className="text-warning cursor-pointer"
                                         size={20}

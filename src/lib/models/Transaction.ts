@@ -1,6 +1,5 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "@/lib/sequelize";
-import JournalEntry from "@/lib/models/JournalEntry";
 
 const Transaction = sequelize.define(
   "Transaction",

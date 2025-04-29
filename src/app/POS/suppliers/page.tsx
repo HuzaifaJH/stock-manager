@@ -16,6 +16,7 @@ export default function SuppliersPage() {
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         fetchSuppliers();
@@ -38,9 +39,13 @@ export default function SuppliersPage() {
         setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     };
 
-    const sortedSuppliers = [...suppliers].sort((a, b) => {
-        return sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
-    });
+    const filteredSuppliers = suppliers.filter(supplier =>
+        supplier.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const sortedSuppliers = [...filteredSuppliers].sort((a, b) =>
+        sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+    );
 
     const totalPages = Math.ceil(sortedSuppliers.length / rowsPerPage);
     const paginatedSuppliers = sortedSuppliers.slice(
@@ -74,6 +79,19 @@ export default function SuppliersPage() {
                 <button className="btn btn-primary" onClick={() => setSelectedSupplier({ id: 0, name: "", phoneNumber: "" })}>
                     Add Supplier
                 </button>
+            </div>
+
+            <div className="flex justify-between items-center mb-4 flex-col sm:flex-row gap-2">
+                <input
+                    type="text"
+                    placeholder="Search by supplier name"
+                    className="input input-bordered w-full sm:max-w-sm"
+                    value={searchQuery}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                />
             </div>
 
             <div className="overflow-x-auto">

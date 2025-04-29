@@ -3,9 +3,10 @@ import { sequelize } from "@/lib/sequelize";
 import SalesReturnItem from "@/lib/models/SalesReturnItem";
 import Product from "@/lib/models/Product";
 import SalesReturn from "@/lib/models/SalesReturn";
-import updateAccountBalances from "../update-account-balances";
 import Transaction from "@/lib/models/Transaction";
 import JournalEntry from "@/lib/models/JournalEntry";
+import Category from "@/lib/models/Category";
+import SubCategory from "@/lib/models/SubCategory";
 
 interface SalesReturnItem {
   productId: number;
@@ -23,19 +24,44 @@ export async function GET() {
           include: [
             {
               model: Product,
-              attributes: ["name"],
+              include: [
+                {
+                  model: Category,
+                  attributes: ["id", "name"],
+                },
+                {
+                  model: SubCategory,
+                  attributes: ["id", "name"],
+                },
+              ],
+              attributes: ["id", "name", "categoryId", "subCategoryId"],
             },
           ],
         },
       ],
     });
 
-    const formattedSalesReturns = salesReturns.map((salesReturns) => {
-      const salesReturnJSON = salesReturns.toJSON();
+    const result = salesReturns.map((salesReturn) => {
+      const plainSalesReturn = salesReturn.get({ plain: true });
 
+      plainSalesReturn.SalesReturnItems = plainSalesReturn.SalesReturnItems.map(
+        (item: { Product: { categoryId: number; subCategoryId: number } }) => {
+          const { categoryId, subCategoryId } = item.Product;
+          return {
+            ...item,
+            categoryId,
+            subCategoryId,
+          };
+        }
+      );
+
+      return plainSalesReturn;
+    });
+
+    const formattedSalesReturns = result.map((salesReturn) => {
       let totalPrice = 0;
 
-      const updatedSalesReturnItems = salesReturnJSON.SalesReturnItems.map(
+      const updatedSalesReturnItems = salesReturn.SalesReturnItems.map(
         (item: { returnPrice: number; quantity: number }) => {
           const totalSalesReturnPrice = item.returnPrice * item.quantity;
           totalPrice += totalSalesReturnPrice;
@@ -48,8 +74,8 @@ export async function GET() {
       );
 
       return {
-        ...salesReturnJSON,
-        SalesItems: updatedSalesReturnItems,
+        ...salesReturn,
+        SalesReturnItems: updatedSalesReturnItems,
         totalPrice,
       };
     });
@@ -67,12 +93,12 @@ export async function GET() {
 export async function POST(req: Request) {
   const transaction = await sequelize.transaction();
   try {
-    const { items, date, customerName, paymentMethod, reason } =
+    const { items, date, customerName, isPaymentMethodCash, reason } =
       await req.json();
 
     // Create sales entry
     const newSalesReturn = await SalesReturn.create(
-      { date, customerName, reason },
+      { date, customerName, reason, isPaymentMethodCash },
       { transaction }
     );
 
@@ -109,7 +135,7 @@ export async function POST(req: Request) {
     const newTransaction = await Transaction.create(
       {
         date,
-        type: "Sale",
+        type: "Sales Return",
         referenceId: newSalesReturn.getDataValue("id"),
         totalAmount,
       },
@@ -119,14 +145,14 @@ export async function POST(req: Request) {
     // Journal Entries
     const journalEntries = [
       {
-        accountId: 4, // Sales Revenue Account
+        ledgerId: 2, // Sales Revenue Account
         description: `Sales return from ${customerName}`,
         amount: totalAmount,
         type: "Debit",
         transactionId: newTransaction.getDataValue("id"),
       },
       {
-        accountId: paymentMethod === "Cash" ? 1 : 4, // Cash (1) or Accounts Receivable (4)
+        ledgerId: isPaymentMethodCash === true ? 7 : 5, // Cash (1) or Accounts Receivable (4)
         description: `Refund to ${customerName}`,
         amount: totalAmount,
         type: "Credit",
@@ -135,9 +161,6 @@ export async function POST(req: Request) {
     ];
 
     await JournalEntry.bulkCreate(journalEntries, { transaction });
-
-    // Update account balances
-    await updateAccountBalances(journalEntries, transaction);
 
     await transaction.commit();
     return NextResponse.json(

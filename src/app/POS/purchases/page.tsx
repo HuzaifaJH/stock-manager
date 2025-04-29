@@ -1,5 +1,6 @@
 "use client";
 
+import { SearchDropdown } from "@/components/search-dropdown";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiEye, FiPlusCircle, FiTrash2 } from "react-icons/fi";
@@ -12,6 +13,10 @@ interface Supplier {
 interface Product {
     id: number;
     name: string;
+    subCategoryId: number;
+    categoryId: number;
+    Category: Category;
+    SubCategory: Subcategory;
 }
 
 interface Purchase {
@@ -21,14 +26,30 @@ interface Purchase {
     supplierId: number | "";
     date: string;
     Supplier?: { name: string };
-    paymentMehthod : string;
+    isPaymentMethodCash: boolean;
 }
 
 interface PurchaseItem {
     productId: number | "";
+    categoryId: number | "";
+    subCategoryId: number | "";
     quantity: number | null;
     purchasePrice: number | null;
     Product?: Product;
+    filteredSubcategories?: Subcategory[];
+    filteredProducts?: Product[];
+}
+
+interface Category {
+    id: number;
+    name: string;
+}
+
+interface Subcategory {
+    id: number;
+    name: string;
+    categoryId: number;
+    Category?: Category;
 }
 
 export default function PurchasesPage() {
@@ -36,6 +57,10 @@ export default function PurchasesPage() {
     const [purchases, setPurchases] = useState<Purchase[]>([]);
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
+    // const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+    // const [filteredSubcategories, setFilteredSubcategories] = useState<Subcategory[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
@@ -44,26 +69,32 @@ export default function PurchasesPage() {
 
     const [purchaseItems, setPurchaseItems] = useState<PurchaseItem[]>([]);
     const [supplierId, setSupplierId] = useState<number | "">("");
-    const [paymentMethod, setPaymentMethod] = useState<string | "">("");
+    const [isPaymentMethodCash, setIsPaymentMethodCash] = useState<boolean>(true);
     const [date, setDate] = useState<string>(new Date().toISOString().split("T")[0]);
     const [viewMode, setViewMode] = useState(false);
 
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const [purchasesRes, suppliersRes, productsRes] = await Promise.all([
+            const [purchasesRes, suppliersRes, productsRes, categoriesRes, subcategoriesRes] = await Promise.all([
                 fetch("/api/purchases"),
                 fetch("/api/suppliers"),
                 fetch("/api/products"),
+                fetch("/api/categories"),
+                fetch("/api/subcategories"),
             ]);
-            const [purchasesData, suppliersData, productsData] = await Promise.all([
+            const [purchasesData, suppliersData, productsData, categoriesData, subcategoriesData] = await Promise.all([
                 purchasesRes.json(),
                 suppliersRes.json(),
                 productsRes.json(),
+                categoriesRes.json(),
+                subcategoriesRes.json()
             ]);
             setPurchases(purchasesData);
             setSuppliers(suppliersData);
             setProducts(productsData);
+            setCategories(categoriesData);
+            setSubcategories(subcategoriesData);
         } catch (error) {
             console.error("Error fetching data: ", error);
         } finally {
@@ -108,7 +139,7 @@ export default function PurchasesPage() {
     );
 
     const addItem = () => {
-        setPurchaseItems([...purchaseItems, { productId: "", quantity: null, purchasePrice: null }]);
+        setPurchaseItems([...purchaseItems, { productId: "", quantity: null, purchasePrice: null, categoryId: "", subCategoryId: "" }]);
     };
 
     const updateItem = (index: number, field: keyof PurchaseItem, value: number | null) => {
@@ -117,7 +148,7 @@ export default function PurchasesPage() {
         // newItems[index][field] = value as never;
         if (field === "quantity" || field === "purchasePrice") {
             newItems[index][field] = value;
-        } else if (field === "productId" && value !== null) {
+        } else if ((field === "productId" || field === "categoryId" || field === "subCategoryId") && value !== null) {
             newItems[index][field] = value;
         }
 
@@ -141,12 +172,12 @@ export default function PurchasesPage() {
                 {
                     method: selectedPurchase?.id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ supplierId, date, items: purchaseItems, paymentMethod }),
+                    body: JSON.stringify({ supplierId, date, items: purchaseItems, isPaymentMethodCash }),
                 });
             if (res.ok) {
                 toast.success(`Purchase ${selectedPurchase?.id ? "updated" : "added"} successfully`);
                 setSupplierId("");
-                setPaymentMethod("");
+                setIsPaymentMethodCash(true);
                 setDate(new Date().toISOString().split("T")[0]);
                 setPurchaseItems([]);
                 setSelectedPurchase(null);
@@ -162,11 +193,33 @@ export default function PurchasesPage() {
         }
     };
 
+    const handleCategoryChange = (index: number, categoryId: number) => {
+        const newItems = [...purchaseItems];
+
+        newItems[index].categoryId = categoryId;
+        newItems[index].subCategoryId = "";
+        newItems[index].productId = "";
+        newItems[index].filteredSubcategories = subcategories.filter(sc => sc.categoryId === categoryId);
+        newItems[index].filteredProducts = [];
+
+        setPurchaseItems(newItems);
+    };
+
+    const handleSubCategoryChange = (index: number, subCategoryId: number) => {
+        const newItems = [...purchaseItems];
+
+        newItems[index].subCategoryId = subCategoryId;
+        newItems[index].productId = "";
+        newItems[index].filteredProducts = products.filter(p => p.subCategoryId === subCategoryId);
+
+        setPurchaseItems(newItems);
+    };
+
     return (
         <div className="p-6">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Purchases</h2>
-                <button className="btn btn-primary" onClick={() => setSelectedPurchase({ id: 0, supplierId: supplierId, date: date, paymentMehthod: paymentMethod })}>
+                <button className="btn btn-primary" onClick={() => setSelectedPurchase({ id: 0, supplierId: supplierId, date: date, isPaymentMethodCash: isPaymentMethodCash })}>
                     Add Purchase
                 </button>
             </div>
@@ -200,19 +253,35 @@ export default function PurchasesPage() {
                                             setViewMode(true);
                                             setPurchaseItems(purchase.PurchaseItems || []);
                                             setSupplierId(purchase.supplierId);
-                                            setPaymentMethod(purchase.paymentMehthod);
+                                            setIsPaymentMethodCash(purchase.isPaymentMethodCash);
                                             setDate(new Date(purchase.date).toISOString().split("T")[0]);
                                         }}
-                                        />
+                                    />
                                     <FiEdit
                                         className="text-warning cursor-pointer mx-1"
                                         size={18}
                                         onClick={() => {
                                             setSelectedPurchase(purchase);
                                             setViewMode(false);
-                                            setPurchaseItems(purchase.PurchaseItems || []);
+
+                                            const enrichedItems = purchase.PurchaseItems?.map((item) => {
+                                                const itemFilteredSubcategories = subcategories.filter(
+                                                    (sc) => sc.categoryId === item.categoryId
+                                                );
+
+                                                const itemFilteredProducts = products.filter(
+                                                    (p) => p.subCategoryId === item.subCategoryId
+                                                );
+
+                                                return {
+                                                    ...item,
+                                                    filteredSubcategories: itemFilteredSubcategories,
+                                                    filteredProducts: itemFilteredProducts,
+                                                };
+                                            });
+                                            setPurchaseItems(enrichedItems || []);
                                             setSupplierId(purchase.supplierId);
-                                            setPaymentMethod(purchase.paymentMehthod);
+                                            setIsPaymentMethodCash(purchase.isPaymentMethodCash);
                                             setDate(new Date(purchase.date).toISOString().split("T")[0]);
                                         }
                                         }
@@ -262,7 +331,7 @@ export default function PurchasesPage() {
 
             {selectedPurchase && (
                 <div className="modal modal-open flex items-center justify-center">
-                    <div className="modal-box w-[80%] h-[80%] max-w-[90vw] max-h-[90vh] flex flex-col">
+                    <div className="modal-box w-[90%] h-[90%] max-w-[90vw] max-h-[90vh] flex flex-col">
                         <h3 className="font-bold text-lg">
                             {viewMode ? "View Purchase" : selectedPurchase.id ? "Edit Purchase" : "Add Purchase"}
                         </h3>
@@ -308,23 +377,25 @@ export default function PurchasesPage() {
                                 </div>
 
                                 {/* Payment Method */}
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-4">
                                     <span className="font-medium">Payment Method:</span>
                                     {viewMode ? (
-                                        <span>
-                                            {/* {selectedPurchase.paymentMehthod || "N/A"} */}
-                                            </span>
+                                        <span>{isPaymentMethodCash ? "CASH" : "CREDIT"}</span>
                                     ) : (
-                                        <select
-                                            value={paymentMethod}
-                                            onChange={(e) => setPaymentMethod(e.target.value)}
-                                            required
-                                            className="select select-bordered w-52"
-                                        >
-                                            <option value="" disabled>Select Payment Method</option>
-                                            <option value="Cash">Cash</option>
-                                            <option value="Accounts Payable">Accounts Payable</option>
-                                        </select>
+                                        <div className="form-control">
+                                            <label className="label cursor-pointer gap-4">
+                                                <span className="label-text">Credit</span>
+                                                <input
+                                                    type="checkbox"
+                                                    className="toggle toggle-primary"
+                                                    checked={isPaymentMethodCash === true}
+                                                    onChange={(e) =>
+                                                        setIsPaymentMethodCash(e.target.checked ? true : false)
+                                                    }
+                                                />
+                                                <span className="label-text">Cash</span>
+                                            </label>
+                                        </div>
                                     )}
                                 </div>
 
@@ -335,43 +406,76 @@ export default function PurchasesPage() {
                                 {!viewMode && <FiPlusCircle className="cursor-pointer text-green-500 ml-4" size={25} onClick={addItem} />}
                             </div>
 
-                            <table className="table w-full mt-3">
+                            <table className="table w-full table-fixed mt-3">
                                 <thead>
-                                    <tr>
-                                        <th>Product</th>
-                                        <th>Quantity</th>
-                                        <th>Price (Rs)</th>
-                                        <th>Total Price (Rs)</th>
-                                        {!viewMode && <th>Actions</th>}
+                                    <tr className="text-sm">
+                                        <th className="w-[14.28%]">Category</th>
+                                        <th className="w-[14.28%]">Sub Category</th>
+                                        <th className="w-[14.28%]">Product</th>
+                                        <th className="w-[14.28%]">Quantity</th>
+                                        <th className="w-[14.28%]">Price (Rs)</th>
+                                        <th className="w-[14.28%]">Total Price (Rs)</th>
+                                        {!viewMode && <th className="w-[14.28%]">Actions</th>}
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {purchaseItems?.map((item, index) => (
-                                        <tr key={index}>
-                                            <td>
+                                        <tr key={index} className="text-sm">
+                                            <td className="p-2">
                                                 {viewMode ? (
-                                                    <span>{products.find((p) => p.id === item.productId)?.name || "N/A"}</span>
+                                                    <span>{item.Product?.Category.name || "N/A"}</span>
                                                 ) : (
-                                                    <select
-                                                        className="select select-bordered"
-                                                        value={item.productId}
-                                                        onChange={(e) => updateItem(index, "productId", Number(e.target.value))}
-                                                        required
-                                                    >
-                                                        <option value="" disabled>Select product</option>
-                                                        {products.map((p) => (
-                                                            <option key={p.id} value={p.id}>{p.name}</option>
-                                                        ))}
-                                                    </select>
+                                                    <SearchDropdown
+                                                        placeholder={"Select Category"}
+                                                        index={index}
+                                                        items={categories || []}
+                                                        selectedItemId={item.categoryId || ""}
+                                                        onChange={(i, val) => {
+                                                            updateItem(i, "categoryId", val);
+                                                            handleCategoryChange(index, Number(val));
+                                                        }}
+                                                        required={true}
+                                                    />
                                                 )}
                                             </td>
-                                            <td>
+                                            <td className="p-2">
+                                                {viewMode ? (
+                                                    <span>{item.Product?.SubCategory.name || "N/A"}</span>
+                                                ) : (
+                                                    <SearchDropdown
+                                                        placeholder={"Select Sub Category"}
+                                                        index={index}
+                                                        items={item.filteredSubcategories || []}
+                                                        selectedItemId={item.subCategoryId || ""}
+                                                        onChange={(i, val) => {
+                                                            updateItem(i, "subCategoryId", val);
+                                                            handleSubCategoryChange(index, Number(val));
+                                                        }}
+                                                        required={true}
+                                                    />
+                                                )}
+                                            </td>
+                                            <td className="p-2">
+                                                {viewMode ? (
+                                                    <span>{item.Product?.name || "N/A"}</span>
+                                                ) : (
+                                                    <SearchDropdown
+                                                        placeholder={"Select Product"}
+                                                        index={index}
+                                                        items={item.filteredProducts || []}
+                                                        selectedItemId={item.productId || ""}
+                                                        onChange={(i, val) => updateItem(i, "productId", val)}
+                                                        required={true}
+                                                    />
+                                                )}
+                                            </td>
+                                            <td className="p-2">
                                                 {viewMode ? (
                                                     <span>{item.quantity}</span>
                                                 ) : (
                                                     <input
                                                         type="number"
-                                                        className="input input-bordered"
+                                                        className="input input-bordered w-full"
                                                         value={item.quantity === null ? "" : item.quantity}
                                                         onChange={(e) => updateItem(index, "quantity", e.target.value ? Number(e.target.value) : null)}
                                                         onBlur={() => {
@@ -385,13 +489,13 @@ export default function PurchasesPage() {
                                                     />
                                                 )}
                                             </td>
-                                            <td>
+                                            <td className="p-2">
                                                 {viewMode ? (
                                                     <span>Rs {item.purchasePrice}</span>
                                                 ) : (
                                                     <input
                                                         type="number"
-                                                        className="input input-bordered"
+                                                        className="input input-bordered w-full"
                                                         value={item.purchasePrice === null ? "" : item.purchasePrice}
                                                         onChange={(e) => updateItem(index, "purchasePrice", e.target.value ? Number(e.target.value) : null)}
                                                         onBlur={() => {
@@ -405,9 +509,9 @@ export default function PurchasesPage() {
                                                     />
                                                 )}
                                             </td>
-                                            <td>Rs {(item.quantity || 0) * (item.purchasePrice || 0)}</td>
+                                            <td className="p-2">Rs {(item.quantity || 0) * (item.purchasePrice || 0)}</td>
                                             {!viewMode && (
-                                                <td>
+                                                <td className="p-2">
                                                     <FiTrash2 className="text-error cursor-pointer" size={20} onClick={() => removeItem(index)} />
                                                 </td>
                                             )}
@@ -430,7 +534,7 @@ export default function PurchasesPage() {
                                         setSelectedPurchase(null);
                                         setPurchaseItems([]);
                                         setSupplierId("");
-                                        setPaymentMethod("");
+                                        setIsPaymentMethodCash(true);
                                         setDate(new Date().toISOString().split("T")[0]);
                                         setViewMode(false);
                                     }}

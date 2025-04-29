@@ -12,13 +12,23 @@ const Purchase = sequelize.define("Purchase", {
     type: DataTypes.DATE,
     allowNull: false,
   },
+  isPaymentMethodCash: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+  },
 });
 
 // Associations
 Supplier.hasMany(Purchase, { foreignKey: "supplierId" });
-Purchase.belongsTo(Supplier, { foreignKey: "supplierId" });
+Purchase.belongsTo(Supplier, {
+  foreignKey: "supplierId",
+  onDelete: "RESTRICT",
+});
 
-Purchase.hasMany(PurchaseItem, { foreignKey: "purchaseId", onDelete: "CASCADE" });
-PurchaseItem.belongsTo(Purchase, { foreignKey: "purchaseId" });
+Purchase.hasMany(PurchaseItem, { foreignKey: "purchaseId" });
+PurchaseItem.belongsTo(Purchase, {
+  foreignKey: "purchaseId",
+  onDelete: "CASCADE",
+});
 
 export default Purchase;

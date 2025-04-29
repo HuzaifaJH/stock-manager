@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
+import { sequelize } from "@/lib/sequelize";
 import Product from "@/lib/models/Product";
 import Purchase from "@/lib/models/Purchase";
 import Supplier from "@/lib/models/Supplier";
 import PurchaseItem from "@/lib/models/PurchaseItem";
+import Transaction from "@/lib/models/Transaction";
+import JournalEntry from "@/lib/models/JournalEntry";
 
 interface PurchaseItem {
   productId: number;
@@ -78,66 +81,121 @@ export async function PUT(
   context: { params: Promise<{ id: string[] }> }
 ) {
   const { id } = await context.params;
+  const transaction = await sequelize.transaction();
+
   if (!id) {
     return NextResponse.json({ error: "Invalid purchase ID" }, { status: 400 });
   }
 
   try {
-    const { supplierId, date, items } = await req.json();
+    const purchaseId = Number(id);
+    const { supplierId, date, items, isPaymentMethodCash } = await req.json();
 
-    const purchase = await Purchase.findByPk(Number(id), {
-      include: [PurchaseItem],
+    const existingPurchase = await Purchase.findByPk(purchaseId, {
+      include: [{ model: PurchaseItem }],
+      transaction,
     });
 
-    if (!purchase) {
+    if (!existingPurchase) {
+      await transaction.rollback();
       return NextResponse.json(
         { error: "Purchase not found" },
         { status: 404 }
       );
     }
 
-    const purchaseJSON = purchase.toJSON();
+    const oldItems = await PurchaseItem.findAll({
+      where: { purchaseId },
+      transaction,
+    });
 
-    // Update purchase details
-    await purchase.update({ supplierId, date });
+    for (const item of oldItems) {
+      await Product.increment("stock", {
+        by: -item.getDataValue("quantity"),
+        where: { id: item.getDataValue("productId") },
+        transaction,
+      });
+    }
 
-    // Restore old stock before updating
-    await Promise.all(
-      purchaseJSON.PurchaseItems.map(async (oldItem: PurchaseItem) => {
-        await Product.increment("stock", {
-          by: -oldItem.quantity,
-          where: { id: oldItem.productId },
-        });
-      })
-    );
+    // Delete old PurchaseItems
+    await PurchaseItem.destroy({ where: { purchaseId }, transaction });
 
-    await PurchaseItem.destroy({ where: { purchaseId: purchaseJSON.id } });
-
-    // Insert new purchase items
-    const purchaseItems = await Promise.all(
-      items.map(async (item: PurchaseItem) => {
-        const purchaseItem = await PurchaseItem.create({
-          purchaseId: purchaseJSON.id,
+    // Create new PurchaseItems and update stock
+    let totalAmount = 0;
+    for (const item of items) {
+      await PurchaseItem.create(
+        {
+          purchaseId,
           productId: item.productId,
           quantity: item.quantity,
           purchasePrice: item.purchasePrice,
-        });
+        },
+        { transaction }
+      );
 
-        // Deduct stock based on new items
-        await Product.increment("stock", {
-          by: item.quantity,
-          where: { id: item.productId },
-        });
+      totalAmount += item.quantity * item.purchasePrice;
 
-        return purchaseItem;
-      })
+      await Product.increment("stock", {
+        by: item.quantity,
+        where: { id: item.productId },
+        transaction,
+      });
+    }
+
+    // Update the main Purchase record
+    await existingPurchase.update({ supplierId, date, isPaymentMethodCash }, { transaction });
+
+    // Delete old transaction and journal entries
+    const oldTransaction = await Transaction.findOne({
+      where: { referenceId: purchaseId, type: "Purchase" },
+      transaction,
+    });
+
+    if (oldTransaction) {
+      await JournalEntry.destroy({
+        where: { transactionId: oldTransaction.getDataValue("id") },
+        transaction,
+      });
+      await oldTransaction.destroy({ transaction });
+    }
+
+    // Create new transaction and journal entries
+    const newTransaction = await Transaction.create(
+      {
+        date,
+        type: "Purchase",
+        referenceId: purchaseId,
+        totalAmount,
+      },
+      { transaction }
     );
 
-    return NextResponse.json(
-      { purchase, items: purchaseItems },
-      { status: 200 }
-    );
+    const paymentAccountId = isPaymentMethodCash === true ? 7 : 6;
+
+    const journalEntries = [
+      {
+        transactionId: newTransaction.getDataValue("id"),
+        ledgerId: 3,
+        description: "Purchase Inventory",
+        amount: totalAmount,
+        type: "Debit",
+      },
+      {
+        transactionId: newTransaction.getDataValue("id"),
+        ledgerId: paymentAccountId,
+        description: "Payment for Purchase",
+        amount: totalAmount,
+        type: "Credit",
+      },
+    ];
+
+    await JournalEntry.bulkCreate(journalEntries, { transaction });
+
+    await transaction.commit();
+
+    return NextResponse.json({ message: "Purchase updated successfully" });
   } catch (error) {
+    await transaction.rollback();
     return NextResponse.json(
       { error: "Failed to update purchase: " + error },
       { status: 500 }
@@ -151,45 +209,59 @@ export async function DELETE(
   context: { params: Promise<{ id: string[] }> }
 ) {
   const { id } = await context.params;
-  if (!id) {
-    return NextResponse.json({ error: "Invalid purchase ID" }, { status: 400 });
-  }
+  const transaction = await sequelize.transaction();
 
   try {
-    const purchase = await Purchase.findByPk(Number(id), {
-      include: [PurchaseItem],
-    });
+    const purchaseId = Number(id);
+
+    const purchase = await Purchase.findByPk(purchaseId, { transaction });
 
     if (!purchase) {
+      await transaction.rollback();
       return NextResponse.json(
         { error: "Purchase not found" },
         { status: 404 }
       );
     }
 
-    const purchaseJSON = purchase.toJSON();
+    const purchaseItems = await PurchaseItem.findAll({
+      where: { purchaseId },
+      transaction,
+    });
 
-    // Restore stock before deleting purchase
-    await Promise.all(
-      purchaseJSON.PurchaseItems.map(async (item: PurchaseItem) => {
-        await Product.increment("stock", {
-          by: -item.quantity, // Restore stock
-          where: { id: item.productId },
-        });
-      })
-    );
+    for (const item of purchaseItems) {
+      await Product.increment("stock", {
+        by: -item.getDataValue("quantity"),
+        where: { id: item.getDataValue("productId") },
+        transaction,
+      });
+    }
 
-    // Delete purchase items
-    await PurchaseItem.destroy({ where: { purchaseId: purchaseJSON.id } });
+    await PurchaseItem.destroy({ where: { purchaseId }, transaction });
+    await Purchase.destroy({ where: { id: purchaseId }, transaction });
 
-    // Delete purchase
-    await purchase.destroy();
+    const relatedTransaction = await Transaction.findOne({
+      where: { referenceId: purchaseId, type: "Purchase" },
+      transaction,
+    });
 
-    return NextResponse.json(
-      { message: "Purchase deleted successfully" },
-      { status: 200 }
-    );
+    if (relatedTransaction) {
+      await JournalEntry.destroy({
+        where: { transactionId: relatedTransaction.getDataValue("id") },
+        transaction,
+      });
+
+      await Transaction.destroy({
+        where: { id: relatedTransaction.getDataValue("id") },
+        transaction,
+      });
+    }
+
+    await transaction.commit();
+
+    return NextResponse.json({ message: "Purchase deleted successfully" });
   } catch (error) {
+    await transaction.rollback();
     return NextResponse.json(
       { error: "Failed to delete purchase: " + error },
       { status: 500 }

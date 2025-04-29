@@ -1,11 +1,29 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
+interface LedgerEntries {
+    id: number,
+    createdAt: string,
+    Transaction?: any,
+    LedgerAccount?: any,
+    description: string,
+    type: string,
+    amount: string
+}
+
+interface LedgerAccounts {
+    id: number,
+    name: string
+}
+
 export default function GeneralLedger() {
     const [ledgerEntries, setLedgerEntries] = useState([]);
-    const [accounts, setAccounts] = useState([]);
+    const [accounts, setAccounts] = useState<LedgerAccounts[]>([]);
+    // const [filters, setFilters] = useState({ dateFrom: new Date().toISOString().split("T")[0], dateTo: new Date().toISOString().split("T")[0], accountId: "", type: "" });
     const [filters, setFilters] = useState({ dateFrom: "", dateTo: "", accountId: "", type: "" });
+
 
     useEffect(() => {
         fetchAccounts();
@@ -13,7 +31,7 @@ export default function GeneralLedger() {
     }, [filters]);
 
     const fetchAccounts = async () => {
-        const response = await axios.get("/api/accounts");
+        const response = await axios.get("/api/ledger-accounts");
         setAccounts(response.data);
     };
 
@@ -24,21 +42,21 @@ export default function GeneralLedger() {
 
     return (
         <div className="p-4">
-            <h1 className="text-2xl font-bold mb-4">General Ledger</h1>
+            <h1 className="text-2xl font-bold mb-4">General Entries</h1>
             <div className="flex gap-4 mb-4">
                 <input type="date" className="input input-bordered" value={filters.dateFrom} onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })} />
                 <input type="date" className="input input-bordered" value={filters.dateTo} onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })} />
                 <select className="select select-bordered" value={filters.accountId} onChange={(e) => setFilters({ ...filters, accountId: e.target.value })}>
                     <option value="">All Accounts</option>
-                    {accounts.map((account: any) => (
+                    {accounts.map((account: LedgerAccounts) => (
                         <option key={account.id} value={account.id}>{account.name}</option>
                     ))}
                 </select>
-                <select className="select select-bordered" value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })}>
+                {/* <select className="select select-bordered" value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })}>
                     <option value="">All Types</option>
                     <option value="Debit">Debit</option>
                     <option value="Credit">Credit</option>
-                </select>
+                </select> */}
             </div>
             <table className="table w-full border">
                 <thead>
@@ -51,10 +69,10 @@ export default function GeneralLedger() {
                     </tr>
                 </thead>
                 <tbody>
-                    {ledgerEntries.map((entry: any) => (
+                    {ledgerEntries.map((entry: LedgerEntries) => (
                         <tr key={entry.id}>
                             <td>{new Date(entry.createdAt).toLocaleDateString("en-GB")}</td>
-                            <td>{entry.Account.name}</td>
+                            <td>{entry.LedgerAccount.name}{entry?.Transaction?.purchaseDetails?.Supplier?.name ? ` (${entry.Transaction.purchaseDetails.Supplier.name})` : ""}</td>
                             <td>{entry.description}</td>
                             <td>{entry.type === "Debit" ? entry.amount : "-"}</td>
                             <td>{entry.type === "Credit" ? entry.amount : "-"}</td>

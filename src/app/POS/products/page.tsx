@@ -10,7 +10,7 @@ interface Product {
     categoryId: number;
     subCategoryId: number;
     Category: Category;
-    Subcategory: Subcategory;
+    SubCategory: Subcategory;
 }
 
 interface Category {
@@ -28,13 +28,14 @@ interface ProductSort {
     name: string;
     stock: number;
     category: string;
-    subcategory: string;
+    SubCategory: Subcategory;
 }
 
 export default function ProductList() {
     const [products, setProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
-    const [subcategories, setSubcategories] = useState<Subcategory[]>([]);  // Added subcategories state
+    const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+    const [filteredSubcategories, setFilteredSubcategories] = useState<Subcategory[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -42,7 +43,9 @@ export default function ProductList() {
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [selectedCategory, setSelectedCategory] = useState<number | null>(null); // Track selected category
+    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+    const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<number | null>(null);
 
     useEffect(() => {
         fetchProducts();
@@ -111,15 +114,41 @@ export default function ProductList() {
         setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     };
 
-    const sortedProducts = [...products].sort((a, b) => {
+    // const sortedProducts = [...products].sort((a, b) => {
+    //     if (!sortKey) return 0;
+    //     if (sortKey === "name") {
+    //         return sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+    //     }
+    //     if (sortKey === "category" || sortKey === "SubCategory") {
+    //         return sortOrder === "asc"
+    //             ? (a.Category?.name || "").localeCompare(b.Category?.name || "")
+    //             : (b.Category?.name || "").localeCompare(a.Category?.name || "");
+    //     }
+    //     return sortOrder === "asc" ? a[sortKey] - b[sortKey] : b[sortKey] - a[sortKey];
+    // });
+
+    {/* Filtered, Sorted & Paginated Data */ }
+    const filteredProducts = products.filter((product) => {
+        const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory = selectedCategoryId ? product.categoryId === selectedCategoryId : true;
+        const matchesSubCategory = selectedSubCategoryId ? product.subCategoryId === selectedSubCategoryId : true;
+        return matchesSearch && matchesCategory && matchesSubCategory;
+    });
+
+    const sortedProducts = [...filteredProducts].sort((a, b) => {
         if (!sortKey) return 0;
         if (sortKey === "name") {
             return sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
         }
-        if (sortKey === "category" || sortKey === "subcategory") {
+        if (sortKey === "category") {
             return sortOrder === "asc"
                 ? (a.Category?.name || "").localeCompare(b.Category?.name || "")
                 : (b.Category?.name || "").localeCompare(a.Category?.name || "");
+        }
+        if (sortKey === "SubCategory") {
+            return sortOrder === "asc"
+                ? (a.SubCategory?.name || "").localeCompare(b.SubCategory?.name || "")
+                : (b.SubCategory?.name || "").localeCompare(a.SubCategory?.name || "");
         }
         return sortOrder === "asc" ? a[sortKey] - b[sortKey] : b[sortKey] - a[sortKey];
     });
@@ -132,7 +161,7 @@ export default function ProductList() {
     );
 
     const handleCategoryChange = (categoryId: number) => {
-        setSelectedCategory(categoryId);
+        // setSelectedCategory(categoryId);
         // Filter subcategories based on selected category
         setSubcategories(subcategories.filter(subcategory => subcategory.categoryId === categoryId));
     };
@@ -144,6 +173,52 @@ export default function ProductList() {
                 <button className="btn btn-primary mb-4" onClick={() => { setSelectedProduct(null); setIsModalOpen(true); }}>
                     + Add Product
                 </button>
+            </div>
+
+            {/* Filters Section */}
+            <div className="flex flex-wrap gap-4 mb-4 items-center">
+                <input
+                    type="text"
+                    placeholder="Search by name"
+                    className="input input-bordered w-full sm:max-w-xs"
+                    value={searchQuery}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                />
+
+                <select
+                    className="select select-bordered w-full sm:max-w-xs"
+                    value={selectedCategoryId || ""}
+                    onChange={(e) => {
+                        const catId = Number(e.target.value);
+                        setSelectedCategoryId(catId);
+                        setCurrentPage(1);
+                        setSelectedSubCategoryId(null);
+                        setFilteredSubcategories(subcategories.filter(sc => sc.categoryId == catId));
+                    }}
+                >
+                    <option value="">All Categories</option>
+                    {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                </select>
+
+                <select
+                    className="select select-bordered w-full sm:max-w-xs"
+                    value={selectedSubCategoryId || ""}
+                    onChange={(e) => {
+                        setSelectedSubCategoryId(Number(e.target.value));
+                        setCurrentPage(1);
+                    }}
+                    disabled={!selectedCategoryId}
+                >
+                    <option value="">All Subcategories</option>
+                    {filteredSubcategories.map(sub => (
+                        <option key={sub.id} value={sub.id}>{sub.name}</option>
+                    ))}
+                </select>
             </div>
 
             <div className="overflow-x-auto">
@@ -160,8 +235,8 @@ export default function ProductList() {
                             <th className="cursor-pointer" onClick={() => handleSort("category")}>
                                 Category {sortKey === "category" && (sortOrder === "asc" ? "↑" : "↓")}
                             </th>
-                            <th className="cursor-pointer" onClick={() => handleSort("subcategory")}>
-                                Subcategory {sortKey === "subcategory" && (sortOrder === "asc" ? "↑" : "↓")}
+                            <th className="cursor-pointer" onClick={() => handleSort("SubCategory")}>
+                                Sub Category {sortKey === "SubCategory" && (sortOrder === "asc" ? "↑" : "↓")}
                             </th>
                             <th className="">Actions</th>
                         </tr>
@@ -173,7 +248,7 @@ export default function ProductList() {
                                 <td className="">{product.name}</td>
                                 <td className="">{product.stock}</td>
                                 <td className="">{product.Category?.name || "No Category"}</td>
-                                <td className="">{product.Subcategory?.name || "No Subcategory"}</td>
+                                <td className="">{product.SubCategory?.name || "No Subcategory"}</td>
                                 <td className="flex items-center space-x-2">
                                     <FiEdit
                                         className="text-warning cursor-pointer"
@@ -322,7 +397,7 @@ export default function ProductList() {
                                 >
                                     <option value="" disabled>Select a subcategory</option>
                                     {subcategories
-                                        .filter(subcat => subcat.categoryId === selectedCategory)  // Filter subcategories by selected category
+                                        // .filter(subcat => subcat.categoryId === selectedCategory)  // Filter subcategories by selected category
                                         .map((subcat) => (
                                             <option key={subcat.id} value={subcat.id}>
                                                 {subcat.name}

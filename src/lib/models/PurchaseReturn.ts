@@ -16,18 +16,25 @@ const PurchaseReturn = sequelize.define("PurchaseReturn", {
     type: DataTypes.DATE,
     allowNull: false,
   },
+  isPaymentMethodCash: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+  },
 });
 
 // Associations
 Supplier.hasMany(PurchaseReturn, { foreignKey: "supplierId" });
-PurchaseReturn.belongsTo(Supplier, { foreignKey: "supplierId" });
+PurchaseReturn.belongsTo(Supplier, {
+  foreignKey: "supplierId",
+  onDelete: "RESTRICT",
+});
 
 PurchaseReturn.hasMany(PurchaseReturnItem, {
   foreignKey: "purchaseReturnId",
-  onDelete: "CASCADE",
 });
 PurchaseReturnItem.belongsTo(PurchaseReturn, {
   foreignKey: "purchaseReturnId",
+  onDelete: "CASCADE",
 });
 
 export default PurchaseReturn;

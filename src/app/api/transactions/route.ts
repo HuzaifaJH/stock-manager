@@ -1,13 +1,57 @@
 import { NextResponse } from "next/server";
+import { sequelize } from "@/lib/sequelize";
 import Transaction from "@/lib/models/Transaction";
 import JournalEntry from "@/lib/models/JournalEntry";
-import updateAccountBalances from "@/app/api/update-account-balances";
+// import updateAccountBalances from "@/app/utils/update-account-balances";
+import LedgerAccount from "@/lib/models/LedgerAccount";
+import { AccountGroup } from "@/lib/models";
 
 // Get all transactions
 export async function GET() {
   try {
-    const transactions = await Transaction.findAll({ include: JournalEntry });
-    return NextResponse.json(transactions);
+    const transactions = await Transaction.findAll({
+      include: [
+        {
+          model: JournalEntry,
+          include: [
+            {
+              model: LedgerAccount,
+              include: [
+                {
+                  model: AccountGroup,
+                },
+              ],
+              attributes: ["id", "name", "accountGroup"],
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = transactions.map((transactions) => {
+      const plainTransactions = transactions.get({ plain: true });
+
+      plainTransactions.JournalEntries = plainTransactions.JournalEntries.map(
+        (item: {
+          LedgerAccount: {
+            AccountGroup: { accountType: number };
+            accountGroup: number;
+          };
+        }) => {
+          const { accountGroup } = item.LedgerAccount;
+          const { accountType } = item.LedgerAccount.AccountGroup;
+          return {
+            ...item,
+            accountGroup,
+            accountType,
+          };
+        }
+      );
+
+      return plainTransactions;
+    });
+
+    return NextResponse.json(result);
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to fetch transactions: " + error },
@@ -18,35 +62,42 @@ export async function GET() {
 
 // Create a new transaction
 export async function POST(req: Request) {
+  const transaction = await sequelize.transaction();
   try {
     const { date, type, referenceId, totalAmount, journalEntries } =
       await req.json();
 
-    const transaction = await Transaction.create({
-      date,
-      type,
-      referenceId,
-      totalAmount,
-    });
+    const newTransaction = await Transaction.create(
+      {
+        date,
+        type,
+        referenceId,
+        totalAmount,
+      },
+      { transaction }
+    );
 
     if (journalEntries && journalEntries.length > 0) {
       for (const entry of journalEntries) {
-        await JournalEntry.create({
-          date,
-          description: entry.description,
-          amount: entry.amount,
-          type: entry.type,
-          accountId: entry.accountId,
-          transactionId: transaction.getDataValue("id"),
-        });
+        await JournalEntry.create(
+          {
+            date,
+            description: entry.description,
+            amount: entry.amount,
+            type: entry.type,
+            ledgerId: entry.ledgerId,
+            transactionId: newTransaction.getDataValue("id"),
+          },
+          { transaction }
+        );
       }
     }
 
-    // Update account balances
-    await updateAccountBalances(journalEntries);
+    await transaction.commit();
 
-    return NextResponse.json(transaction, { status: 201 });
+    return NextResponse.json(newTransaction, { status: 201 });
   } catch (error) {
+    await transaction.rollback();
     return NextResponse.json(
       { error: "Failed to create transaction:" + error },
       { status: 500 }

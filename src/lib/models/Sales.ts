@@ -14,13 +14,17 @@ const Sales = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    isPaymentMethodCash: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-Sales.hasMany(SalesItem, { foreignKey: "salesId", onDelete: "CASCADE" });
-SalesItem.belongsTo(Sales, { foreignKey: "salesId" });
+Sales.hasMany(SalesItem, { foreignKey: "salesId" });
+SalesItem.belongsTo(Sales, { foreignKey: "salesId", onDelete: "CASCADE" });
 
 export default Sales;
