@@ -11,6 +11,7 @@ interface Product {
     subCategoryId: number;
     Category: Category;
     SubCategory: Subcategory;
+    price: number;
 }
 
 interface Category {
@@ -29,6 +30,14 @@ interface ProductSort {
     stock: number;
     category: string;
     SubCategory: Subcategory;
+    price: number;
+}
+
+interface Transaction {
+    date: string;
+    type: string;
+    quantity: number;
+    price: number;
 }
 
 export default function ProductList() {
@@ -46,6 +55,9 @@ export default function ProductList() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
     const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<number | null>(null);
+
+    const [stockModalOpen, setStockModalOpen] = useState(false);
+    const [productRecords, setProductRecords] = useState<Transaction[]>([]);
 
     useEffect(() => {
         fetchProducts();
@@ -166,6 +178,13 @@ export default function ProductList() {
         setSubcategories(subcategories.filter(subcategory => subcategory.categoryId === categoryId));
     };
 
+    const openModal = async (productId: number) => {
+        const res = await fetch(`/api/products/${productId}/transactions`);
+        const data = await res.json();
+        setProductRecords(data);
+        setStockModalOpen(true);
+    };
+
     return (
         <div className="p-6">
             <div className="flex justify-between items-center mb-4">
@@ -232,6 +251,9 @@ export default function ProductList() {
                             <th className="cursor-pointer" onClick={() => handleSort("stock")}>
                                 Stock {sortKey === "stock" && (sortOrder === "asc" ? "↑" : "↓")}
                             </th>
+                            <th className="cursor-pointer" onClick={() => handleSort("price")}>
+                                Price {sortKey === "price" && (sortOrder === "asc" ? "↑" : "↓")}
+                            </th>
                             <th className="cursor-pointer" onClick={() => handleSort("category")}>
                                 Category {sortKey === "category" && (sortOrder === "asc" ? "↑" : "↓")}
                             </th>
@@ -245,8 +267,11 @@ export default function ProductList() {
                         {paginatedProducts.map((product, index) => (
                             <tr key={product.id}>
                                 <td className="">{(currentPage - 1) * rowsPerPage + index + 1}</td>
-                                <td className="">{product.name}</td>
+                                <td className="cursor-pointer" onClick={() => openModal(product.id)}>
+                                    {product.name}
+                                </td>
                                 <td className="">{product.stock}</td>
+                                <td className="">{product.price}</td>
                                 <td className="">{product.Category?.name || "No Category"}</td>
                                 <td className="">{product.SubCategory?.name || "No Subcategory"}</td>
                                 <td className="flex items-center space-x-2">
@@ -324,6 +349,7 @@ export default function ProductList() {
                                 const newProduct = {
                                     name: formData.get("name"),
                                     stock: Number(formData.get("stock")),
+                                    price: Number(formData.get("price")),
                                     categoryId: Number(formData.get("categoryId")),
                                     subCategoryId: Number(formData.get("subCategoryId"))
                                 };
@@ -369,6 +395,20 @@ export default function ProductList() {
                                 Stock:
                                 <input name="stock" type="number" defaultValue={selectedProduct?.stock ?? ""} className="input input-bordered w-full" required />
                             </label>
+
+                            <label className="block my-2">
+                                Price:
+                                <input name="price" defaultValue={selectedProduct?.price ?? ""} type="number" className="input input-bordered w-full" required
+                                    onBlur={(e) => {
+                                        const price = Number(e.target.value);
+                                        if (!price || price <= 0) {
+                                            toast.error("Price must be greater than zero");
+                                            e.target.value = ""; e.target.focus();
+                                        }
+                                    }}
+                                />
+                            </label>
+
                             <label className="block my-2">
                                 Category:
                                 <select
@@ -417,6 +457,55 @@ export default function ProductList() {
                         </form>
                     </div>
                 </div>
+            )}
+
+            {stockModalOpen && (
+                <dialog className="modal modal-open">
+                    <div className="modal-box max-w-2xl">
+                        <h3 className="font-bold text-lg mb-4">Stock In/Out History</h3>
+                        <div className="overflow-x-auto">
+                            <table className="table">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Date</th>
+                                        <th>Price</th>
+                                        <th className="text-right">Quantity</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {productRecords.length > 0 ? productRecords.map((tx, idx) => (
+                                        <tr key={idx}>
+                                            <td className="flex items-center gap-2">
+                                                {tx.type === "purchase" ? (
+                                                    <span className="">Purchase</span>
+                                                ) : (
+                                                    <span className="">Sale</span>
+                                                )}
+                                            </td>
+                                            <td>{new Date(tx.date).toLocaleDateString()}</td>
+                                            <td>{tx.price}</td>
+                                            <td className="text-right">
+                                                {tx.type === "purchase" ? (
+                                                    <span className="text-green-600">+ {tx.quantity} pcs.</span>
+                                                ) : (
+                                                    <span className="text-red-600">- {tx.quantity} pcs.</span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    )) : (<tr>
+                                        <td colSpan={3} className="text-center text-gray-400 py-4">
+                                            No Record Found.
+                                        </td>
+                                    </tr>)}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="modal-action">
+                            <button className="btn" onClick={() => setStockModalOpen(false)}>Close</button>
+                        </div>
+                    </div>
+                </dialog>
             )}
         </div>
     );

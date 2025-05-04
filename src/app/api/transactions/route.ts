@@ -51,7 +51,15 @@ export async function GET() {
       return plainTransactions;
     });
 
-    return NextResponse.json(result);
+    const sortedTransactions = result.map((txn) => {
+      // const txnJSON = txn.toJSON();
+      txn.JournalEntries = txn.JournalEntries.sort((a: { type: string }) =>
+        a.type === "Debit" ? -1 : 1
+      );
+      return txn;
+    });
+
+    return NextResponse.json(sortedTransactions);
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to fetch transactions: " + error },
@@ -71,9 +79,14 @@ export async function POST(req: Request) {
       {
         date,
         type,
-        referenceId,
+        // referenceId,
         totalAmount,
       },
+      { transaction }
+    );
+
+    await newTransaction.update(
+      { referenceId: "ME#" + newTransaction.getDataValue("id") },
       { transaction }
     );
 

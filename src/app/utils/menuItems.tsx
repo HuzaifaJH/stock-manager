@@ -77,11 +77,11 @@ export const menuItems: MenuItem[] = [
         name: "Financials",
         icon: <FiBook />,
         subItems: [
-            // { name: "Chart of Accounts", href: "/accounts/chart-of-accounts" },
-            { name: "General Entries", href: "/accounts/general-ledger" },
-            // { name: "Trial Balance", href: "/accounts/trial-balance" },
-            // { name: "Income Statement", href: "/accounts/income-statement" },
-            // { name: "Balance Sheet", href: "/accounts/balance-sheet" },
+            { name: "Journal Entries", href: "/accounts/journal-entries" },
+            { name: "Trial Balance", href: "/accounts/trial-balance" },
+            { name: "Income Statement", href: "/accounts/income-statement" },
+            { name: "Balance Sheet", href: "/accounts/balance-sheet" },
+            { name: "Cash Flow", href: "/accounts/cash-flow" },
         ],
     },
 ];

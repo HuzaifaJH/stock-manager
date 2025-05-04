@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import JournalEntry from "@/lib/models/JournalEntry";
 import LedgerAccounts from "@/lib/models/LedgerAccount";
@@ -6,11 +5,14 @@ import { Model, Op } from "sequelize";
 import Transaction from "@/lib/models/Transaction";
 import Purchase from "@/lib/models/Purchase";
 import Supplier from "@/lib/models/Supplier";
+import AccountGroup from "@/lib/models/AccountGroup";
+
 interface JournalEntryWithRelations extends Model {
   Transaction?: typeof Transaction & {
     dataValues: Record<string, any>;
     type: string;
     referenceId: string;
+    refId: number;
   };
   LedgerAccount?: typeof LedgerAccounts;
 }
@@ -26,26 +28,44 @@ export async function GET(req: Request) {
     const whereClause: any = {};
 
     if (accountId) whereClause.ledgerId = accountId;
-    if (dateFrom && dateTo) {
-      whereClause.createdAt = {
-        [Op.between]: [dateFrom, dateTo],
-      };
-    }
-    // if (type) whereClause.type = type;
+
+    const where = {
+      date: {
+        ...(dateFrom && { [Op.gte]: new Date(dateFrom) }),
+        ...(dateTo && {
+          [Op.lte]: new Date(new Date(dateTo).setHours(23, 59, 59, 999)),
+        }),
+      },
+    };
 
     const ledgerEntries = (await JournalEntry.findAll({
       where: whereClause,
       include: [
         {
           model: LedgerAccounts,
-          attributes: ["name"],
+          attributes: ["id", "name"],
+          include: [
+            {
+              model: AccountGroup,
+              attributes: ["id", "name", "accountType"],
+            },
+          ],
         },
         {
           model: Transaction,
+          where,
         },
       ],
       order: [["createdAt", "ASC"]],
     })) as JournalEntryWithRelations[];
+
+    ledgerEntries.forEach((x) => {
+      if (x?.Transaction?.referenceId) {
+        x.Transaction.refId = Number(
+          x.Transaction.referenceId.replace(/^[A-Z]+#/, "")
+        );
+      }
+    });
 
     const purchaseIds = ledgerEntries
       .filter(
@@ -53,12 +73,13 @@ export async function GET(req: Request) {
           e.Transaction?.type === "Purchase" ||
           e.Transaction?.type === "Purchase Return"
       )
-      .map((e: any) => e.Transaction.referenceId);
+      .map((e: any) => e.Transaction.refId);
 
     const purchases = await Purchase.findAll({
       where: { id: purchaseIds },
-      include: { model: Supplier, attributes: ["name"] },
+      include: { model: Supplier, attributes: ["id", "name"] },
     });
+
     const purchaseMap = Object.fromEntries(
       purchases.map((p: any) => [p.id, p])
     );
@@ -66,7 +87,7 @@ export async function GET(req: Request) {
     for (const entry of ledgerEntries) {
       const tx = entry.Transaction;
       if (tx?.type === "Purchase" || tx?.type === "Purchase Return") {
-        tx.dataValues.purchaseDetails = purchaseMap[tx.referenceId];
+        tx.dataValues.purchaseDetails = purchaseMap[tx.refId];
       }
     }
 

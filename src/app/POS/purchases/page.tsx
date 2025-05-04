@@ -229,6 +229,7 @@ export default function PurchasesPage() {
                     <thead>
                         <tr>
                             <th>#</th>
+                            <th>Ref no.</th>
                             <th>Supplier</th>
                             <th className="cursor-pointer" onClick={handleSort}>
                                 Date {sortOrder === "asc" ? "↑" : "↓"}
@@ -241,6 +242,7 @@ export default function PurchasesPage() {
                         {paginatedPurchases.map((purchase, index) => (
                             <tr key={purchase.id}>
                                 <td>{index + 1}</td>
+                                <td>P#{purchase.id}</td>
                                 <td>{purchase.Supplier?.name}</td>
                                 <td>{new Date(purchase.date).toLocaleDateString("en-GB")}</td>
                                 <td>{purchase.totalPrice}</td>
@@ -333,7 +335,7 @@ export default function PurchasesPage() {
                 <div className="modal modal-open flex items-center justify-center">
                     <div className="modal-box w-[90%] h-[90%] max-w-[90vw] max-h-[90vh] flex flex-col">
                         <h3 className="font-bold text-lg">
-                            {viewMode ? "View Purchase" : selectedPurchase.id ? "Edit Purchase" : "Add Purchase"}
+                            {viewMode ? "View Purchase" + " - P#" +selectedPurchase.id : selectedPurchase.id ? "Edit Purchase" + " - P#" +selectedPurchase.id : "Add Purchase"}
                         </h3>
 
                         <form onSubmit={handleSubmit} className="flex flex-col flex-grow">

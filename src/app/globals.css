@@ -26,3 +26,34 @@ input[type="number"]::-webkit-outer-spin-button {
     appearance: none;
     margin: 0;
 }
+
+input:focus, select:focus, textarea:focus, button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #print-area, #print-area * {
+    visibility: visible;
+  }
+
+  #print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  /* Optional: remove page breaks if needed */
+  .no-print {
+    display: none !important;
+  }
+}
+
+.td-bordered {
+  @apply border-r border-base-300 last:border-r-0;
+}

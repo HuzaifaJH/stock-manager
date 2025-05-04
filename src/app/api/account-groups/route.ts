@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import AccountGroup from "@/lib/models/AccountGroup";
 import { accountTypes } from "@/app/utils/accountType";

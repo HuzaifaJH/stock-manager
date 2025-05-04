@@ -102,7 +102,8 @@ export async function GET() {
 export async function POST(req: Request) {
   const transaction = await sequelize.transaction();
   try {
-    const { supplierId, date, items, isPaymentMethodCash, reason } = await req.json();
+    const { supplierId, date, items, isPaymentMethodCash, reason } =
+      await req.json();
 
     // Calculate total purchase amount
     const totalAmount = items.reduce(
@@ -156,7 +157,7 @@ export async function POST(req: Request) {
       {
         date,
         type: "Purchase Return",
-        referenceId: newPurchaseReturn.getDataValue("id"),
+        referenceId: "PR#" + newPurchaseReturn.getDataValue("id"),
         totalAmount,
       },
       { transaction }

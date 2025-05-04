@@ -15,7 +15,7 @@ const Purchase = sequelize.define("Purchase", {
   isPaymentMethodCash: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
-  },
+  }
 });
 
 // Associations

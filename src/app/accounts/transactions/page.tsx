@@ -143,7 +143,7 @@ export default function TransactionsPage() {
         const transactionData = {
             date: formData.get("date"),
             type: "Manual Entry",
-            referenceId: formData.get("referenceId"),
+            // referenceId: formData.get("referenceId"),
             totalAmount: selectedTransaction?.totalAmount,
             journalEntries: journalEntries,
         };
@@ -235,7 +235,7 @@ export default function TransactionsPage() {
                             </th>
                             <th>Reference ID</th>
                             <th>Total Amount (Rs)</th>
-                            <th>Actions</th>
+                            <th>View Details</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -257,7 +257,7 @@ export default function TransactionsPage() {
                                             // setTransactionType(transaction.type);
                                         }}
                                     />
-                                    {!fixTransactionTypes.includes(transaction.type) && (
+                                    {/* {!fixTransactionTypes.includes(transaction.type) && (
                                         <>
                                             <FiEdit
                                                 className="text-warning cursor-pointer mx-1"
@@ -293,7 +293,7 @@ export default function TransactionsPage() {
                                                 onClick={() => handleDelete(transaction.id)}
                                             />
                                         </>
-                                    )}
+                                    )} */}
                                 </td>
                             </tr>
                         ))}
@@ -384,7 +384,7 @@ export default function TransactionsPage() {
                                 </div>
 
                                 {/* Reference ID */}
-                                <div className="flex items-center gap-2 w-full">
+                                {/* <div className="flex items-center gap-2 w-full">
                                     <label className="font-medium whitespace-nowrap">Reference ID:</label>
                                     <div className="w-full">
                                         {viewMode ? (
@@ -399,7 +399,7 @@ export default function TransactionsPage() {
                                             />
                                         )}
                                     </div>
-                                </div>
+                                </div> */}
 
                                 {/* Total Amount */}
                                 <div className="flex items-center gap-2 w-full">

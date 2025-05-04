@@ -104,7 +104,7 @@ export async function PUT(
     });
 
     const oldTransaction = await Transaction.findOne({
-      where: { referenceId: purchaseReturnId, type: "Purchase Return" },
+      where: { referenceId: "PR#"+purchaseReturnId, type: "Purchase Return" },
       transaction,
     });
 
@@ -121,7 +121,7 @@ export async function PUT(
       {
         date,
         type: "Purchase Return",
-        referenceId: purchaseReturnId,
+        referenceId: "PR#"+purchaseReturnId,
         totalAmount,
       },
       { transaction }
@@ -202,7 +202,7 @@ export async function DELETE(
 
     // Delete journal entries and transaction
     const existingTransaction = await Transaction.findOne({
-      where: { type: "Purchase Return", referenceId: purchaseReturnId },
+      where: { type: "Purchase Return", referenceId: "PR#"+purchaseReturnId },
       transaction,
     });
 

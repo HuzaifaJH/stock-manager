@@ -55,10 +55,7 @@ export async function PUT(
       }
     }
 
-    await transaction.update(
-      { date, type, referenceId, totalAmount },
-      { transaction: T }
-    );
+    await transaction.update({ date, type, totalAmount }, { transaction: T });
 
     await T.commit();
     return NextResponse.json(transaction);

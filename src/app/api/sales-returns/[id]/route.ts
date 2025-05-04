@@ -92,7 +92,7 @@ export async function PUT(
     // Update transaction
     const transactionRecord = await Transaction.findOne({
       where: {
-        referenceId: salesReturnId,
+        referenceId: "SR#" + salesReturnId,
         type: "Sales Return",
       },
       transaction,
@@ -179,7 +179,7 @@ export async function DELETE(
     // Delete Journal Entries
     const transactionRecord = await Transaction.findOne({
       where: {
-        referenceId: salesReturnId,
+        referenceId: "SR#" + salesReturnId,
         type: "Sales Return",
       },
       transaction,

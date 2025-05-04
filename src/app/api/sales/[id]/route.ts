@@ -9,7 +9,8 @@ import JournalEntry from "@/lib/models/JournalEntry";
 interface SalesItem {
   productId: number;
   quantity: number;
-  price: number;
+  sellingPrice: number;
+  costPrice: number;
 }
 
 // GET a single sales by ID
@@ -51,7 +52,8 @@ export async function PUT(
 
   try {
     const salesId = Number(id);
-    const { items, date, customerName, isPaymentMethodCash } = await req.json();
+    const { items, date, customerName, isPaymentMethodCash, discount } =
+      await req.json();
 
     const existingSale = await Sales.findByPk(salesId, {
       include: [SalesItem],
@@ -97,7 +99,8 @@ export async function PUT(
             salesId,
             productId: item.productId,
             quantity: item.quantity,
-            price: item.price,
+            sellingPrice: item.sellingPrice,
+            costPrice: item.costPrice,
           },
           { transaction }
         );
@@ -108,17 +111,22 @@ export async function PUT(
           { transaction }
         );
 
-        totalAmount += item.quantity * item.price;
+        totalAmount += item.quantity * item.sellingPrice;
         return salesItem;
       })
     );
 
+    totalAmount -= discount;
+
     // Update sale info
-    await existingSale.update({ date, customerName, isPaymentMethodCash }, { transaction });
+    await existingSale.update(
+      { date, customerName, isPaymentMethodCash, discount },
+      { transaction }
+    );
 
     // Delete old transaction and journal entries
     const oldTransaction = await Transaction.findOne({
-      where: { referenceId: salesId, type: "Sale" },
+      where: { referenceId: "S#" + salesId, type: "Sale" },
       transaction,
     });
 
@@ -134,7 +142,7 @@ export async function PUT(
       {
         date,
         type: "Sale",
-        referenceId: salesId,
+        referenceId: "S#" + salesId,
         totalAmount,
       },
       { transaction }
@@ -244,7 +252,7 @@ export async function DELETE(
 
     // Delete associated journal entries
     const saleTransaction = await Transaction.findOne({
-      where: { referenceId: salesId, type: "Sale" },
+      where: { referenceId: "S#" + salesId, type: "Sale" },
       transaction,
     });
 

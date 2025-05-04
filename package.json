@@ -4,27 +4,33 @@
   "private": true,
   "main": "main.js",
   "type": "module",
+  "author": "Huzaifa",
+  "description": "Inventory Management System",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "electron": "electron .",
     "start": "concurrently \"next dev\" \"wait-on http://localhost:3000 && electron .\"",
     "lint": "next lint",
-    "electron-build": "npx electron-builder --dir --win"
+    "electron-build": "npx electron-builder --win"
   },
   "dependencies": {
+    "chart.js": "^4.4.9",
+    "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",
     "kill-port": "^2.0.1",
     "mysql2": "^3.12.0",
     "next": "15.1.7",
     "pg-hstore": "^2.3.4",
     "react": "^19.0.0",
+    "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.5.2",
     "react-icons": "^5.4.0",
     "react-spinners": "^0.15.0",
     "sequelize": "^6.37.5",
-    "theme-change": "^2.5.0"
+    "theme-change": "^2.5.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -62,8 +68,24 @@
     "removePackageScripts": true,
     "extraResources": [
       {
-        "from": ".next/",
-        "to": ".next/"
+        "from": ".next/standalone/",
+        "to": "next/"
+      },
+      {
+        "from": ".next/static/",
+        "to": "next/.next/static/"
+      },
+      {
+        "from": "public/",
+        "to": "public/"
+      },
+      {
+        "from": "next.config.ts",
+        "to": "next.config.ts"
+      },
+      {
+        "from": ".env",
+        "to": ".env"
       }
     ]
   }

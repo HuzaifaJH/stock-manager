@@ -136,7 +136,7 @@ export async function POST(req: Request) {
       {
         date,
         type: "Sales Return",
-        referenceId: newSalesReturn.getDataValue("id"),
+        referenceId: "SR#" + newSalesReturn.getDataValue("id"),
         totalAmount,
       },
       { transaction }

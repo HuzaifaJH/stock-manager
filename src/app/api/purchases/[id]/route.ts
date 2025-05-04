@@ -91,6 +91,13 @@ export async function PUT(
     const purchaseId = Number(id);
     const { supplierId, date, items, isPaymentMethodCash } = await req.json();
 
+    // Calculate total purchase amount
+    const totalAmount = items.reduce(
+      (sum: number, item: { purchasePrice: number; quantity: number }) =>
+        sum + item.purchasePrice * item.quantity,
+      0
+    );
+
     const existingPurchase = await Purchase.findByPk(purchaseId, {
       include: [{ model: PurchaseItem }],
       transaction,
@@ -109,19 +116,31 @@ export async function PUT(
       transaction,
     });
 
+    let oldTotalAmount = 0;
     for (const item of oldItems) {
       await Product.increment("stock", {
         by: -item.getDataValue("quantity"),
         where: { id: item.getDataValue("productId") },
         transaction,
       });
+
+      oldTotalAmount +=
+        item.getDataValue("quantity") * item.getDataValue("purchasePrice");
     }
 
     // Delete old PurchaseItems
     await PurchaseItem.destroy({ where: { purchaseId }, transaction });
 
+    if (!existingPurchase.getDataValue("isPaymentMethodCash")) {
+      await Supplier.decrement("payableAmount", {
+        by: oldTotalAmount,
+        where: { id: supplierId },
+        transaction,
+      });
+    }
+
     // Create new PurchaseItems and update stock
-    let totalAmount = 0;
+    // let totalAmount = 0;
     for (const item of items) {
       await PurchaseItem.create(
         {
@@ -133,7 +152,7 @@ export async function PUT(
         { transaction }
       );
 
-      totalAmount += item.quantity * item.purchasePrice;
+      // totalAmount += item.quantity * item.purchasePrice;
 
       await Product.increment("stock", {
         by: item.quantity,
@@ -143,11 +162,22 @@ export async function PUT(
     }
 
     // Update the main Purchase record
-    await existingPurchase.update({ supplierId, date, isPaymentMethodCash }, { transaction });
+    await existingPurchase.update(
+      { supplierId, date, isPaymentMethodCash },
+      { transaction }
+    );
+
+    if (!isPaymentMethodCash) {
+      await Supplier.increment("payableAmount", {
+        by: totalAmount,
+        where: { id: supplierId },
+        transaction,
+      });
+    }
 
     // Delete old transaction and journal entries
     const oldTransaction = await Transaction.findOne({
-      where: { referenceId: purchaseId, type: "Purchase" },
+      where: { referenceId: "P#" + purchaseId, type: "Purchase" },
       transaction,
     });
 
@@ -164,7 +194,7 @@ export async function PUT(
       {
         date,
         type: "Purchase",
-        referenceId: purchaseId,
+        referenceId: "P#" + purchaseId,
         totalAmount,
       },
       { transaction }
@@ -241,7 +271,7 @@ export async function DELETE(
     await Purchase.destroy({ where: { id: purchaseId }, transaction });
 
     const relatedTransaction = await Transaction.findOne({
-      where: { referenceId: purchaseId, type: "Purchase" },
+      where: { referenceId: "P#" + purchaseId, type: "Purchase" },
       transaction,
     });
 

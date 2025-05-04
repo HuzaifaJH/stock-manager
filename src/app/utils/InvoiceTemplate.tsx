@@ -17,7 +17,7 @@ interface salesItem {
     categoryId: number | "";
     subCategoryId: number | "";
     quantity: number | null;
-    price: number | null;
+    sellingPrice: number | null;
     Product?: Product;
 }
 
@@ -27,7 +27,7 @@ interface Product {
 
 export default function InvoiceTemplate({ sale }: InvoiceTemplateProps) {
     const totalPrice = (sale.SalesItems ?? []).reduce(
-        (sum, item) => sum + (item.quantity ?? 0) * (item.price ?? 0),
+        (sum, item) => sum + (item.quantity ?? 0) * (item.sellingPrice ?? 0),
         0
     );
 
@@ -61,9 +61,9 @@ export default function InvoiceTemplate({ sale }: InvoiceTemplateProps) {
                         <tr key={item.productId}>
                             <td>{item.Product?.name || "N/A"}</td>
                             <td className="text-right">{item.quantity}</td>
-                            <td className="text-right">{item.price && item.price.toFixed(2)}</td>
+                            <td className="text-right">{item.sellingPrice && item.sellingPrice.toFixed(2)}</td>
                             <td className="text-right">
-                                {item.price && item.quantity && (item.quantity * item.price).toFixed(2)}
+                                {item.sellingPrice && item.quantity && (item.quantity * item.sellingPrice).toFixed(2)}
                             </td>
                         </tr>
                     ))}

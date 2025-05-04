@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import LedgerAccount from "@/lib/models/LedgerAccount";
 import AccountGroup from "@/lib/models/AccountGroup";

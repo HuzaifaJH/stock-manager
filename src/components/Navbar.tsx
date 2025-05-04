@@ -36,7 +36,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, toggleMobileMenu, isSide
     const isExpanded = isSidebarExpanded || isMobileOpen;
 
     return (
-        <nav className="flex items-center justify-between px-4 py-4 bg-base-100 shadow-md border-b border-gray-300">
+        <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-4 bg-base-100 shadow-md border-b border-gray-300">
             {/* Left Section: Sidebar Toggle + Dashboard Heading */}
             <div className="flex items-center gap-4">
                 {/* Sidebar Toggle Button (Mobile) */}
@@ -56,7 +56,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, toggleMobileMenu, isSide
                 </div>
 
                 {/* Dashboard Title */}
-                <h1 className="text-lg font-semibold">Dashboard</h1>
+                <h1 className="text-lg font-semibold">Burhani Wood Works</h1>
             </div>
 
             {/* Theme Toggle Button */}

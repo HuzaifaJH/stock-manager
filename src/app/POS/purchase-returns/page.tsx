@@ -231,6 +231,7 @@ export default function PurchaseReturnPage() {
                     <thead>
                         <tr>
                             <th>#</th>
+                            <th>Ref no.</th>
                             <th>Supplier</th>
                             <th className="cursor-pointer" onClick={handleSort}>
                                 Date {sortOrder === "asc" ? "↑" : "↓"}
@@ -243,6 +244,7 @@ export default function PurchaseReturnPage() {
                         {paginatedPurchaseReturns.map((purchaseReturns, index) => (
                             <tr key={purchaseReturns.id}>
                                 <td>{index + 1}</td>
+                                <td>PR#{purchaseReturns.id}</td>
                                 <td>{purchaseReturns.Supplier?.name}</td>
                                 <td>{new Date(purchaseReturns.date).toLocaleDateString("en-GB")}</td>
                                 <td>{purchaseReturns.totalPrice}</td>
@@ -337,7 +339,7 @@ export default function PurchaseReturnPage() {
                 <div className="modal modal-open flex items-center justify-center">
                     <div className="modal-box w-[90%] h-[90%] max-w-[90vw] max-h-[90vh] flex flex-col">
                         <h3 className="font-bold text-lg">
-                            {viewMode ? "View Purchase Return" : selectedPurchaseReturn.id ? "Edit Purchase Return" : "Add Purchase Return"}
+                            {viewMode ? "View Purchase Return" + " - PR#" +selectedPurchaseReturn.id : selectedPurchaseReturn.id ? "Edit Purchase Return" + " - PR#" +selectedPurchaseReturn.id : "Add Purchase Return"}
                         </h3>
 
                         <form onSubmit={handleSubmit} className="flex flex-col flex-grow">

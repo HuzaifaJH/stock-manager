@@ -30,7 +30,14 @@ const SalesItem = sequelize.define(
         min: 1,
       },
     },
-    price: {
+    sellingPrice: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      validate: {
+        min: 0,
+      },
+    },
+    costPrice: {
       type: DataTypes.FLOAT,
       allowNull: false,
       validate: {

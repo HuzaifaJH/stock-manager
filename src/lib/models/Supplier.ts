@@ -12,6 +12,11 @@ const Supplier = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    payableAmount: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      defaultValue: 0,
+    },
   },
   {
     timestamps: true,

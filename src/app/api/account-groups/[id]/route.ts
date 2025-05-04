@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import AccountGroup from "@/lib/models/AccountGroup";
+import LedgerAccount from "@/lib/models/LedgerAccount";
 
 // Get accountGroup by ID
 export async function GET(
@@ -9,7 +10,9 @@ export async function GET(
   const { id } = await context.params;
 
   try {
-    const accountGroup = await AccountGroup.findByPk(Number(id));
+    const accountGroup = await AccountGroup.findByPk(Number(id), {
+      include: { model: LedgerAccount, attributes: ["id","name"] },
+    });
     if (!accountGroup)
       return NextResponse.json(
         { error: "Account Group not found" },

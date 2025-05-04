@@ -18,6 +18,14 @@ const Sales = sequelize.define(
       type: DataTypes.BOOLEAN,
       allowNull: false,
     },
+    discount: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+      defaultValue: 0,
+      validate: {
+        min: 0,
+      },
+    },
   },
   {
     timestamps: true,

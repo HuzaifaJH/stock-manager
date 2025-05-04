@@ -11,7 +11,15 @@ import SubCategory from "@/lib/models/SubCategory";
 interface SalesItem {
   productId: number;
   quantity: number;
-  price: number;
+  sellingPrice: number;
+  costPrice: number;
+}
+
+class CustomError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "CustomError";
+  }
 }
 
 // GET all sales
@@ -62,8 +70,8 @@ export async function GET() {
       let totalPrice = 0;
 
       const updatedSalesItems = sales.SalesItems.map(
-        (item: { price: number; quantity: number }) => {
-          const totalSalePrice = item.price * item.quantity;
+        (item: { sellingPrice: number; quantity: number }) => {
+          const totalSalePrice = item.sellingPrice * item.quantity;
           totalPrice += totalSalePrice;
 
           return {
@@ -72,6 +80,8 @@ export async function GET() {
           };
         }
       );
+
+      totalPrice -= sales.discount;
 
       return {
         ...sales,
@@ -93,21 +103,24 @@ export async function GET() {
 export async function POST(req: Request) {
   const transaction = await sequelize.transaction();
   try {
-    const { items, date, customerName, isPaymentMethodCash } = await req.json();
+    const { items, date, customerName, discount, isPaymentMethodCash } =
+      await req.json();
 
     // Create sales entry
-    const newSale = await Sales.create({ date, customerName, isPaymentMethodCash }, { transaction });
+    const newSale = await Sales.create(
+      { date, customerName, isPaymentMethodCash, discount },
+      { transaction }
+    );
 
     let totalAmount = 0;
+
     const salesItems = await Promise.all(
       items.map(async (item: SalesItem) => {
         const product = await Product.findByPk(item.productId, { transaction });
         if (!product) {
-          await transaction.rollback();
-          throw new Error("Product not found");
+          throw new CustomError("Product not found");
         } else if (product.getDataValue("stock") < item.quantity) {
-          await transaction.rollback();
-          throw new Error("Insufficient stock");
+          throw new CustomError("Insufficient stock");
         }
 
         const salesItem = await SalesItem.create(
@@ -115,7 +128,8 @@ export async function POST(req: Request) {
             salesId: newSale.getDataValue("id"),
             productId: item.productId,
             quantity: item.quantity,
-            price: item.price,
+            sellingPrice: item.sellingPrice,
+            costPrice: item.costPrice,
           },
           { transaction }
         );
@@ -126,17 +140,19 @@ export async function POST(req: Request) {
           { transaction }
         );
 
-        totalAmount += item.quantity * item.price;
+        totalAmount += item.quantity * item.sellingPrice;
         return salesItem;
       })
     );
+
+    totalAmount -= discount;
 
     // Create transaction record
     const newTransaction = await Transaction.create(
       {
         date,
         type: "Sale",
-        referenceId: newSale.getDataValue("id"),
+        referenceId: "S#" + newSale.getDataValue("id"),
         totalAmount,
       },
       { transaction }
@@ -164,10 +180,16 @@ export async function POST(req: Request) {
 
     await transaction.commit();
     return NextResponse.json({ newSale, salesItems }, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     await transaction.rollback();
+
+    if (error instanceof CustomError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    console.error("Unhandled sales error:", error);
     return NextResponse.json(
-      { error: "Error recording sales: " + error },
+      { error: "Error recording sales" },
       { status: 500 }
     );
   }

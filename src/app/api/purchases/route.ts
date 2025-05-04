@@ -114,6 +114,14 @@ export async function POST(req: Request) {
       { returning: true, transaction }
     );
 
+    if (!isPaymentMethodCash) {
+      await Supplier.increment("payableAmount", {
+        by: totalAmount,
+        where: { id: supplierId },
+        transaction,
+      });
+    }
+
     // Create the related purchase items
     const purchaseItems = await Promise.all(
       items.map(async (item: PurchaseItem) => {
@@ -146,7 +154,7 @@ export async function POST(req: Request) {
       {
         date,
         type: "Purchase",
-        referenceId: newPurchase.getDataValue("id"),
+        referenceId: "P#" + newPurchase.getDataValue("id"),
         totalAmount,
       },
       { transaction }

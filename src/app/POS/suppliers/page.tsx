@@ -2,12 +2,20 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiTrash2 } from "react-icons/fi";
+import { TbCreditCardPay } from "react-icons/tb";
 
 interface Supplier {
     id: number;
     name: string;
     phoneNumber: string;
+    payableAmount: number;
 }
+
+interface LedgerAccount {
+    id: number;
+    name: string;
+}
+
 
 export default function SuppliersPage() {
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -17,9 +25,13 @@ export default function SuppliersPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [searchQuery, setSearchQuery] = useState("");
+    const [showPayoutModal, setShowPayoutModal] = useState<boolean>(false);
+    const [accountLedgers, setAccountLedgers] = useState<LedgerAccount[]>([]);
+    const [accountLedger, setAccountLedger] = useState<number | "">("");
 
     useEffect(() => {
         fetchSuppliers();
+        fetchLedgerAccounts();
     }, []);
 
     const fetchSuppliers = async () => {
@@ -30,6 +42,19 @@ export default function SuppliersPage() {
             setSuppliers(data);
         } catch (error) {
             console.error("Error fetching suppliers: ", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const fetchLedgerAccounts = async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch("/api/account-groups/3");
+            const data = await res.json();
+            setAccountLedgers(data.LedgerAccounts);
+        } catch (error) {
+            console.error("Error fetching Account Ledgers: ", error);
         } finally {
             setIsLoading(false);
         }
@@ -76,7 +101,7 @@ export default function SuppliersPage() {
         <div className="p-6">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Supplier List</h2>
-                <button className="btn btn-primary" onClick={() => setSelectedSupplier({ id: 0, name: "", phoneNumber: "" })}>
+                <button className="btn btn-primary" onClick={() => setSelectedSupplier({ id: 0, name: "", phoneNumber: "", payableAmount: 0 })}>
                     Add Supplier
                 </button>
             </div>
@@ -103,6 +128,7 @@ export default function SuppliersPage() {
                                 Name {sortOrder === "asc" ? "↑" : "↓"}
                             </th>
                             <th className="">Phone</th>
+                            <th className="">Payable Amount (Rs)</th>
                             <th className="">Actions</th>
                         </tr>
                     </thead>
@@ -112,6 +138,7 @@ export default function SuppliersPage() {
                                 <td>{(currentPage - 1) * rowsPerPage + index + 1}</td>
                                 <td>{supplier.name}</td>
                                 <td>{supplier.phoneNumber}</td>
+                                <td>{supplier.payableAmount}</td>
                                 <td className="flex items-center space-x-2">
                                     <FiEdit
                                         className="text-warning cursor-pointer mx-1"
@@ -123,6 +150,13 @@ export default function SuppliersPage() {
                                         size={18}
                                         onClick={() => handleDelete(supplier.id)}
                                     />
+                                    {supplier.payableAmount > 0 ? (
+                                        <TbCreditCardPay
+                                            className="text-primary cursor-pointer mx-1"
+                                            size={18}
+                                            onClick={() => { setSelectedSupplier(supplier); setShowPayoutModal(true) }}
+                                        />
+                                    ) : ""}
                                 </td>
                             </tr>
                         ))}
@@ -213,6 +247,80 @@ export default function SuppliersPage() {
                             <div className="modal-action">
                                 <button type="submit" className="btn btn-primary" disabled={isLoading}>Save</button>
                                 <button type="button" className="btn" onClick={() => setSelectedSupplier(null)}>Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+            {showPayoutModal && (
+                <div className="modal modal-open">
+                    <div className="modal-box">
+                        <h3 className="font-bold text-lg">Pay to Supplier</h3>
+                        <form
+                            onSubmit={async (e) => {
+                                e.preventDefault();
+                                setIsLoading(true);
+                                const formData = new FormData(e.target as HTMLFormElement);
+                                const supplierData = {
+                                    accountLedgerId: formData.get("accountLedgerId"),
+                                    amount: formData.get("amount"),
+                                    supplierId: selectedSupplier?.id
+                                };
+
+                                try {
+                                    const res = await fetch(
+                                        "/api/suppliers/pay-amount",
+                                        {
+                                            method: "POST",
+                                            headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify(supplierData),
+                                        }
+                                    );
+
+                                    if (res.ok) {
+                                        toast.success("Payment Posted Successfully");
+                                        fetchSuppliers();
+                                    } else {
+                                        toast.error("Failed to Post Payment");
+                                    }
+                                } catch (error) {
+                                    toast.error("Error saving record: " + error);
+                                } finally {
+                                    setIsLoading(false);
+                                    setShowPayoutModal(false);
+                                    setAccountLedger("");
+                                    setSelectedSupplier(null);
+                                }
+                            }}
+                        >
+                            <label className="block my-2">Ledger Account:
+                                <select
+                                    name="accountLedgerId"
+                                    className="select select-bordered w-full"
+                                    value={accountLedger}
+                                    onChange={(e) => {
+                                        setAccountLedger(Number(e.target.value));
+                                    }}
+                                    required
+                                >
+                                    <option value="" disabled>Select Ledger</option>
+                                    {accountLedgers.map((al) => (
+                                        <option key={al.id} value={al.id}>{al.name}</option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label className="block my-2">Amount: <input name="amount" defaultValue={""} className="input input-bordered w-full" required
+                                onBlur={(e) => {
+                                    const amount = Number(e.target.value);
+                                    if (selectedSupplier?.payableAmount && selectedSupplier?.payableAmount < amount) {
+                                        toast.error("Amount cannot be geater than Payable Amount");
+                                        e.target.value = ""; e.target.focus();
+                                    }
+                                }}
+                            /></label>
+                            <div className="modal-action">
+                                <button type="submit" className="btn btn-primary" disabled={isLoading}>Save</button>
+                                <button type="button" className="btn" onClick={() => { setShowPayoutModal(false); setAccountLedger(""); setSelectedSupplier(null); }}>Cancel</button>
                             </div>
                         </form>
                     </div>

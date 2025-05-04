@@ -25,11 +25,11 @@ export default function LayoutProvider({ children }: { children: React.ReactNode
     }, [pathname]);
 
     return (
-        <div className="flex flex-col">
+        <div className="flex flex-col min-h-screen">
             <Navbar toggleSidebar={toggleSidebar} toggleMobileMenu={toggleMobileMenu} isSidebarExpanded={isSidebarExpanded} isMobileOpen={isMobileOpen} />
             <div className="flex flex-1">
                 <Sidebar isExpanded={isSidebarExpanded} isMobileOpen={isMobileOpen} setIsMobileOpen={() => setIsMobileOpen(false)} />
-                <main className="flex-1 p-6">
+                <main className="flex-1 p-6 pt-20 overflow-y-auto h-screen">
                     <Toaster />
                     {loading && <Loader />}
                     {children}</main>

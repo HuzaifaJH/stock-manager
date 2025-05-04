@@ -221,6 +221,7 @@ export default function SalesReturnPage() {
                     <thead>
                         <tr>
                             <th>#</th>
+                            <th>Ref no.</th>
                             <th>Customer Name</th>
                             <th className="cursor-pointer" onClick={handleSort}>
                                 Date {sortOrder === "asc" ? "↑" : "↓"}
@@ -233,6 +234,7 @@ export default function SalesReturnPage() {
                         {paginatedSalesReturn.map((salesReturn, index) => (
                             <tr key={salesReturn.id}>
                                 <td>{index + 1}</td>
+                                <td>SR#{salesReturn.id}</td>
                                 <td>{salesReturn.customerName}</td>
                                 <td>{new Date(salesReturn.date).toLocaleDateString("en-GB")}</td>
                                 <td>{salesReturn.totalPrice}</td>
@@ -328,7 +330,7 @@ export default function SalesReturnPage() {
                 <div className="modal modal-open flex items-center justify-center">
                     <div className="modal-box w-[90%] h-[90%] max-w-[90vw] max-h-[90vh] flex flex-col">
                         <h3 className="font-bold text-lg">
-                            {viewMode ? "View Sales Return" : selectedSaleReturn.id ? "Edit Sales Return" : "Add Sales Return"}
+                            {viewMode ? "View Sales Return" + " - SR#" + selectedSaleReturn.id : selectedSaleReturn.id ? "Edit Sales Return" + " - SR#" + selectedSaleReturn.id : "Add Sales Return"}
                         </h3>
 
                         <form onSubmit={handleSubmit} className="flex flex-col flex-grow">
