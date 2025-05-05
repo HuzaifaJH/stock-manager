@@ -5,12 +5,7 @@ import Product from "@/lib/models/Product";
 import SalesReturn from "@/lib/models/SalesReturn";
 import Transaction from "@/lib/models/Transaction";
 import JournalEntry from "@/lib/models/JournalEntry";
-
-interface SalesReturnItem {
-  productId: number;
-  quantity: number;
-  returnPrice: number;
-}
+import { _SalesReturnItem } from "@/app/utils/interfaces";
 
 export async function PUT(
   req: Request,
@@ -61,7 +56,7 @@ export async function PUT(
     // Recalculate and add new items
     let totalAmount = 0;
     // const salesReturnItems = await Promise.all(
-    items.map(async (item: SalesReturnItem) => {
+    items.map(async (item: _SalesReturnItem) => {
       const product = await Product.findByPk(item.productId, { transaction });
       if (!product) {
         await transaction.rollback();

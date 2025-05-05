@@ -5,50 +5,7 @@ import { SearchDropdown } from "@/components/search-dropdown";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiEye, FiPlusCircle, FiTrash2 } from "react-icons/fi";
-
-interface Product {
-    id: number;
-    name: string;
-    subCategoryId: number;
-    categoryId: number;
-    Category: Category;
-    SubCategory: Subcategory;
-    price: number | null;
-}
-
-interface Sales {
-    id: number;
-    date: string;
-    SalesItems?: salesItem[];
-    totalPrice?: number;
-    customerName: string;
-    isPaymentMethodCash: boolean;
-    discount: number | "";
-}
-
-interface salesItem {
-    productId: number | "";
-    categoryId: number | "";
-    subCategoryId: number | "";
-    quantity: number | null;
-    sellingPrice: number | null;
-    costPrice: number | null;
-    Product?: Product;
-    filteredSubcategories?: Subcategory[];
-    filteredProducts?: Product[];
-}
-
-interface Category {
-    id: number;
-    name: string;
-}
-
-interface Subcategory {
-    id: number;
-    name: string;
-    categoryId: number;
-    Category?: Category;
-}
+import { Category, Subcategory, Product, Sales, SalesItem } from '@/app/utils/interfaces';
 
 export default function SalesPage() {
 
@@ -60,7 +17,7 @@ export default function SalesPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
-    const [salesItems, setsalesItems] = useState<salesItem[]>([]);
+    const [salesItems, setsalesItems] = useState<SalesItem[]>([]);
     const [customerName, setCustomerName] = useState<string>("Walk-in Customer");
     const [date, setDate] = useState<string>(new Date().toISOString().split("T")[0]);
     const [isPaymentMethodCash, setIsPaymentMethodCash] = useState<boolean>(true);
@@ -136,7 +93,7 @@ export default function SalesPage() {
         setsalesItems([...salesItems, { productId: "", quantity: null, sellingPrice: null, costPrice: null, categoryId: "", subCategoryId: "" }]);
     };
 
-    const updateItem = (index: number, field: keyof salesItem, value: number | null) => {
+    const updateItem = (index: number, field: keyof SalesItem, value: number | null) => {
         const newItems = [...salesItems];
 
         // newItems[index][field] = value as never;

@@ -2,18 +2,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiTrash2 } from "react-icons/fi";
-
-interface Category {
-    id: number;
-    name: string;
-}
-
-interface Subcategory {
-    id: number;
-    name: string;
-    categoryId: number;
-    Category?: Category;
-}
+import { Category, Subcategory } from '@/app/utils/interfaces';
 
 export default function SubcategoriesPage() {
     const [subcategories, setSubcategories] = useState<Subcategory[]>([]);

@@ -2,24 +2,9 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
+import { LedgerEntries, LedgerAccount } from '@/app/utils/interfaces';
 // import jsPDF from "jspdf";
 // import html2canvas from "html2canvas";
-
-interface LedgerEntries {
-    id: number,
-    createdAt: string,
-    Transaction?: any,
-    LedgerAccount?: any,
-    description: string,
-    type: string,
-    amount: string,
-    ledgerId: number
-}
-
-interface LedgerAccounts {
-    id: number,
-    name: string
-}
 
 export default function JournalEntries() {
     const today = new Date();
@@ -27,7 +12,7 @@ export default function JournalEntries() {
     const formatDate = (date: Date) => date.toLocaleDateString("en-CA");
 
     const [ledgerEntries, setLedgerEntries] = useState([]);
-    const [accounts, setAccounts] = useState<LedgerAccounts[]>([]);
+    const [accounts, setAccounts] = useState<LedgerAccount[]>([]);
     const [filters, setFilters] = useState({
         dateFrom: formatDate(firstDayOfMonth),
         dateTo: formatDate(today), accountId: "", type: ""
@@ -67,7 +52,7 @@ export default function JournalEntries() {
                 <input type="date" className="input input-bordered" value={filters.dateTo} onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })} max={formatDate(new Date())} />
                 <select className="select select-bordered" value={filters.accountId} onChange={(e) => setFilters({ ...filters, accountId: e.target.value })}>
                     <option value="">All Accounts</option>
-                    {accounts.map((account: LedgerAccounts) => (
+                    {accounts.map((account: LedgerAccount) => (
                         <option key={account.id} value={account.id}>{account.name}</option>
                     ))}
                 </select>

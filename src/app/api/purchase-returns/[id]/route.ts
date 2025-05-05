@@ -5,12 +5,7 @@ import Transaction from "@/lib/models/Transaction";
 import JournalEntry from "@/lib/models/JournalEntry";
 import PurchaseReturn from "@/lib/models/PurchaseReturn";
 import PurchaseReturnItem from "@/lib/models/PurchaseReturnItem";
-
-interface PurchaseReturnItem {
-  productId: number;
-  quantity: number;
-  purchaseReturnPrice: number;
-}
+import { _PurchaseReturnItem } from "@/app/utils/interfaces";
 
 export async function PUT(
   req: Request,
@@ -20,7 +15,8 @@ export async function PUT(
   const transaction = await sequelize.transaction();
   try {
     const purchaseReturnId = Number(id);
-    const { supplierId, date, items, isPaymentMethodCash, reason } = await req.json();
+    const { supplierId, date, items, isPaymentMethodCash, reason } =
+      await req.json();
 
     const existingPurchaseReturn = await PurchaseReturn.findByPk(
       purchaseReturnId,
@@ -69,7 +65,7 @@ export async function PUT(
     );
 
     // Add new return items
-    items.map(async (item: PurchaseReturnItem) => {
+    items.map(async (item: _PurchaseReturnItem) => {
       const product = await Product.findByPk(item.productId, { transaction });
       // const product = await Product.findOne({
       //   where: { id: item.productId },
@@ -104,7 +100,7 @@ export async function PUT(
     });
 
     const oldTransaction = await Transaction.findOne({
-      where: { referenceId: "PR#"+purchaseReturnId, type: "Purchase Return" },
+      where: { referenceId: "PR#" + purchaseReturnId, type: "Purchase Return" },
       transaction,
     });
 
@@ -121,7 +117,7 @@ export async function PUT(
       {
         date,
         type: "Purchase Return",
-        referenceId: "PR#"+purchaseReturnId,
+        referenceId: "PR#" + purchaseReturnId,
         totalAmount,
       },
       { transaction }
@@ -202,7 +198,7 @@ export async function DELETE(
 
     // Delete journal entries and transaction
     const existingTransaction = await Transaction.findOne({
-      where: { type: "Purchase Return", referenceId: "PR#"+purchaseReturnId },
+      where: { type: "Purchase Return", referenceId: "PR#" + purchaseReturnId },
       transaction,
     });
 

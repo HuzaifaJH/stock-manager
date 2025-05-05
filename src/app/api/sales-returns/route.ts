@@ -7,12 +7,7 @@ import Transaction from "@/lib/models/Transaction";
 import JournalEntry from "@/lib/models/JournalEntry";
 import Category from "@/lib/models/Category";
 import SubCategory from "@/lib/models/SubCategory";
-
-interface SalesReturnItem {
-  productId: number;
-  quantity: number;
-  returnPrice: number;
-}
+import { _SalesReturnItem } from "@/app/utils/interfaces";
 
 // GET all sales
 export async function GET() {
@@ -104,7 +99,7 @@ export async function POST(req: Request) {
 
     let totalAmount = 0;
     const salesReturnItems = await Promise.all(
-      items.map(async (item: SalesReturnItem) => {
+      items.map(async (item: _SalesReturnItem) => {
         const product = await Product.findByPk(item.productId, { transaction });
         if (!product) {
           throw new Error("Product not found");

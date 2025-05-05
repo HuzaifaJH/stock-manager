@@ -1,23 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-type LedgerEntries = {
-    id: number;
-    amount: number;
-    type: "Debit" | "Credit";
-    createdAt: string;
-    ledgerId: number;
-    LedgerAccount: {
-        id: number;
-        name: string;
-        AccountGroup: {
-            id: number;
-            name: string;
-            accountType: number; // 1 = Asset, 2 = Liability, 3 = Equity
-        };
-    };
-};
+import { LedgerEntries } from '@/app/utils/interfaces';
 
 const accountTypes = [
     { code: 1, account: "Asset" },

@@ -2,43 +2,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiTrash2 } from "react-icons/fi";
-
-interface Product {
-    id: number;
-    name: string;
-    stock: number;
-    categoryId: number;
-    subCategoryId: number;
-    Category: Category;
-    SubCategory: Subcategory;
-    price: number;
-}
-
-interface Category {
-    id: number;
-    name: string;
-}
-
-interface Subcategory {
-    id: number;
-    name: string;
-    categoryId: number;
-}
-
-interface ProductSort {
-    name: string;
-    stock: number;
-    category: string;
-    SubCategory: Subcategory;
-    price: number;
-}
-
-interface Transaction {
-    date: string;
-    type: string;
-    quantity: number;
-    price: number;
-}
+import { Category, Subcategory, Product, ProductSort, Transaction } from '@/app/utils/interfaces';
 
 export default function ProductList() {
     const [products, setProducts] = useState<Product[]>([]);
@@ -477,7 +441,7 @@ export default function ProductList() {
                                     {productRecords.length > 0 ? productRecords.map((tx, idx) => (
                                         <tr key={idx}>
                                             <td className="flex items-center gap-2">
-                                                {tx.type === "purchase" ? (
+                                                {tx.type === "Purchase" ? (
                                                     <span className="">Purchase</span>
                                                 ) : (
                                                     <span className="">Sale</span>
@@ -486,7 +450,7 @@ export default function ProductList() {
                                             <td>{new Date(tx.date).toLocaleDateString()}</td>
                                             <td>{tx.price}</td>
                                             <td className="text-right">
-                                                {tx.type === "purchase" ? (
+                                                {tx.type === "Purchase" ? (
                                                     <span className="text-green-600">+ {tx.quantity} pcs.</span>
                                                 ) : (
                                                     <span className="text-red-600">- {tx.quantity} pcs.</span>

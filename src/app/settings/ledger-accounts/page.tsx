@@ -1,25 +1,18 @@
 "use client";
 import { accountTypes } from "@/app/utils/accountType";
+import { AccountGroup, LedgerAccount } from "@/app/utils/interfaces";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiEdit, FiTrash2, FiArrowLeftCircle, FiArrowRightCircle } from "react-icons/fi";
 
-interface LedgerAccount {
-    id: number;
-    name: string;
-    accountGroup: number | "";
-    code: string;
-    // balance: number;
-    AccountGroup?: AccountGroup;
-    accountType: number | "";
-}
-
-interface AccountGroup {
-    id: number,
-    name: string;
-    accountType: number;
-    accountTypeName: string;
-}
+// interface LedgerAccount {
+//     id: number;
+//     name: string;
+//     accountGroup: number | "";
+//     code: string;
+//     AccountGroup?: AccountGroup;
+//     accountType: number | "";
+// }
 
 export default function LedgerAccounts() {
     const [ledgerAccounts, setLedgerAccounts] = useState<LedgerAccount[]>([]);

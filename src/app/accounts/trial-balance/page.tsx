@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { accountTypes } from "@/app/utils/accountType";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { LedgerAccount, LedgerEntries } from '@/app/utils/interfaces';
 
 export default function TrialBalancePage() {
 
@@ -10,7 +11,7 @@ export default function TrialBalancePage() {
     const formatDate = (date: Date) => date.toLocaleDateString("en-CA");
 
     const [ledgerEntries, setLedgerEntries] = useState<LedgerEntries[]>([]);
-    const [ledgerAccounts, setLedgerAccounts] = useState<LedgerAccounts[]>([]);
+    const [ledgerAccounts, setLedgerAccounts] = useState<LedgerAccount[]>([]);
     const [filters, setFilters] = useState({
         dateFrom: formatDate(firstDayOfMonth),
         dateTo: formatDate(today),
@@ -146,22 +147,3 @@ export default function TrialBalancePage() {
         </div>
     );
 }
-
-type LedgerEntries = {
-    id: number;
-    ledgerId: number;
-    type: 'Debit' | 'Credit';
-    amount: number;
-    createdAt: string;
-};
-
-type LedgerAccounts = {
-    id: number;
-    name: string;
-    accountGroup: number;
-    AccountGroup?: {
-        id: number;
-        name: string;
-        accountType: number;
-    };
-};

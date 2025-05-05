@@ -4,53 +4,7 @@ import { SearchDropdown } from "@/components/search-dropdown";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiEye, FiPlusCircle, FiTrash2 } from "react-icons/fi";
-
-interface Supplier {
-    id: number;
-    name: string;
-}
-
-interface Product {
-    id: number;
-    name: string;
-    subCategoryId: number;
-    categoryId: number;
-    Category: Category;
-    SubCategory: Subcategory;
-}
-
-interface Purchase {
-    PurchaseItems?: PurchaseItem[];
-    totalPrice?: number;
-    id: number;
-    supplierId: number | "";
-    date: string;
-    Supplier?: { name: string };
-    isPaymentMethodCash: boolean;
-}
-
-interface PurchaseItem {
-    productId: number | "";
-    categoryId: number | "";
-    subCategoryId: number | "";
-    quantity: number | null;
-    purchasePrice: number | null;
-    Product?: Product;
-    filteredSubcategories?: Subcategory[];
-    filteredProducts?: Product[];
-}
-
-interface Category {
-    id: number;
-    name: string;
-}
-
-interface Subcategory {
-    id: number;
-    name: string;
-    categoryId: number;
-    Category?: Category;
-}
+import { Category, Subcategory, Product, Supplier, Purchase, PurchaseItem } from '@/app/utils/interfaces';
 
 export default function PurchasesPage() {
 
@@ -335,7 +289,7 @@ export default function PurchasesPage() {
                 <div className="modal modal-open flex items-center justify-center">
                     <div className="modal-box w-[90%] h-[90%] max-w-[90vw] max-h-[90vh] flex flex-col">
                         <h3 className="font-bold text-lg">
-                            {viewMode ? "View Purchase" + " - P#" +selectedPurchase.id : selectedPurchase.id ? "Edit Purchase" + " - P#" +selectedPurchase.id : "Add Purchase"}
+                            {viewMode ? "View Purchase" + " - P#" + selectedPurchase.id : selectedPurchase.id ? "Edit Purchase" + " - P#" + selectedPurchase.id : "Add Purchase"}
                         </h3>
 
                         <form onSubmit={handleSubmit} className="flex flex-col flex-grow">

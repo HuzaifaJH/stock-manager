@@ -7,12 +7,6 @@ import PurchaseItem from "@/lib/models/PurchaseItem";
 import Transaction from "@/lib/models/Transaction";
 import JournalEntry from "@/lib/models/JournalEntry";
 
-interface PurchaseItem {
-  productId: number;
-  quantity: number;
-  purchasePrice: number;
-}
-
 // GET: Fetch a single purchase by ID
 export async function GET(
   req: Request,

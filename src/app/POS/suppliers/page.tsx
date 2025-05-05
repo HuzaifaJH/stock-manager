@@ -3,19 +3,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiTrash2 } from "react-icons/fi";
 import { TbCreditCardPay } from "react-icons/tb";
-
-interface Supplier {
-    id: number;
-    name: string;
-    phoneNumber: string;
-    payableAmount: number;
-}
-
-interface LedgerAccount {
-    id: number;
-    name: string;
-}
-
+import { LedgerAccount, Supplier } from '@/app/utils/interfaces';
 
 export default function SuppliersPage() {
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);

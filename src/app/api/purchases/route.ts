@@ -8,12 +8,13 @@ import Transaction from "@/lib/models/Transaction";
 import JournalEntry from "@/lib/models/JournalEntry";
 import Category from "@/lib/models/Category";
 import SubCategory from "@/lib/models/SubCategory";
+import { _PurchaseItem } from "@/app/utils/interfaces";
 
-interface PurchaseItem {
-  productId: number;
-  quantity: number;
-  purchasePrice: number;
-}
+// interface PurchaseItem {
+//   productId: number;
+//   quantity: number;
+//   purchasePrice: number;
+// }
 
 export async function GET() {
   try {
@@ -124,7 +125,7 @@ export async function POST(req: Request) {
 
     // Create the related purchase items
     const purchaseItems = await Promise.all(
-      items.map(async (item: PurchaseItem) => {
+      items.map(async (item: _PurchaseItem) => {
         const purchaseItem = await PurchaseItem.create(
           {
             purchaseId: newPurchase.getDataValue("id"),

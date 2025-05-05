@@ -5,13 +5,7 @@ import Sales from "@/lib/models/Sales";
 import { sequelize } from "@/lib/sequelize";
 import Transaction from "@/lib/models/Transaction";
 import JournalEntry from "@/lib/models/JournalEntry";
-
-interface SalesItem {
-  productId: number;
-  quantity: number;
-  sellingPrice: number;
-  costPrice: number;
-}
+import { _SalesItem } from "@/app/utils/interfaces";
 
 // GET a single sales by ID
 export async function GET(
@@ -83,7 +77,7 @@ export async function PUT(
     // Recreate sales items
     let totalAmount = 0;
     const newSalesItems = await Promise.all(
-      items.map(async (item: SalesItem) => {
+      items.map(async (item: _SalesItem) => {
         const product = await Product.findByPk(item.productId, { transaction });
         if (!product) {
           await transaction.rollback();

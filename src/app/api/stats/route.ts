@@ -9,29 +9,32 @@ import {
 } from "@/lib/models";
 import { NextResponse } from "next/server";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const groupBy = searchParams.get("groupBy");
 
-    const now = dayjs();
+    dayjs.extend(utc);
+
+    const now = dayjs().utc();
     let startDate: dayjs.Dayjs;
     const date = new Date();
     const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
     let dateFormat: string;
 
     switch (groupBy) {
-      case "day":
-        startDate = now.startOf("day");
-        dateFormat = "%Y-%m-%d %H:00"; // group by hour
-        break;
+      // case "day":
+      //   startDate = now.startOf("day");
+      //   dateFormat = "%Y-%m-%d %H:00"; // group by hour
+      //   break;
       case "week":
         startDate = now.startOf("week");
         dateFormat = "%Y-%m-%d"; // group by day
         break;
       case "month":
-        startDate = now.startOf("month");
+        startDate = now.utc().startOf("month");
         dateFormat = "%Y-%m-%d"; // group by day
         break;
       case "year":
@@ -137,7 +140,7 @@ export async function GET(req: Request) {
           attributes: ["sellingPrice", "quantity", "costPrice"],
         },
       ],
-      where: { date: { [Op.gte]: startDate } },
+      where: { date: { [Op.gte]: startDate.toDate() } },
       attributes: ["discount", "date"],
     })) as unknown as {
       discount: number;
@@ -183,7 +186,7 @@ export async function GET(req: Request) {
           attributes: ["returnPrice", "quantity"],
         },
       ],
-      where: { date: { [Op.gte]: startDate } },
+      where: { date: { [Op.gte]: startDate.toDate() } },
       attributes: ["date"],
     })) as unknown as {
       date: string;
@@ -219,13 +222,13 @@ export async function GET(req: Request) {
 
     const formattedLabels = labels.map((label) => {
       switch (groupBy) {
-        case "day":
-          return dayjs(label).format("MMM D, hA"); // e.g. "May 1, 3PM"
+        // case "day":
+        //   return dayjs(label).format("MMM D, hA");
         case "week":
         case "month":
-          return dayjs(label).format("MMM D"); // e.g. "May 1"
+          return dayjs(label).format("MMM D");
         case "year":
-          return dayjs(label).format("MMM"); // e.g. "May"
+          return dayjs(label).format("MMM");
         default:
           return label;
       }

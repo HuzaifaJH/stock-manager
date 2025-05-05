@@ -8,12 +8,7 @@ import Transaction from "@/lib/models/Transaction";
 import JournalEntry from "@/lib/models/JournalEntry";
 import Category from "@/lib/models/Category";
 import SubCategory from "@/lib/models/SubCategory";
-
-interface PurchaseReturnItem {
-  productId: number;
-  quantity: number;
-  purchaseReturnPrice: number;
-}
+import { _PurchaseReturnItem } from "@/app/utils/interfaces";
 
 export async function GET() {
   try {
@@ -120,7 +115,7 @@ export async function POST(req: Request) {
 
     // Create the related purchase return items
     const purchaseReturnItems = await Promise.all(
-      items.map(async (item: PurchaseReturnItem) => {
+      items.map(async (item: _PurchaseReturnItem) => {
         const product = await Product.findByPk(item.productId, { transaction });
         if (!product) {
           throw new Error("Product not found");

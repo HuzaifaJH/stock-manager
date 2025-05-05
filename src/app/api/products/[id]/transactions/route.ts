@@ -20,13 +20,13 @@ export async function GET(
 
     const transactions = [
       ...purchaseItems.map((item) => ({
-        type: "purchase",
+        type: "Purchase",
         quantity: item.getDataValue("quantity"),
         date: item.getDataValue("Purchase").date,
         price: item.getDataValue("purchasePrice"),
       })),
       ...salesItems.map((item) => ({
-        type: "sale",
+        type: "Sale",
         quantity: item.getDataValue("quantity"),
         date: item.getDataValue("Sale").date,
         price: item.getDataValue("sellingPrice"),

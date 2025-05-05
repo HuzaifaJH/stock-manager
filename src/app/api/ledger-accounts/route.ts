@@ -3,14 +3,6 @@ import LedgerAccount from "@/lib/models/LedgerAccount";
 import AccountGroup from "@/lib/models/AccountGroup";
 import { accountTypes } from "@/app/utils/accountType";
 
-interface LedgerAccount {
-  toJSON: () => any;
-  AccountGroup: {
-    toJSON: () => any;
-    accountType: number;
-  };
-}
-
 // GET all ledger accounts
 export async function GET() {
   try {

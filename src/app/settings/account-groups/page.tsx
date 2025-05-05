@@ -3,14 +3,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiEdit, FiTrash2, FiArrowLeftCircle, FiArrowRightCircle } from "react-icons/fi";
 import { accountTypes } from "@/app/utils/accountType";
-
-interface AccountGroup {
-    id: number;
-    name: string;
-    accountType: number | null;
-    code: number | null;
-    accountTypeName?: string;
-}
+import { AccountGroup } from "@/app/utils/interfaces";
 
 export default function AccountGroups() {
     const [accountGroups, setAccountGroups] = useState<AccountGroup[]>([]);
@@ -92,7 +85,7 @@ export default function AccountGroups() {
         <div className="p-6">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Account Groups</h2>
-                <button className="btn btn-primary" onClick={() => setSelectedAccountGroup({ id: 0, name: "", accountType: null, code: null })}>
+                <button className="btn btn-primary" onClick={() => setSelectedAccountGroup({ id: 0, name: "", accountType: 0, code: null })}>
                     Add Account Group
                 </button>
             </div>

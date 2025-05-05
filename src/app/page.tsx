@@ -95,11 +95,11 @@ export default function Dashboard() {
   };
 
   return (
-    <main className="p-6">
-      <div className="w-full px-4 p-6 space-y-6">
+    <main className="p-4 sm:p-6">
+      <div className="w-full space-y-6">
 
         {/* Top row boxes */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           <div className="stats bg-base-100 shadow">
             <div className="stat">
               <div className="stat-title">Monthly Sales</div>
@@ -129,14 +129,14 @@ export default function Dashboard() {
         </div>
 
         {/* Bottom row */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
           {/* Sales & Profit Chart */}
-          <div className="bg-base-100 p-4 rounded shadow">
+          <div className="bg-base-100 p-4 rounded shadow min-h-[300px]">
             <div className="flex justify-between items-center mb-2">
               <h2 className="text-lg font-semibold">Sales & Profit</h2>
               <select className="select select-sm select-bordered" value={filter} onChange={(e) => setFilter(e.target.value)}>
-                <option value="day">Day</option>
+                {/* <option value="day">Day</option> */}
                 <option value="week">Week</option>
                 <option value="month">Month</option>
                 <option value="year">Year</option>
@@ -146,7 +146,7 @@ export default function Dashboard() {
           </div>
 
           {/* Low Stock Products Table */}
-          <div className="bg-base-100 p-4 rounded shadow">
+          <div className="bg-base-100 p-4 rounded shadow min-h-[300px]">
             <h2 className="text-lg font-semibold mb-2">Low Stock Products</h2>
 
             {/* Subcategory Filter Dropdown */}
@@ -194,7 +194,7 @@ export default function Dashboard() {
 
 
           {/* Top Selling Products */}
-          <div className="bg-base-100 p-4 rounded shadow">
+          <div className="bg-base-100 p-4 rounded shadow min-h-[300px]">
             <h2 className="text-lg font-semibold mb-2">Top Selling (This Month)</h2>
             <div className="overflow-y-auto max-h-64 space-y-1">
               {topSellingProducts.length > 0 ? (

@@ -4,39 +4,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiEye, FiPlusCircle, FiTrash2 } from "react-icons/fi";
 import { accountTypes } from "@/app/utils/accountType";
-interface Transaction {
-    id: number;
-    date: string;
-    type: "Sale" | "Purchase" | "Sales Return" | "Purchase Return" | "Manual Entry" | "";
-    referenceId: string | null;
-    totalAmount: number | null;
-    JournalEntries?: JournalEntry[];
-}
-
-interface JournalEntry {
-    ledgerId: number | "";
-    description: string | null;
-    amount: number | null;
-    type: "Debit" | "Credit" | "";
-    LedgerAccount?: LedgerAccount
-    accountGroup: number | "";
-    accountType: number | "";
-    filteredAccountGroups?: AccountGroup[];
-    filteredLedgerAccount?: LedgerAccount[];
-}
-
-interface LedgerAccount {
-    id: number;
-    name: string;
-    accountGroup: number;
-    AccountGroup: AccountGroup;
-}
-
-interface AccountGroup {
-    id: number;
-    name: string;
-    accountType: number;
-}
+import { AccountGroup, JournalEntry, LedgerAccount, Transaction } from '@/app/utils/interfaces';
 
 export default function TransactionsPage() {
 
@@ -444,7 +412,7 @@ export default function TransactionsPage() {
                                         <tr key={index}>
                                             <td className="p-2">
                                                 {viewMode ? (
-                                                    <span>{accountTypes.find((at) => at.code == item.LedgerAccount?.AccountGroup.accountType)?.account || "N/A"}</span>
+                                                    <span>{accountTypes.find((at) => at.code == item.LedgerAccount?.AccountGroup?.accountType)?.account || "N/A"}</span>
                                                 ) : (
                                                     <select
                                                         className="select select-bordered w-full"
@@ -465,7 +433,7 @@ export default function TransactionsPage() {
                                             </td>
                                             <td className="p-2">
                                                 {viewMode ? (
-                                                    <span>{item.LedgerAccount?.AccountGroup.name || "N/A"}</span>
+                                                    <span>{item.LedgerAccount?.AccountGroup?.name || "N/A"}</span>
                                                 ) : (
                                                     <select
                                                         className="select select-bordered w-full"

@@ -4,48 +4,7 @@ import { SearchDropdown } from "@/components/search-dropdown";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiEye, FiPlusCircle, FiTrash2 } from "react-icons/fi";
-
-interface Product {
-    id: number;
-    name: string;
-    subCategoryId: number;
-    categoryId: number;
-    Category: Category;
-    SubCategory: Subcategory;
-}
-
-interface SalesReturn {
-    id: number;
-    date: string;
-    SalesReturnItems?: salesReturnItem[];
-    totalPrice?: number;
-    customerName: string;
-    isPaymentMethodCash: boolean;
-    reason: string;
-}
-
-interface salesReturnItem {
-    productId: number | "";
-    categoryId: number | "";
-    subCategoryId: number | "";
-    quantity: number | null;
-    returnPrice: number | null;
-    Product?: Product;
-    filteredSubcategories?: Subcategory[];
-    filteredProducts?: Product[];
-}
-
-interface Category {
-    id: number;
-    name: string;
-}
-
-interface Subcategory {
-    id: number;
-    name: string;
-    categoryId: number;
-    Category?: Category;
-}
+import { Category, Subcategory, Product, SalesReturn, SalesReturnItem } from '@/app/utils/interfaces';
 
 export default function SalesReturnPage() {
 
@@ -57,7 +16,7 @@ export default function SalesReturnPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
-    const [salesReturnItems, setsalesReturnItems] = useState<salesReturnItem[]>([]);
+    const [salesReturnItems, setsalesReturnItems] = useState<SalesReturnItem[]>([]);
     const [customerName, setCustomerName] = useState<string>("");
     const [reason, setReason] = useState<string>("");
     const [date, setDate] = useState<string>(new Date().toISOString().split("T")[0]);
@@ -133,7 +92,7 @@ export default function SalesReturnPage() {
         setsalesReturnItems([...salesReturnItems, { productId: "", quantity: null, returnPrice: null, categoryId: "", subCategoryId: "" }]);
     };
 
-    const updateItem = (index: number, field: keyof salesReturnItem, value: number | null) => {
+    const updateItem = (index: number, field: keyof SalesReturnItem, value: number | null) => {
         const newItems = [...salesReturnItems];
 
         // newItems[index][field] = value as never;

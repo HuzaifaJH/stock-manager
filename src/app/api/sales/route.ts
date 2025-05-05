@@ -7,13 +7,7 @@ import Transaction from "@/lib/models/Transaction";
 import JournalEntry from "@/lib/models/JournalEntry";
 import Category from "@/lib/models/Category";
 import SubCategory from "@/lib/models/SubCategory";
-
-interface SalesItem {
-  productId: number;
-  quantity: number;
-  sellingPrice: number;
-  costPrice: number;
-}
+import { _SalesItem } from "@/app/utils/interfaces";
 
 class CustomError extends Error {
   constructor(message: string) {
@@ -115,7 +109,7 @@ export async function POST(req: Request) {
     let totalAmount = 0;
 
     const salesItems = await Promise.all(
-      items.map(async (item: SalesItem) => {
+      items.map(async (item: _SalesItem) => {
         const product = await Product.findByPk(item.productId, { transaction });
         if (!product) {
           throw new CustomError("Product not found");
