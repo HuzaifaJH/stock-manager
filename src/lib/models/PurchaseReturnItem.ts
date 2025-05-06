@@ -12,7 +12,7 @@ const PurchaseReturnItem = sequelize.define("PurchaseReturnItem", {
     allowNull: false,
   },
   quantity: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.FLOAT,
     allowNull: false,
   },
   purchaseReturnPrice: {

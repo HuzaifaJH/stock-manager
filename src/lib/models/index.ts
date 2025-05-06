@@ -15,6 +15,7 @@ import Transaction from "./Transaction";
 import SubCategory from "./SubCategory";
 import SalesReturnItem from "./SalesReturnItem";
 import PurchaseReturnItem from "./PurchaseReturnItem";
+import Expense from "./Expense";
 
 export {
   sequelize,
@@ -34,4 +35,5 @@ export {
   LedgerAccount,
   Transaction,
   JournalEntry,
+  Expense,
 };

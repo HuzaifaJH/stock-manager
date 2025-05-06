@@ -21,6 +21,7 @@ export default function AccountGroups() {
         try {
             const res = await fetch("/api/account-groups");
             const data = await res.json();
+            console.log(data)
             setAccountGroups(data);
         } catch (error) {
             console.error("Error fetching account groups: ", error);

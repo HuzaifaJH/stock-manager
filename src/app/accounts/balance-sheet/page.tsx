@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { LedgerEntries } from '@/app/utils/interfaces';
 
-const accountTypes = [
-    { code: 1, account: "Asset" },
-    { code: 2, account: "Liability" },
-    { code: 3, account: "Equity" },
-];
+// const accountTypes = [
+//     { code: 1, account: "Asset" },
+//     { code: 2, account: "Liability" },
+//     { code: 3, account: "Equity" },
+// ];
 
 export default function BalanceSheet() {
     const today = new Date();
@@ -55,15 +55,16 @@ export default function BalanceSheet() {
         }
     });
 
-    const assets = Object.entries(grouped).filter(([_, d]) => d.type === 1);
-    const liabilities = Object.entries(grouped).filter(([_, d]) => d.type === 2);
-    const equity = Object.entries(grouped).filter(([_, d]) => d.type === 3);
+    const assets = Object.entries(grouped).filter(([, d]) => d.type === 1);
+    const liabilities = Object.entries(grouped).filter(([, d]) => d.type === 2);
+    const equity = Object.entries(grouped).filter(([, d]) => d.type === 3);
 
     const calcBalance = (debit: number, credit: number) => debit - credit;
 
-    const totalAssets = assets.reduce((sum, [_, d]) => sum + calcBalance(d.debit, d.credit), 0);
-    const totalLiabilities = liabilities.reduce((sum, [_, d]) => sum + calcBalance(d.credit, d.debit), 0);
-    const totalEquity = equity.reduce((sum, [_, d]) => sum + calcBalance(d.credit, d.debit), 0);
+    const totalAssets = assets.reduce((sum, [, d]) => sum + calcBalance(d.debit, d.credit), 0);
+    const totalLiabilities = liabilities.reduce((sum, [, d]) => sum + calcBalance(d.credit, d.debit), 0);
+    const totalEquity = equity.reduce((sum, [, d]) => sum + calcBalance(d.credit, d.debit), 0);
+
 
     const totalLiabilitiesAndEquity = totalLiabilities + totalEquity;
 

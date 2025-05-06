@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiEye, FiPlusCircle, FiTrash2 } from "react-icons/fi";
+import { FiArrowLeftCircle, FiArrowRightCircle, FiEye, FiPlusCircle, FiTrash2 } from "react-icons/fi";
 import { accountTypes } from "@/app/utils/accountType";
 import { AccountGroup, JournalEntry, LedgerAccount, Transaction } from '@/app/utils/interfaces';
 
@@ -21,7 +21,7 @@ export default function TransactionsPage() {
     const [ledgerAccount, setLedgerAccount] = useState<LedgerAccount[]>([]);
     // const [transactionType, setTransactionType] = useState<string | "">("Manual Entry");
 
-    const fixTransactionTypes = ["Sale", "Purchase", "Sales Return", "Purchase Return"];
+    // const fixTransactionTypes = ["Sale", "Purchase", "Sales Return", "Purchase Return"];
 
 
     const fetchTransactions = async () => {
@@ -51,23 +51,23 @@ export default function TransactionsPage() {
         fetchTransactions();
     }, []);
 
-    const handleDelete = async (id: number) => {
-        if (!confirm("Are you sure you want to delete this transaction?")) return;
-        setIsLoading(true);
-        try {
-            const res = await fetch(`/api/transactions/${id}`, { method: "DELETE" });
-            if (res.ok) {
-                toast.success("Transaction deleted successfully");
-                fetchTransactions();
-            } else {
-                toast.error("Failed to delete transaction");
-            }
-        } catch (error) {
-            toast.error("Error deleting transaction: " + error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    // const handleDelete = async (id: number) => {
+    //     if (!confirm("Are you sure you want to delete this transaction?")) return;
+    //     setIsLoading(true);
+    //     try {
+    //         const res = await fetch(`/api/transactions/${id}`, { method: "DELETE" });
+    //         if (res.ok) {
+    //             toast.success("Transaction deleted successfully");
+    //             fetchTransactions();
+    //         } else {
+    //             toast.error("Failed to delete transaction");
+    //         }
+    //     } catch (error) {
+    //         toast.error("Error deleting transaction: " + error);
+    //     } finally {
+    //         setIsLoading(false);
+    //     }
+    // };
 
     const handleSort = () => {
         setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -144,7 +144,8 @@ export default function TransactionsPage() {
         }
     };
 
-    const calculateTotalAmount = () => {
+    // Memoize calculateTotalAmount with useCallback
+    const calculateTotalAmount = useCallback(() => {
         const totalDebit = journalEntries
             .filter(entry => entry.type === "Debit")
             .reduce((sum, entry) => sum + (entry.amount || 0), 0);
@@ -154,12 +155,13 @@ export default function TransactionsPage() {
             .reduce((sum, entry) => sum + (entry.amount || 0), 0);
 
         return totalDebit === totalCredit ? totalDebit : null;
-    };
+    }, [journalEntries]); // Recalculate only when journalEntries change
 
     useEffect(() => {
         const newTotal = calculateTotalAmount();
         setSelectedTransaction(prev => prev ? { ...prev, totalAmount: newTotal ?? null } : prev);
-    }, [journalEntries]);
+    }, [journalEntries, calculateTotalAmount]); // Re-run effect when journalEntries or calculateTotalAmount change
+
 
     const handleAccountTypeChange = (index: number, accountType: number) => {
         const newItems = [...journalEntries];

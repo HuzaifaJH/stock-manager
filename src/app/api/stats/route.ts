@@ -6,6 +6,7 @@ import {
   SalesItem,
   SalesReturn,
   SalesReturnItem,
+  Expense,
 } from "@/lib/models";
 import { NextResponse } from "next/server";
 import dayjs from "dayjs";
@@ -55,7 +56,13 @@ export async function GET(req: Request) {
       group: ["productId"],
       order: [[Sequelize.fn("SUM", Sequelize.col("quantity")), "DESC"]],
       limit: 10,
-      include: [{ model: Product, attributes: ["name"] }],
+      include: [
+        {
+          model: Product,
+          attributes: ["name"],
+          include: [{ model: SubCategory, attributes: ["id", "name"] }],
+        },
+      ],
     });
 
     // Low on Stock Products
@@ -130,6 +137,12 @@ export async function GET(req: Request) {
 
     totalSales = parseFloat(totalSales.toFixed(2));
     totalProfit = parseFloat(totalProfit.toFixed(2));
+
+    const expenses = (await Expense.findAll({
+      where: { date: { [Op.gte]: firstDayOfMonth } },
+    })) as unknown as { amount: number }[];
+
+    const totalExpense = expenses.reduce((sum, item) => sum + item.amount, 0);
 
     // Chart Data
     // Fetch and group sales
@@ -244,6 +257,7 @@ export async function GET(req: Request) {
       totalOrders: salesData.length,
       totalSales,
       totalProfit,
+      totalExpense,
       topSellingProducts,
       lowStockProducts,
       chartData: { labels: formattedLabels, sales, profit },

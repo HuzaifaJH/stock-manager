@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import LedgerAccount from "@/lib/models/LedgerAccount";
+import LedgerAccountModel from "@/lib/models/LedgerAccount";
 import AccountGroup from "@/lib/models/AccountGroup";
 import { accountTypes } from "@/app/utils/accountType";
+import { LedgerAccount } from "@/app/utils/interfaces";
 
 // GET all ledger accounts
 export async function GET() {
   try {
-    const ledgerAccounts = await LedgerAccount.findAll({
+    const ledgerAccounts = await LedgerAccountModel.findAll({
       include: {
         model: AccountGroup,
         attributes: ["accountType", "name"],
@@ -14,13 +15,10 @@ export async function GET() {
     });
 
     const ledgerAccountsWithTypeName = ledgerAccounts.map((group) => {
-      const json = group.toJSON() as {
-        AccountGroup: { accountType: number };
-        [key: string]: any;
-      };
+      const json = group.toJSON() as LedgerAccount;
 
       const accountType = accountTypes.find(
-        (type) => type.code === json.AccountGroup.accountType
+        (type) => type.code === json.AccountGroup?.accountType
       );
 
       return {
@@ -56,7 +54,7 @@ export async function POST(req: Request) {
     }
 
     // Generate next code for ledger in the group
-    const existingLedgers = await LedgerAccount.findAll({
+    const existingLedgers = await LedgerAccountModel.findAll({
       where: { accountGroup },
     });
 
@@ -65,7 +63,7 @@ export async function POST(req: Request) {
       .toString()
       .padStart(3, "0")}`;
 
-    const newLedger = await LedgerAccount.create({
+    const newLedger = await LedgerAccountModel.create({
       name,
       accountGroup,
       code,

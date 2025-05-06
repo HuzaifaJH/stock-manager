@@ -23,11 +23,14 @@ body {
 /* To remove number input arrows */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
-    appearance: none;
-    margin: 0;
+  appearance: none;
+  margin: 0;
 }
 
-input:focus, select:focus, textarea:focus, button:focus {
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
   outline: none !important;
   box-shadow: none !important;
 }
@@ -37,7 +40,8 @@ input:focus, select:focus, textarea:focus, button:focus {
     visibility: hidden;
   }
 
-  #print-area, #print-area * {
+  #print-area,
+  #print-area * {
     visibility: visible;
   }
 
@@ -56,4 +60,15 @@ input:focus, select:focus, textarea:focus, button:focus {
 
 .td-bordered {
   @apply border-r border-base-300 last:border-r-0;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }

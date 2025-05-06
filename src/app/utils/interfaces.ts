@@ -11,6 +11,15 @@ export interface Category {
   name: string;
 }
 
+export interface Expense {
+  id: number;
+  expenseLedgerAccount: number;
+  date: string;
+  amount: number;
+  description: string;
+  LedgerAccount?: LedgerAccount;
+}
+
 export interface JournalEntry {
   ledgerId: number | "";
   description: string | null;
@@ -48,7 +57,7 @@ export interface LedgerEntries {
       accountType: number;
     };
   };
-  Transaction?: any;
+  Transaction: Transaction;
 }
 
 export interface Product {
@@ -118,7 +127,7 @@ export interface Sales {
   date: string;
   customerName: string;
   isPaymentMethodCash: boolean;
-  discount: number | "";
+  discount: number;
   totalPrice?: number;
   SalesItems?: SalesItem[];
 }
@@ -171,6 +180,10 @@ export interface Supplier {
 }
 
 export interface Transaction {
+  dataValues?: {
+    purchaseDetails: Purchase;
+  };
+  refId?: number;
   id?: number;
   date: string;
   type:
@@ -179,12 +192,14 @@ export interface Transaction {
     | "Sales Return"
     | "Purchase Return"
     | "Manual Entry"
+    | "Expense"
     | "";
   referenceId: string | null;
   totalAmount: number | null;
   JournalEntries?: JournalEntry[];
   quantity?: number;
   price?: number;
+  purchaseDetails?: Purchase;
 }
 
 export interface _PurchaseItem {

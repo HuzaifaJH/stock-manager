@@ -1,7 +1,7 @@
 "use client";
 import { accountTypes } from "@/app/utils/accountType";
 import { AccountGroup, LedgerAccount } from "@/app/utils/interfaces";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiEdit, FiTrash2, FiArrowLeftCircle, FiArrowRightCircle } from "react-icons/fi";
 
@@ -30,10 +30,20 @@ export default function LedgerAccounts() {
         fetchAccountGroups();
     }, []);
 
-    useEffect(() => {
+    // useEffect(() => {
+    //     const filtered = accountGroups.filter(group => group.accountType == selectedAccountType);
+    //     setFilteredGroups(filtered);
+    // }, [selectedAccountType]);
+
+    // Memoize the filtering logic with useCallback
+    const filterAccountGroups = useCallback(() => {
         const filtered = accountGroups.filter(group => group.accountType == selectedAccountType);
         setFilteredGroups(filtered);
-    }, [selectedAccountType]);
+    }, [accountGroups, selectedAccountType]); // Re-run the filter when either accountGroups or selectedAccountType changes
+
+    useEffect(() => {
+        filterAccountGroups(); // Call the memoized function inside useEffect
+    }, [filterAccountGroups]); // Re-run useEffect when filterAccountGroups changes
 
     const fetchLedgerAccounts = async () => {
         setIsLoading(true);

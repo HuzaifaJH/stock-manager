@@ -12,7 +12,7 @@ const PurchaseItem = sequelize.define("PurchaseItem", {
     allowNull: false,
   },
   quantity: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.FLOAT,
     allowNull: false,
   },
   purchasePrice: {

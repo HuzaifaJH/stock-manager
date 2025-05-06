@@ -29,7 +29,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, isMobileOpen, setIsMobile
         <>
             {/* Sidebar */}
             <div
-                className={`fixed md:relative transition-all duration-300 h-screen z-40 overflow-y-auto pt-15 
+                className={`fixed md:relative transition-all duration-300 h-screen z-40 overflow-y-auto no-scrollbar pt-15 
     bg-base-200 shadow-md border-r border-gray-300 dark:border-gray-700 
     ${isMobileOpen ? "left-0 w-60" : "left-[-100%] md:left-0"} 
     ${shouldExpand ? "w-60" : "w-16"} md:block`}

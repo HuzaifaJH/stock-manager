@@ -20,7 +20,7 @@ export async function PUT(
   const T = await sequelize.transaction();
 
   try {
-    const { date, type, referenceId, totalAmount, journalEntries } =
+    const { date, type, totalAmount, journalEntries } =
       await req.json();
 
     const transaction = await Transaction.findByPk(Number(id), {

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
 import { LedgerEntries, LedgerAccount } from '@/app/utils/interfaces';
@@ -15,29 +15,41 @@ export default function JournalEntries() {
     const [accounts, setAccounts] = useState<LedgerAccount[]>([]);
     const [filters, setFilters] = useState({
         dateFrom: formatDate(firstDayOfMonth),
-        dateTo: formatDate(today), accountId: "", type: ""
+        dateTo: formatDate(today)
     });
+    const [accountFilter, setAccountFilter] = useState<number | "">("");
     const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
     let runningBalance = 0;
     let totalDebit = 0;
     let totalCredit = 0;
 
+    // Memoize fetchAccounts with useCallback
+    const fetchAccounts = useCallback(async () => {
+        try {
+            const response = await axios.get("/api/ledger-accounts");
+            setAccounts(response.data);
+        } catch (error) {
+            console.error("Error fetching accounts:", error);
+        }
+    }, []); // Empty dependency array means this function will not change unless explicitly needed
+
+    // Memoize fetchLedgerEntries with useCallback, dependent on filters
+    const fetchLedgerEntries = useCallback(async () => {
+        try {
+            const response = await axios.get("/api/journal-entries", { params: filters });
+            setLedgerEntries(response.data);
+        } catch (error) {
+            console.error("Error fetching ledger entries:", error);
+        }
+    }, [filters]); // Fetch ledger entries whenever filters change
+
+    // UseEffect to call both fetch functions when filters change
     useEffect(() => {
         fetchAccounts();
         fetchLedgerEntries();
-    }, [filters]);
+    }, [filters, fetchAccounts, fetchLedgerEntries]);  // Include functions in dependency array
 
-    const fetchAccounts = async () => {
-        const response = await axios.get("/api/ledger-accounts");
-        setAccounts(response.data);
-    };
-
-    const fetchLedgerEntries = async () => {
-        const response = await axios.get("/api/journal-entries", { params: filters });
-        setLedgerEntries(response.data);
-    };
-
-    const groupedEntries = ledgerEntries.reduce((acc: any, entry: LedgerEntries) => {
+    const groupedEntries = ledgerEntries.reduce<Record<string, LedgerEntries[]>>((acc, entry: LedgerEntries) => {
         const refId = entry.Transaction?.referenceId || "No Ref";
         if (!acc[refId]) acc[refId] = [];
         acc[refId].push(entry);
@@ -50,7 +62,7 @@ export default function JournalEntries() {
             <div className="flex gap-4 mb-4">
                 <input type="date" className="input input-bordered" value={filters.dateFrom} onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })} max={formatDate(new Date())} />
                 <input type="date" className="input input-bordered" value={filters.dateTo} onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })} max={formatDate(new Date())} />
-                <select className="select select-bordered" value={filters.accountId} onChange={(e) => setFilters({ ...filters, accountId: e.target.value })}>
+                <select className="select select-bordered" value={accountFilter ?? ""} onChange={(e) => setAccountFilter(Number(e.target.value))}>
                     <option value="">All Accounts</option>
                     {accounts.map((account: LedgerAccount) => (
                         <option key={account.id} value={account.id}>{account.name}</option>
@@ -66,12 +78,12 @@ export default function JournalEntries() {
                             <th>Description</th>
                             <th>Debit</th>
                             <th>Credit</th>
-                            {filters.accountId && <th>Counter Account</th>}
-                            {filters.accountId && <th>Balance</th>}
+                            {accountFilter != "" && <th>Counter Account</th>}
+                            {accountFilter != "" && <th>Balance</th>}
                         </tr>
                     </thead>
                     <tbody>
-                        {(Object.entries(groupedEntries) as [string, LedgerEntries[]][]).filter(([_, entries]) => !filters.accountId || entries.some(e => e.ledgerId === Number(filters.accountId))).flatMap(([referenceId, entries]) => {
+                        {(Object.entries(groupedEntries) as [string, LedgerEntries[]][]).filter(([, entries]) => !accountFilter || entries.some(e => e.ledgerId === accountFilter)).flatMap(([referenceId, entries]) => {
 
                             const isExpanded = expandedGroups[referenceId] ?? true;
                             const toggleGroup = () =>
@@ -79,7 +91,7 @@ export default function JournalEntries() {
 
                             const headerRow = (
                                 <tr key={`header-${referenceId}`} className="bg-base-200 cursor-pointer" onClick={toggleGroup}>
-                                    <td colSpan={filters.accountId ? 6 : 5} className="flex items-center gap-2">
+                                    <td colSpan={accountFilter ? 6 : 5} className="flex items-center gap-2">
                                         {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
                                         Ref: {referenceId} |{" "}
                                         {/* {new Date(entries[0].Transaction?.date || entries[0].createdAt).toLocaleDateString("en-GB")}| */}
@@ -91,11 +103,11 @@ export default function JournalEntries() {
                             const entryRows = isExpanded
                                 ? entries
                                     .filter((entry) =>
-                                        !filters.accountId || entry.ledgerId.toString() === filters.accountId
+                                        !accountFilter || entry.ledgerId === accountFilter
                                     )
                                     .map((entry: LedgerEntries) => {
                                         const isDebit = entry.type === "Debit";
-                                        if (entry.ledgerId.toString() === filters.accountId) {
+                                        if (entry.ledgerId === accountFilter) {
                                             runningBalance += isDebit ? +entry.amount : -entry.amount;
                                         }
 
@@ -121,12 +133,12 @@ export default function JournalEntries() {
                                                 <td className="td-bordered">{entry.description}</td>
                                                 <td className="td-bordered">{isDebit ? entry.amount : "-"}</td>
                                                 <td className="td-bordered">{!isDebit ? entry.amount : "-"}</td>
-                                                {filters.accountId && (
+                                                {accountFilter != "" && (
                                                     <td className="td-bordered">
                                                         {counterAccount || "-"}
                                                     </td>
                                                 )}
-                                                {filters.accountId && (
+                                                {accountFilter != "" && (
                                                     <td className="td-bordered">
                                                         {runningBalance >= 0 ? Math.abs(runningBalance) : "(" + Math.abs(runningBalance) + ")"}
                                                         {/* {Math.abs(runningBalance)} {runningBalance >= 0 ? "Dr" : "Cr"} */}

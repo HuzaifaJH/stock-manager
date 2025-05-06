@@ -69,18 +69,18 @@ export default function IncomeStatement() {
     });
 
     const incomeAccounts = Object.entries(grouped).filter(
-        ([_, data]) => data.type === 4
+        ([, data]) => data.type === 4
     );
     const expenseAccounts = Object.entries(grouped).filter(
-        ([_, data]) => data.type === 5
+        ([, data]) => data.type === 5
     );
 
     const totalIncome = incomeAccounts.reduce(
-        (sum, [_, data]) => sum + (data.credit - data.debit),
+        (sum, [, data]) => sum + (data.credit - data.debit),
         0
     );
     const totalExpense = expenseAccounts.reduce(
-        (sum, [_, data]) => sum + (data.debit - data.credit),
+        (sum, [, data]) => sum + (data.debit - data.credit),
         0
     );
 

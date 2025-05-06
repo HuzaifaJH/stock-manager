@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiEye, FiPlusCircle, FiTrash2 } from "react-icons/fi";
 import { Category, Subcategory, Product, Sales, SalesItem } from '@/app/utils/interfaces';
+import dayjs from "dayjs";
 
 export default function SalesPage() {
 
@@ -19,13 +20,16 @@ export default function SalesPage() {
 
     const [salesItems, setsalesItems] = useState<SalesItem[]>([]);
     const [customerName, setCustomerName] = useState<string>("Walk-in Customer");
-    const [date, setDate] = useState<string>(new Date().toISOString().split("T")[0]);
+    // const [date, setDate] = useState<string>(new Date().toISOString().split("T")[0]);
+    const [date, setDate] = useState(dayjs().format("YYYY-MM-DDTHH:mm"));
     const [isPaymentMethodCash, setIsPaymentMethodCash] = useState<boolean>(true);
-    const [discount, setDiscount] = useState<number | "">(0);
+    const [discount, setDiscount] = useState<number>(0);
     const [viewMode, setViewMode] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
 
     const [categories, setCategories] = useState<Category[]>([]);
     const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+    const [hideWalkIn, setHideWalkIn] = useState(false);
 
     const fetchData = async () => {
         setIsLoading(true);
@@ -75,11 +79,17 @@ export default function SalesPage() {
         }
     };
 
+    const filteredSales = sales.filter((sale) => {
+        const matchesSearch = sale.customerName.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCheckBox = hideWalkIn ? sale.customerName.toLowerCase() !== "walk-in customer" : true;
+        return matchesSearch && matchesCheckBox;
+    });
+
     const handleSort = () => {
         setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     };
 
-    const sortedSales = [...sales].sort((a, b) => {
+    const sortedSales = [...filteredSales].sort((a, b) => {
         return sortOrder === "asc" ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date);
     });
 
@@ -131,7 +141,7 @@ export default function SalesPage() {
                 });
             if (res.ok) {
                 toast.success(`Sales ${selectedSale?.id ? "updated" : "added"} successfully`);
-                setDate(new Date().toISOString().split("T")[0]);
+                setDate(dayjs().format("YYYY-MM-DDTHH:mm"));
                 setCustomerName("Walk-in Customer");
                 setDiscount(0);
                 setIsPaymentMethodCash(true);
@@ -142,9 +152,13 @@ export default function SalesPage() {
                 const errorData = await res.json();
                 throw new Error(errorData.error || "Unknown error");
             }
-        } catch (error: any) {
+        } catch (error) {
             console.error("Error adding sales:", error);
-            toast.error(error.message);
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("An unknown error occurred.");
+            }
         } finally {
             setIsLoading(false);
         }
@@ -195,9 +209,8 @@ export default function SalesPage() {
             </body>
           </html>
         `);
-        // printWindow?.document.close();
+        printWindow?.document.close();
     };
-
 
     const updatePrice = (index: number, id: number) => {
         const price = products.find((x) => x.id == id)?.price;
@@ -214,6 +227,31 @@ export default function SalesPage() {
                 </button>
             </div>
 
+            {/* Filters Section */}
+            <div className="flex flex-wrap gap-4 mb-4 items-center">
+                <input
+                    type="text"
+                    placeholder="Search by customer name"
+                    className="input input-bordered w-full sm:max-w-sm"
+                    value={searchQuery}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                />
+                <label className="flex items-center space-x-2 mb-2">
+                    <input
+                        type="checkbox"
+                        checked={hideWalkIn}
+                        onChange={(e) => {
+                            setHideWalkIn(e.target.checked)
+                            setCurrentPage(1);
+                        }}
+                    />
+                    <span>Hide Walk-in Customers</span>
+                </label>
+            </div>
+
             <div className="overflow-x-auto">
                 <table className="table w-full table-zebra">
                     <thead>
@@ -225,6 +263,7 @@ export default function SalesPage() {
                                 Date {sortOrder === "asc" ? "↑" : "↓"}
                             </th>
                             <th>Total Price (Rs)</th>
+                            <th>Payment</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -236,6 +275,13 @@ export default function SalesPage() {
                                 <td>{sales.customerName}</td>
                                 <td>{new Date(sales.date).toLocaleDateString("en-GB")}</td>
                                 <td>{sales.totalPrice}</td>
+                                <td>
+                                    {sales.isPaymentMethodCash ? (
+                                        <span className="badge badge-success">Cash</span>
+                                    ) : (
+                                        <span className="badge badge-warning">Credit</span>
+                                    )}
+                                </td>
                                 <td className="flex items-center space-x-2">
                                     <FiEye
                                         className="text-blue-500 cursor-pointer mx-1"
@@ -244,7 +290,7 @@ export default function SalesPage() {
                                             setSelectedSale(sales);
                                             setViewMode(true);
                                             setsalesItems(sales.SalesItems || []);
-                                            setDate(new Date(sales.date).toISOString().split("T")[0]);
+                                            setDate(dayjs(sales.date).format("YYYY-MM-DDTHH:mm"));
                                             setIsPaymentMethodCash(sales.isPaymentMethodCash);
                                             setCustomerName(sales.customerName);
                                             setDiscount(sales.discount);
@@ -274,7 +320,7 @@ export default function SalesPage() {
                                             });
 
                                             setsalesItems(enrichedItems || []);
-                                            setDate(new Date(sales.date).toISOString().split("T")[0]);
+                                            setDate(dayjs(sales.date).format("YYYY-MM-DDTHH:mm"));
                                             setIsPaymentMethodCash(sales.isPaymentMethodCash);
                                             setCustomerName(sales.customerName);
                                             setDiscount(sales.discount);
@@ -287,6 +333,7 @@ export default function SalesPage() {
                                         onClick={() => handleDelete(sales.id)}
                                     />
                                 </td>
+
                             </tr>
                         ))}
                     </tbody>
@@ -331,7 +378,7 @@ export default function SalesPage() {
                             {viewMode ? "View Sales" + " - S#" + selectedSale.id : selectedSale.id ? "Edit Sales" + " - S#" + selectedSale.id : "Add Sales"}
                         </h3>
 
-                        <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">
+                        <form onSubmit={handleSubmit} className="flex flex-col flex-grow">
                             <div className="flex flex-wrap gap-6 mt-3 items-center">
                                 {/* Customer Name*/}
                                 <div className="flex items-center gap-2">
@@ -344,7 +391,7 @@ export default function SalesPage() {
                                             value={customerName}
                                             onChange={(e) => setCustomerName(e.target.value)}
                                             required
-                                            className="input input-bordered w-52"
+                                            className="input input-bordered w-full"
                                         />
                                     )}
                                 </div>
@@ -353,11 +400,11 @@ export default function SalesPage() {
                                 <div className="flex items-center gap-2">
                                     <span className="font-medium">Date:</span>
                                     {viewMode ? (
-                                        <span>{new Date(selectedSale.date).toLocaleDateString("en-GB")}</span>
+                                        <span>{dayjs(selectedSale.date).format("YYYY-MM-DD HH:mm")}</span>
                                     ) : (
                                         <input
-                                            type="date"
-                                            className="input input-bordered w-40"
+                                            type="datetime-local"
+                                            className="input input-bordered w-full"
                                             value={date}
                                             onChange={(e) => setDate(e.target.value)}
                                             required
@@ -396,7 +443,7 @@ export default function SalesPage() {
                                 {!viewMode && <FiPlusCircle className="cursor-pointer text-green-500 ml-4" size={25} onClick={addItem} />}
                             </div>
 
-                            <div className="flex-1 overflow-y-auto mt-3">
+                            <div className="flex-1 mt-3">
                                 <table className="table w-full">
                                     <thead>
                                         <tr className="text-sm">
@@ -556,7 +603,7 @@ export default function SalesPage() {
                                     onClick={() => {
                                         setSelectedSale(null);
                                         setsalesItems([]);
-                                        setDate(new Date().toISOString().split("T")[0]);
+                                        setDate(dayjs().format("YYYY-MM-DDTHH:mm"));
                                         setViewMode(false);
                                         setCustomerName("Walk-in Customer");
                                         setDiscount(0);

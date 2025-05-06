@@ -2,18 +2,25 @@ import { NextResponse } from "next/server";
 import AccountGroup from "@/lib/models/AccountGroup";
 import { accountTypes } from "@/app/utils/accountType";
 
+type AccountGroupJSON = {
+  id: number;
+  name: string;
+  accountType: number;
+};
+
 // Get all accounts
 export async function GET() {
   try {
     const accountgroups = await AccountGroup.findAll();
 
-    const accountGroupsWithTypeName = accountgroups.map((group: any) => {
+    const accountGroupsWithTypeName = accountgroups.map((group) => {
+      const groupJson = group.toJSON() as AccountGroupJSON;
       const accountType = accountTypes.find(
-        (type) => type.code === group.accountType
+        (type) => type.code === groupJson.accountType
       );
       return {
-        ...group.toJSON(),
-        accountTypeName: accountType ? accountType.account : null,
+        ...groupJson,
+        accountTypeName: accountType?.account ?? null,
       };
     });
 

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { accountTypes } from "@/app/utils/accountType";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { LedgerAccount, LedgerEntries } from '@/app/utils/interfaces';
@@ -19,11 +19,8 @@ export default function TrialBalancePage() {
         accountType: ""
     });
 
-    useEffect(() => {
-        fetchData();
-    }, [filters]);
-
-    const fetchData = async () => {
+    // Memoize fetchData so it's stable between renders
+    const fetchData = useCallback(async () => {
         const query = new URLSearchParams(filters).toString();
 
         const [entriesRes, accountsRes] = await Promise.all([
@@ -35,7 +32,11 @@ export default function TrialBalancePage() {
         const accounts = await accountsRes.json();
         setLedgerEntries(entries);
         setLedgerAccounts(accounts);
-    };
+    }, [filters]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
     const filteredAccounts = ledgerAccounts.filter((acc) => {
         if (!filters.accountType) return true;

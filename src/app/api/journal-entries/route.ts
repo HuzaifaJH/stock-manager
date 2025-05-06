@@ -1,21 +1,22 @@
 import { NextResponse } from "next/server";
 import JournalEntry from "@/lib/models/JournalEntry";
-import LedgerAccounts from "@/lib/models/LedgerAccount";
-import { Model, Op } from "sequelize";
+import LedgerAccount from "@/lib/models/LedgerAccount";
+import { Op } from "sequelize";
 import Transaction from "@/lib/models/Transaction";
-import Purchase from "@/lib/models/Purchase";
+import PurchaseModel from "@/lib/models/Purchase";
 import Supplier from "@/lib/models/Supplier";
 import AccountGroup from "@/lib/models/AccountGroup";
+import { LedgerEntries, Purchase } from "@/app/utils/interfaces";
 
-interface JournalEntryWithRelations extends Model {
-  Transaction?: typeof Transaction & {
-    dataValues: Record<string, any>;
-    type: string;
-    referenceId: string;
-    refId: number;
-  };
-  LedgerAccount?: typeof LedgerAccounts;
-}
+// interface JournalEntryWithRelations extends Model {
+//   Transaction?: typeof Transaction & {
+//     dataValues: Record<string, any>;
+//     type: string;
+//     referenceId: string;
+//     refId: number;
+//   };
+//   LedgerAccount?: typeof LedgerAccount;
+// }
 
 export async function GET(req: Request) {
   try {
@@ -25,7 +26,7 @@ export async function GET(req: Request) {
     const dateTo = searchParams.get("dateTo");
     // const type = searchParams.get("type");
 
-    const whereClause: any = {};
+    const whereClause: Partial<{ ledgerId: string }> = {};
 
     if (accountId) whereClause.ledgerId = accountId;
 
@@ -42,7 +43,7 @@ export async function GET(req: Request) {
       where: whereClause,
       include: [
         {
-          model: LedgerAccounts,
+          model: LedgerAccount,
           attributes: ["id", "name"],
           include: [
             {
@@ -56,8 +57,8 @@ export async function GET(req: Request) {
           where,
         },
       ],
-      order: [["createdAt", "ASC"]],
-    })) as JournalEntryWithRelations[];
+      order: [["createdAt", "DESC"]],
+    })) as unknown as LedgerEntries[];
 
     ledgerEntries.forEach((x) => {
       if (x?.Transaction?.referenceId) {
@@ -69,25 +70,25 @@ export async function GET(req: Request) {
 
     const purchaseIds = ledgerEntries
       .filter(
-        (e: any) =>
+        (e: LedgerEntries) =>
           e.Transaction?.type === "Purchase" ||
           e.Transaction?.type === "Purchase Return"
       )
-      .map((e: any) => e.Transaction.refId);
+      .map((e: LedgerEntries) => e.Transaction.refId);
 
-    const purchases = await Purchase.findAll({
+    const purchases = (await PurchaseModel.findAll({
       where: { id: purchaseIds },
       include: { model: Supplier, attributes: ["id", "name"] },
-    });
+    })) as unknown as Purchase[];
 
-    const purchaseMap = Object.fromEntries(
-      purchases.map((p: any) => [p.id, p])
-    );
+    const purchaseMap = Object.fromEntries(purchases.map((p) => [p.id, p]));
 
     for (const entry of ledgerEntries) {
       const tx = entry.Transaction;
       if (tx?.type === "Purchase" || tx?.type === "Purchase Return") {
-        tx.dataValues.purchaseDetails = purchaseMap[tx.refId];
+        if (tx && tx.dataValues && tx.refId) {
+          tx.dataValues.purchaseDetails = purchaseMap[tx.refId];
+        }
       }
     }
 

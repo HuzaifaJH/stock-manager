@@ -26,6 +26,7 @@ export async function GET() {
           ],
         },
       ],
+      order: [["createdAt", "DESC"]],
     });
 
     const result = transactions.map((transactions) => {
@@ -72,7 +73,7 @@ export async function GET() {
 export async function POST(req: Request) {
   const transaction = await sequelize.transaction();
   try {
-    const { date, type, referenceId, totalAmount, journalEntries } =
+    const { date, type, totalAmount, journalEntries } =
       await req.json();
 
     const newTransaction = await Transaction.create(

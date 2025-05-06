@@ -1,86 +1,107 @@
-// components/InvoiceTemplate.tsx
+import { Sales, SalesItem } from '@/app/utils/interfaces';
+import dayjs from "dayjs";
+
 interface InvoiceTemplateProps {
     sale: Sales;
 }
 
-interface Sales {
-    id: number;
-    date: string;
-    SalesItems?: salesItem[];
-    totalPrice?: number;
-    customerName: string;
-    isPaymentMethodCash: boolean;
-}
-
-interface salesItem {
-    productId: number | "";
-    categoryId: number | "";
-    subCategoryId: number | "";
-    quantity: number | null;
-    sellingPrice: number | null;
-    Product?: Product;
-}
-
-interface Product {
-    name: string;
-}
-
 export default function InvoiceTemplate({ sale }: InvoiceTemplateProps) {
-    const totalPrice = (sale.SalesItems ?? []).reduce(
+    const totalBeforeDiscount = (sale.SalesItems ?? []).reduce(
         (sum, item) => sum + (item.quantity ?? 0) * (item.sellingPrice ?? 0),
         0
     );
 
+    const discount = sale.discount ?? 0;
+    const totalAfterDiscount = totalBeforeDiscount - discount;
+
     return (
-        <div id="invoice" className="p-4 text-xs font-mono w-[280px]">
-            <div className="text-center">
-                <h2 className="text-sm font-bold">Your Store Name</h2>
-                <p>123 Main Street, City</p>
-                <p>Phone: 123-456-7890</p>
-                <hr className="my-2" />
+        <div
+            id="invoice"
+            style={{
+                padding: '2rem 1rem',
+                fontSize: '12px',
+                fontFamily: 'monospace',
+                width: '280px',
+                color: 'black',
+            }}
+        >
+            <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
+                <h2 style={{ fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                    Burhani Wooden & Timber Mart
+                </h2>
+                <span>Shop # 3 Sector 11-B Up More Near Bohri Masjid, North Karachi, Pakistan</span>
+                <br />
+                <span>Phone: +92 321 2275956 / +92 3343727466</span>
+                <br />
+                <br />
+                <hr style={{ margin: '0.5rem 0', borderStyle: 'dashed', borderTop: '1px solid #000' }} />
             </div>
 
-            <div className="flex justify-between text-[10px]">
-                <span>Date: {sale.date}</span>
-                <span>Invoice #: {sale.id}</span>
+            <div style={{ fontSize: '12px', marginBottom: '0.25rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Date: {dayjs(sale.date).format("YYYY-MM-DD")}</span>
+                    <span>Time: {dayjs(sale.date).format("HH:mm")}</span>
+                </div>
+                <div>Invoice #: {sale.id}</div>
+                <div>Customer: {sale.customerName}</div>
             </div>
 
-            <div className="mb-2 text-[10px]">Customer: {sale.customerName}</div>
+            <br />
+            <br />
 
-            <table className="w-full text-[10px]">
+            <table style={{ width: '100%', fontSize: '12px', marginBottom: '0.5rem', borderCollapse: 'collapse' }}>
                 <thead>
-                    <tr className="border-y border-dashed">
-                        <th className="text-left">Item</th>
-                        <th className="text-right">Qty</th>
-                        <th className="text-right">Price</th>
-                        <th className="text-right">Total</th>
+                    <tr style={{ borderTop: '1px dashed black', borderBottom: '1px dashed black' }}>
+                        <th style={{ textAlign: 'left' }}>Item</th>
+                        <th style={{ textAlign: 'right' }}>Qty</th>
+                        <th style={{ textAlign: 'right' }}>Rate</th>
+                        <th style={{ textAlign: 'right' }}>Total</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {(sale.SalesItems ?? []).map((item: salesItem) => (
+                    {(sale.SalesItems ?? []).map((item: SalesItem) => (
                         <tr key={item.productId}>
                             <td>{item.Product?.name || "N/A"}</td>
-                            <td className="text-right">{item.quantity}</td>
-                            <td className="text-right">{item.sellingPrice && item.sellingPrice.toFixed(2)}</td>
-                            <td className="text-right">
-                                {item.sellingPrice && item.quantity && (item.quantity * item.sellingPrice).toFixed(2)}
+                            <td style={{ textAlign: 'right' }}>{item.quantity}</td>
+                            <td style={{ textAlign: 'right' }}>{item.sellingPrice?.toFixed(2)}</td>
+                            <td style={{ textAlign: 'right' }}>
+                                {(item.quantity && item.sellingPrice
+                                    ? item.quantity * item.sellingPrice
+                                    : 0
+                                ).toFixed(2)}
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
 
-            <hr className="my-2" />
+            <hr style={{ margin: '0.25rem 0', borderStyle: 'dashed', borderTop: '1px solid #000' }} />
 
-            <div className="flex justify-between font-semibold text-[11px]">
-                <span>Total:</span>
-                <span>{totalPrice.toFixed(2)}</span>
+            <br />
+            <br />
+
+            <div style={{ fontSize: '12px', margin: '0.5rem 0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Subtotal:</span>
+                    <span>{totalBeforeDiscount.toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Discount:</span>
+                    <span>-{discount.toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600' }}>
+                    <span>Total:</span>
+                    <span>{totalAfterDiscount.toFixed(2)}</span>
+                </div>
             </div>
 
-            <div className="text-center mt-4 text-[10px]">
-                <p>Payment: {sale.isPaymentMethodCash ? "CASH" : "CREDIT"}</p>
-                <p>Thank you for shopping!</p>
+            <p>Payment Mode: {sale.isPaymentMethodCash ? "CASH" : "CREDIT"}</p>
+
+            <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                <span>No returns accepted after 3 days from the date of purchase.</span>
+                <br />
+                <span>Thank you for your purchase!</span>
             </div>
         </div>
     );
-}  
+}

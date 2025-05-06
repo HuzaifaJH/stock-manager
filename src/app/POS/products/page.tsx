@@ -26,7 +26,7 @@ export default function ProductList() {
     useEffect(() => {
         fetchProducts();
         fetchCategories();
-        fetchSubcategories();  // Fetch subcategories
+        fetchSubcategories();
     }, []);
 
     const fetchProducts = async () => {

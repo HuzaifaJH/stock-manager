@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiEye, FiPlusCircle, FiTrash2 } from "react-icons/fi";
 import { Category, Subcategory, Product, Supplier, Purchase, PurchaseItem } from '@/app/utils/interfaces';
+import dayjs from "dayjs";
 
 export default function PurchasesPage() {
 
@@ -24,8 +25,9 @@ export default function PurchasesPage() {
     const [purchaseItems, setPurchaseItems] = useState<PurchaseItem[]>([]);
     const [supplierId, setSupplierId] = useState<number | "">("");
     const [isPaymentMethodCash, setIsPaymentMethodCash] = useState<boolean>(true);
-    const [date, setDate] = useState<string>(new Date().toISOString().split("T")[0]);
+    const [date, setDate] = useState(dayjs().format("YYYY-MM-DDTHH:mm"));
     const [viewMode, setViewMode] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
 
     const fetchData = async () => {
         setIsLoading(true);
@@ -78,11 +80,15 @@ export default function PurchasesPage() {
         }
     };
 
+    const filteredPurchases = purchases.filter(purchase =>
+        purchase.Supplier?.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     const handleSort = () => {
         setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     };
 
-    const sortedPurchases = [...purchases].sort((a, b) => {
+    const sortedPurchases = [...filteredPurchases].sort((a, b) => {
         return sortOrder === "asc" ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date);
     });
 
@@ -132,7 +138,7 @@ export default function PurchasesPage() {
                 toast.success(`Purchase ${selectedPurchase?.id ? "updated" : "added"} successfully`);
                 setSupplierId("");
                 setIsPaymentMethodCash(true);
-                setDate(new Date().toISOString().split("T")[0]);
+                setDate(dayjs().format("YYYY-MM-DDTHH:mm"));
                 setPurchaseItems([]);
                 setSelectedPurchase(null);
                 fetchData();
@@ -178,6 +184,20 @@ export default function PurchasesPage() {
                 </button>
             </div>
 
+            {/* Filters Section */}
+            <div className="flex flex-wrap gap-4 mb-4 items-center">
+                <input
+                    type="text"
+                    placeholder="Search by supplier name"
+                    className="input input-bordered w-full sm:max-w-sm"
+                    value={searchQuery}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                />
+            </div>
+
             <div className="overflow-x-auto">
                 <table className="table w-full table-zebra">
                     <thead>
@@ -189,6 +209,7 @@ export default function PurchasesPage() {
                                 Date {sortOrder === "asc" ? "↑" : "↓"}
                             </th>
                             <th>Total Price (Rs)</th>
+                            <th>Payment</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -200,6 +221,13 @@ export default function PurchasesPage() {
                                 <td>{purchase.Supplier?.name}</td>
                                 <td>{new Date(purchase.date).toLocaleDateString("en-GB")}</td>
                                 <td>{purchase.totalPrice}</td>
+                                <td>
+                                    {purchase.isPaymentMethodCash ? (
+                                        <span className="badge badge-success">Cash</span>
+                                    ) : (
+                                        <span className="badge badge-warning">Credit</span>
+                                    )}
+                                </td>
                                 <td className="flex items-center space-x-2">
                                     <FiEye
                                         className="text-blue-500 cursor-pointer mx-1"
@@ -210,7 +238,7 @@ export default function PurchasesPage() {
                                             setPurchaseItems(purchase.PurchaseItems || []);
                                             setSupplierId(purchase.supplierId);
                                             setIsPaymentMethodCash(purchase.isPaymentMethodCash);
-                                            setDate(new Date(purchase.date).toISOString().split("T")[0]);
+                                            setDate(dayjs(purchase.date).format("YYYY-MM-DDTHH:mm"));
                                         }}
                                     />
                                     <FiEdit
@@ -238,7 +266,7 @@ export default function PurchasesPage() {
                                             setPurchaseItems(enrichedItems || []);
                                             setSupplierId(purchase.supplierId);
                                             setIsPaymentMethodCash(purchase.isPaymentMethodCash);
-                                            setDate(new Date(purchase.date).toISOString().split("T")[0]);
+                                            setDate(dayjs(purchase.date).format("YYYY-MM-DDTHH:mm"));
                                         }
                                         }
                                     />
@@ -304,7 +332,7 @@ export default function PurchasesPage() {
                                             value={supplierId}
                                             onChange={(e) => setSupplierId(Number(e.target.value))}
                                             required
-                                            className="select select-bordered w-52"
+                                            className="select select-bordered w-full"
                                         >
                                             <option value="" disabled>Select a supplier</option>
                                             {suppliers.map((s) => (
@@ -318,11 +346,11 @@ export default function PurchasesPage() {
                                 <div className="flex items-center gap-2">
                                     <span className="font-medium">Date:</span>
                                     {viewMode ? (
-                                        <span>{new Date(selectedPurchase.date).toLocaleDateString("en-GB")}</span>
+                                        <span>{dayjs(selectedPurchase.date).format("YYYY-MM-DD HH:mm")}</span>
                                     ) : (
                                         <input
-                                            type="date"
-                                            className="input input-bordered w-40"
+                                            type="datetime-local"
+                                            className="input input-bordered w-full"
                                             value={date}
                                             onChange={(e) => setDate(e.target.value)}
                                             required
@@ -362,119 +390,121 @@ export default function PurchasesPage() {
                                 {!viewMode && <FiPlusCircle className="cursor-pointer text-green-500 ml-4" size={25} onClick={addItem} />}
                             </div>
 
-                            <table className="table w-full table-fixed mt-3">
-                                <thead>
-                                    <tr className="text-sm">
-                                        <th className="w-[14.28%]">Category</th>
-                                        <th className="w-[14.28%]">Sub Category</th>
-                                        <th className="w-[14.28%]">Product</th>
-                                        <th className="w-[14.28%]">Quantity</th>
-                                        <th className="w-[14.28%]">Price (Rs)</th>
-                                        <th className="w-[14.28%]">Total Price (Rs)</th>
-                                        {!viewMode && <th className="w-[14.28%]">Actions</th>}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {purchaseItems?.map((item, index) => (
-                                        <tr key={index} className="text-sm">
-                                            <td className="p-2">
-                                                {viewMode ? (
-                                                    <span>{item.Product?.Category.name || "N/A"}</span>
-                                                ) : (
-                                                    <SearchDropdown
-                                                        placeholder={"Select Category"}
-                                                        index={index}
-                                                        items={categories || []}
-                                                        selectedItemId={item.categoryId || ""}
-                                                        onChange={(i, val) => {
-                                                            updateItem(i, "categoryId", val);
-                                                            handleCategoryChange(index, Number(val));
-                                                        }}
-                                                        required={true}
-                                                    />
-                                                )}
-                                            </td>
-                                            <td className="p-2">
-                                                {viewMode ? (
-                                                    <span>{item.Product?.SubCategory.name || "N/A"}</span>
-                                                ) : (
-                                                    <SearchDropdown
-                                                        placeholder={"Select Sub Category"}
-                                                        index={index}
-                                                        items={item.filteredSubcategories || []}
-                                                        selectedItemId={item.subCategoryId || ""}
-                                                        onChange={(i, val) => {
-                                                            updateItem(i, "subCategoryId", val);
-                                                            handleSubCategoryChange(index, Number(val));
-                                                        }}
-                                                        required={true}
-                                                    />
-                                                )}
-                                            </td>
-                                            <td className="p-2">
-                                                {viewMode ? (
-                                                    <span>{item.Product?.name || "N/A"}</span>
-                                                ) : (
-                                                    <SearchDropdown
-                                                        placeholder={"Select Product"}
-                                                        index={index}
-                                                        items={item.filteredProducts || []}
-                                                        selectedItemId={item.productId || ""}
-                                                        onChange={(i, val) => updateItem(i, "productId", val)}
-                                                        required={true}
-                                                    />
-                                                )}
-                                            </td>
-                                            <td className="p-2">
-                                                {viewMode ? (
-                                                    <span>{item.quantity}</span>
-                                                ) : (
-                                                    <input
-                                                        type="number"
-                                                        className="input input-bordered w-full"
-                                                        value={item.quantity === null ? "" : item.quantity}
-                                                        onChange={(e) => updateItem(index, "quantity", e.target.value ? Number(e.target.value) : null)}
-                                                        onBlur={() => {
-                                                            if (item.quantity === null || item.quantity <= 0) {
-                                                                toast.error("Quantity must be greater than zero");
-                                                                updateItem(index, "quantity", null);
-                                                            }
-                                                        }}
-                                                        required
-                                                        placeholder="Enter Quantity"
-                                                    />
-                                                )}
-                                            </td>
-                                            <td className="p-2">
-                                                {viewMode ? (
-                                                    <span>Rs {item.purchasePrice}</span>
-                                                ) : (
-                                                    <input
-                                                        type="number"
-                                                        className="input input-bordered w-full"
-                                                        value={item.purchasePrice === null ? "" : item.purchasePrice}
-                                                        onChange={(e) => updateItem(index, "purchasePrice", e.target.value ? Number(e.target.value) : null)}
-                                                        onBlur={() => {
-                                                            if (item.purchasePrice === null || item.purchasePrice <= 0) {
-                                                                toast.error("Purchase price must be greater than zero");
-                                                                updateItem(index, "purchasePrice", null);
-                                                            }
-                                                        }}
-                                                        required
-                                                        placeholder="Enter Price"
-                                                    />
-                                                )}
-                                            </td>
-                                            <td className="p-2">Rs {(item.quantity || 0) * (item.purchasePrice || 0)}</td>
-                                            {!viewMode && (
-                                                <td className="p-2">
-                                                    <FiTrash2 className="text-error cursor-pointer" size={20} onClick={() => removeItem(index)} />
-                                                </td>
-                                            )}
+                            <div className="flex-1 mt-3">
+                                <table className="table w-full mt-3">
+                                    <thead>
+                                        <tr className="text-sm">
+                                            <th className="w-[14.28%]">Category</th>
+                                            <th className="w-[14.28%]">Sub Category</th>
+                                            <th className="w-[14.28%]">Product</th>
+                                            <th className="w-[14.28%]">Quantity</th>
+                                            <th className="w-[14.28%]">Price (Rs)</th>
+                                            <th className="w-[14.28%]">Total Price (Rs)</th>
+                                            {!viewMode && <th className="w-[14.28%]">Actions</th>}
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {purchaseItems?.map((item, index) => (
+                                            <tr key={index} className="text-sm">
+                                                <td className="p-2">
+                                                    {viewMode ? (
+                                                        <span>{item.Product?.Category.name || "N/A"}</span>
+                                                    ) : (
+                                                        <SearchDropdown
+                                                            placeholder={"Select Category"}
+                                                            index={index}
+                                                            items={categories || []}
+                                                            selectedItemId={item.categoryId || ""}
+                                                            onChange={(i, val) => {
+                                                                updateItem(i, "categoryId", val);
+                                                                handleCategoryChange(index, Number(val));
+                                                            }}
+                                                            required={true}
+                                                        />
+                                                    )}
+                                                </td>
+                                                <td className="p-2">
+                                                    {viewMode ? (
+                                                        <span>{item.Product?.SubCategory.name || "N/A"}</span>
+                                                    ) : (
+                                                        <SearchDropdown
+                                                            placeholder={"Select Sub Category"}
+                                                            index={index}
+                                                            items={item.filteredSubcategories || []}
+                                                            selectedItemId={item.subCategoryId || ""}
+                                                            onChange={(i, val) => {
+                                                                updateItem(i, "subCategoryId", val);
+                                                                handleSubCategoryChange(index, Number(val));
+                                                            }}
+                                                            required={true}
+                                                        />
+                                                    )}
+                                                </td>
+                                                <td className="p-2">
+                                                    {viewMode ? (
+                                                        <span>{item.Product?.name || "N/A"}</span>
+                                                    ) : (
+                                                        <SearchDropdown
+                                                            placeholder={"Select Product"}
+                                                            index={index}
+                                                            items={item.filteredProducts || []}
+                                                            selectedItemId={item.productId || ""}
+                                                            onChange={(i, val) => updateItem(i, "productId", val)}
+                                                            required={true}
+                                                        />
+                                                    )}
+                                                </td>
+                                                <td className="p-2">
+                                                    {viewMode ? (
+                                                        <span>{item.quantity}</span>
+                                                    ) : (
+                                                        <input
+                                                            type="number"
+                                                            className="input input-bordered w-full"
+                                                            value={item.quantity === null ? "" : item.quantity}
+                                                            onChange={(e) => updateItem(index, "quantity", e.target.value ? Number(e.target.value) : null)}
+                                                            onBlur={() => {
+                                                                if (item.quantity === null || item.quantity <= 0) {
+                                                                    toast.error("Quantity must be greater than zero");
+                                                                    updateItem(index, "quantity", null);
+                                                                }
+                                                            }}
+                                                            required
+                                                            placeholder="Enter Quantity"
+                                                        />
+                                                    )}
+                                                </td>
+                                                <td className="p-2">
+                                                    {viewMode ? (
+                                                        <span>Rs {item.purchasePrice}</span>
+                                                    ) : (
+                                                        <input
+                                                            type="number"
+                                                            className="input input-bordered w-full"
+                                                            value={item.purchasePrice === null ? "" : item.purchasePrice}
+                                                            onChange={(e) => updateItem(index, "purchasePrice", e.target.value ? Number(e.target.value) : null)}
+                                                            onBlur={() => {
+                                                                if (item.purchasePrice === null || item.purchasePrice <= 0) {
+                                                                    toast.error("Purchase price must be greater than zero");
+                                                                    updateItem(index, "purchasePrice", null);
+                                                                }
+                                                            }}
+                                                            required
+                                                            placeholder="Enter Price"
+                                                        />
+                                                    )}
+                                                </td>
+                                                <td className="p-2">Rs {(item.quantity || 0) * (item.purchasePrice || 0)}</td>
+                                                {!viewMode && (
+                                                    <td className="p-2">
+                                                        <FiTrash2 className="text-error cursor-pointer" size={20} onClick={() => removeItem(index)} />
+                                                    </td>
+                                                )}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
 
                             <div className="mt-4 font-semibold text-right">
                                 Total: Rs
@@ -491,7 +521,7 @@ export default function PurchasesPage() {
                                         setPurchaseItems([]);
                                         setSupplierId("");
                                         setIsPaymentMethodCash(true);
-                                        setDate(new Date().toISOString().split("T")[0]);
+                                        setDate(dayjs().format("YYYY-MM-DDTHH:mm"));
                                         setViewMode(false);
                                     }}
                                 >

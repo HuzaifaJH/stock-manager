@@ -1,8 +1,9 @@
 "use client";
+import { LedgerEntries } from "@/app/utils/interfaces";
 import { useEffect, useState } from "react";
 
 export default function CashFlowStatement() {
-    const [entries, setEntries] = useState([]);
+    // const [entries, setEntries] = useState([]);
     const today = new Date();
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const formatDate = (date: Date) => date.toLocaleDateString("en-CA");
@@ -26,10 +27,10 @@ export default function CashFlowStatement() {
 
         fetch(`/api/journal-entries?${query}`)
             .then((res) => res.json())
-            .then((data) => { setEntries(data), calculateCashFlows(data) });
+            .then((data) => { calculateCashFlows(data) });
     }, [filters]);
 
-    const calculateCashFlows = (data: any[]) => {
+    const calculateCashFlows = (data: LedgerEntries[]) => {
         const cashFlows = {
             operatingIn: 0,
             operatingOut: 0,
@@ -39,9 +40,9 @@ export default function CashFlowStatement() {
             financingOut: 0,
         };
 
-        data.forEach((entry: any) => {
+        data.forEach((entry: LedgerEntries) => {
             const type = entry.type; // Debit or Credit
-            const amount = parseFloat(entry.amount);
+            const amount = entry.amount;
             const acctType = entry.LedgerAccount?.AccountGroup?.accountType;
 
             if (!acctType) return;

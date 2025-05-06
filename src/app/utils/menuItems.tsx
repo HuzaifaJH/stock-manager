@@ -1,5 +1,6 @@
 import { JSX } from "react";
 import { FiHome, FiCopy, FiCreditCard, FiPieChart, FiUsers, FiBox, FiBook, FiSettings, FiDollarSign } from "react-icons/fi";
+import { GiExpense } from "react-icons/gi";
 
 export interface MenuItem {
     name: string;
@@ -61,6 +62,11 @@ export const menuItems: MenuItem[] = [
         name: "Purchase Return",
         href: "/POS/purchase-returns",
         icon: <FiCreditCard />
+    },
+    {
+        name: "Expenses",
+        href: "/POS/expenses",
+        icon: <GiExpense />
     },
     {
         name: "Transactions",

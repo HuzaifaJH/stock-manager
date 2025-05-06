@@ -14,10 +14,10 @@ const SalesReturnItem = sequelize.define(
       allowNull: false,
     },
     quantity: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.FLOAT,
       allowNull: false,
       validate: {
-        min: 1,
+        min: 0.5,
       },
     },
     returnPrice: {
@@ -34,6 +34,9 @@ const SalesReturnItem = sequelize.define(
 );
 
 // Associations
-SalesReturnItem.belongsTo(Product, { foreignKey: "productId", onDelete: "RESTRICT" });
+SalesReturnItem.belongsTo(Product, {
+  foreignKey: "productId",
+  onDelete: "RESTRICT",
+});
 
 export default SalesReturnItem;

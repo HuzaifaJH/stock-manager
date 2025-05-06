@@ -24,10 +24,10 @@ const SalesItem = sequelize.define(
       // onDelete: "RESTRICT",
     },
     quantity: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.FLOAT,
       allowNull: false,
       validate: {
-        min: 1,
+        min: 0.5,
       },
     },
     sellingPrice: {

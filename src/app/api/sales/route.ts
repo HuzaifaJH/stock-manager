@@ -174,7 +174,7 @@ export async function POST(req: Request) {
 
     await transaction.commit();
     return NextResponse.json({ newSale, salesItems }, { status: 201 });
-  } catch (error: any) {
+  } catch (error) {
     await transaction.rollback();
 
     if (error instanceof CustomError) {
