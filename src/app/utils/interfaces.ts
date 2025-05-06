@@ -142,6 +142,7 @@ export interface SalesItem {
   Product?: Product;
   filteredSubcategories?: Subcategory[];
   filteredProducts?: Product[];
+  totalSold?: number;
 }
 
 export interface SalesReturn {

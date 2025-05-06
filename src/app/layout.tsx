@@ -32,7 +32,7 @@ export default async function RootLayout({
 }>) {
   await syncDatabase(); // Sync DB before rendering the app
   return (
-    <html lang="en">
+    <html lang="en" data-theme="winter" className="dark">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col h-screen`}
       >
