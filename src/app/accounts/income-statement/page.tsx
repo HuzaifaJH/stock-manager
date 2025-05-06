@@ -126,8 +126,8 @@ export default function IncomeStatement() {
                 {/* Income Table */}
                 <div>
                     <h3 className="text-lg font-semibold mb-2">Income</h3>
-                    <table className="table w-full border">
-                        <thead>
+                    <table className="table w-full table-zebra border-2">
+                        <thead className="border-2">
                             <tr>
                                 <th>Account</th>
                                 <th className="text-right">Amount (Rs)</th>
@@ -153,8 +153,8 @@ export default function IncomeStatement() {
                 {/* Expense Table */}
                 <div>
                     <h3 className="text-lg font-semibold mb-2">Expenses</h3>
-                    <table className="table w-full border">
-                        <thead>
+                    <table className="table w-full table-zebra border-2">
+                        <thead className="border-2">
                             <tr>
                                 <th>Account</th>
                                 <th className="text-right">Amount (Rs)</th>

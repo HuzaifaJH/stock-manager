@@ -199,8 +199,8 @@ export default function PurchasesPage() {
             </div>
 
             <div className="overflow-x-auto">
-                <table className="table w-full table-zebra">
-                    <thead>
+                <table className="table w-full table-zebra border-2">
+                    <thead className="border-2">
                         <tr>
                             <th>#</th>
                             <th>Ref no.</th>
@@ -391,8 +391,8 @@ export default function PurchasesPage() {
                             </div>
 
                             <div className="flex-1 mt-3">
-                                <table className="table w-full mt-3">
-                                    <thead>
+                                <table className="table w-full table-zebra border-2">
+                                    <thead className="border-2">
                                         <tr className="text-sm">
                                             <th className="w-[14.28%]">Category</th>
                                             <th className="w-[14.28%]">Sub Category</th>

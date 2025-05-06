@@ -176,8 +176,8 @@ export default function SalesReturnPage() {
             </div>
 
             <div className="overflow-x-auto">
-                <table className="table w-full table-zebra">
-                    <thead>
+                <table className="table w-full table-zebra border-2">
+                    <thead className="border-2">
                         <tr>
                             <th>#</th>
                             <th>Ref no.</th>
@@ -373,8 +373,8 @@ export default function SalesReturnPage() {
                                 {!viewMode && <FiPlusCircle className="cursor-pointer text-green-500 ml-4" size={25} onClick={addItem} />}
                             </div>
 
-                            <table className="table w-full mt-3">
-                                <thead>
+                            <table className="table w-full table-zebra border-2">
+                                <thead className="border-2">
                                     <tr className="text-sm">
                                         <th className="w-[14.28%]">Category</th>
                                         <th className="w-[14.28%]">Sub Category</th>

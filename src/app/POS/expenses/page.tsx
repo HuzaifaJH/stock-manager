@@ -126,8 +126,8 @@ export default function ExpensesPage() {
             </div>
 
             <div className="overflow-x-auto">
-                <table className="table w-full table-zebra">
-                    <thead>
+                <table className="table w-full table-zebra border-2">
+                    <thead className="border-2">
                         <tr className="bg-base-100 text-base-content">
                             <th className="">#</th>
                             <th className="">Expense Type</th>

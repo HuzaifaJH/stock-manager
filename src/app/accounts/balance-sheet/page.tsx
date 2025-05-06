@@ -87,8 +87,8 @@ export default function BalanceSheet() {
                 {/* Assets */}
                 <div>
                     <h3 className="text-lg font-semibold mb-2">Assets</h3>
-                    <table className="table w-full border">
-                        <thead>
+                    <table className="table w-full table-zebra border-2">
+                        <thead className="border-2">
                             <tr>
                                 <th>Account</th>
                                 <th className="text-right">Amount (Rs)</th>
@@ -114,8 +114,8 @@ export default function BalanceSheet() {
                 {/* Liabilities and Equity */}
                 <div>
                     <h3 className="text-lg font-semibold mb-2">Liabilities</h3>
-                    <table className="table w-full border mb-6">
-                        <thead>
+                    <table className="table w-full table-zebra border-2 mb-6">
+                        <thead className="border-2">
                             <tr>
                                 <th>Account</th>
                                 <th className="text-right">Amount (Rs)</th>
@@ -138,8 +138,8 @@ export default function BalanceSheet() {
                     </table>
 
                     <h3 className="text-lg font-semibold mb-2">Equity</h3>
-                    <table className="table w-full border">
-                        <thead>
+                    <table className="table w-full table-zebra border-2">
+                        <thead className="border-2">
                             <tr>
                                 <th>Account</th>
                                 <th className="text-right">Amount (Rs)</th>

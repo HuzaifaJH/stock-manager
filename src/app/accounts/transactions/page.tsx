@@ -195,8 +195,8 @@ export default function TransactionsPage() {
             </div>
 
             <div className="overflow-x-auto">
-                <table className="table w-full table-zebra">
-                    <thead>
+                <table className="table w-full table-zebra border-2">
+                    <thead className="border-2">
                         <tr>
                             <th>#</th>
                             <th>Type</th>
@@ -397,8 +397,8 @@ export default function TransactionsPage() {
                                 {!viewMode && <FiPlusCircle className="cursor-pointer text-green-500 ml-4" size={25} onClick={addItem} />}
                             </div>
 
-                            <table className="table w-full mt-3">
-                                <thead>
+                            <table className="table w-full table-zebra border-2 mt-3">
+                                <thead className="border-2">
                                     <tr>
                                         <th className="w-[14.28%]">Account Type</th>
                                         <th className="w-[14.28%]">Account Group</th>

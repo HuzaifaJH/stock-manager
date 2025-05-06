@@ -205,8 +205,8 @@ export default function ProductList() {
             </div>
 
             <div className="overflow-x-auto">
-                <table className="table w-full table-zebra">
-                    <thead>
+                <table className="table w-full table-zebra border-2">
+                    <thead className="border-2">
                         <tr className="bg-base-100 text-base-content">
                             <th className="">#</th>
                             <th className="cursor-pointer" onClick={() => handleSort("name")}>
@@ -428,8 +428,8 @@ export default function ProductList() {
                     <div className="modal-box max-w-2xl">
                         <h3 className="font-bold text-lg mb-4">Stock In/Out History</h3>
                         <div className="overflow-x-auto">
-                            <table className="table">
-                                <thead>
+                            <table className="table w-full table-zebra border-2">
+                                <thead className="border-2">
                                     <tr>
                                         <th>Type</th>
                                         <th>Date</th>
@@ -458,7 +458,7 @@ export default function ProductList() {
                                             </td>
                                         </tr>
                                     )) : (<tr>
-                                        <td colSpan={3} className="text-center text-gray-400 py-4">
+                                        <td colSpan={6} className="text-center text-gray-400 py-4">
                                             No Record Found.
                                         </td>
                                     </tr>)}

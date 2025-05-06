@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { FiCornerRightDown, FiMinus } from "react-icons/fi";
+import { FiMinus } from "react-icons/fi";
 import { menuItems } from "../app/utils/menuItems";
+import { FaLevelDownAlt } from "react-icons/fa";
 
 interface SidebarProps {
     isExpanded: boolean;
@@ -30,11 +31,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, isMobileOpen, setIsMobile
             {/* Sidebar */}
             <div
                 className={`fixed md:relative transition-all duration-300 h-screen z-40 overflow-y-auto no-scrollbar pt-15 
-    bg-base-200 shadow-md border-r border-gray-300 dark:border-gray-700 
+    bg-gray-800 shadow-md border-r border-gray-300 dark:border-gray-700
     ${isMobileOpen ? "left-0 w-60" : "left-[-100%] md:left-0"} 
     ${shouldExpand ? "w-60" : "w-16"} md:block`}
                 onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => { if (!isExpanded) setExpandedMenu(null); setIsHovered(false); }}
+                onMouseLeave={() => { if (!isExpanded) setIsHovered(false); }}
             >
                 {/* Menu Items */}
                 <nav className="mt-4 space-y-2">
@@ -47,7 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, isMobileOpen, setIsMobile
                                 {/* Parent Menu Item */}
                                 <div
                                     className={`flex items-center justify-between gap-4 px-6 py-3 transition-colors duration-200 
-                ${isActive ? "bg-primary text-white" : "hover:bg-gray-600 hover:bg-opacity-20"}
+                ${isActive ? "text-white" : "hover:bg-gray-600 hover:bg-opacity-20 text-gray-500"}
                 cursor-pointer`}
                                     onClick={() => item.subItems ? toggleMenu(item.name) : setIsMobileOpen(false)}
                                 >
@@ -68,20 +69,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, isMobileOpen, setIsMobile
                                             className={`transition-transform duration-300 ${isMenuExpanded ? "rotate-180" : "rotate-0"
                                                 }`}
                                         >
-                                            <FiCornerRightDown />
+                                            <FaLevelDownAlt />
                                         </span>
                                     )}
                                 </div>
 
                                 {/* Submenu Items */}
                                 {isMenuExpanded && item.subItems && (
-                                    <div className="pl-10">
+                                    <div className="pl-12">
                                         {item.subItems.map((subItem) => (
                                             <Link
                                                 key={subItem.name}
                                                 href={subItem.href ?? "#"}
                                                 className={`flex items-center gap-4 px-4 py-2 transition-colors duration-200 
-                    ${pathname === subItem.href ? "bg-gray-400 text-white" : "hover:bg-gray-600 hover:bg-opacity-20"}
+                    ${pathname === subItem.href ? "text-white" : "hover:bg-gray-600 hover:bg-opacity-20 text-gray-500"}
                     `}
                                                 onClick={() => setIsMobileOpen(false)}
                                             >

@@ -70,8 +70,10 @@ export default function JournalEntries() {
                 </select>
             </div>
             <div id="journal-entries-content" className="print:bg-white bg-base-100 p-4">
-                <table id="journal-table" className="table w-full border-spacing-0 border">
-                    <thead>
+                {/* <table id="journal-table" className="table w-full border-spacing-0 border">
+                    <thead> */}
+                <table id="journal-table" className="table w-full border-2">
+                    <thead className="border-2">
                         <tr>
                             <th>Date</th>
                             <th>Account</th>

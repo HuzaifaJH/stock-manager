@@ -106,8 +106,8 @@ export default function TrialBalancePage() {
 
             {/* Table */}
             <div className="overflow-x-auto">
-                <table className="table table-zebra w-full">
-                    <thead>
+                <table className="table w-full table-zebra border-2">
+                    <thead className="border-2">
                         <tr className="bg-base-200">
                             <th>Account Name</th>
                             <th>Debit</th>

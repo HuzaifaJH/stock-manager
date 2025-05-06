@@ -11,6 +11,9 @@
 
 import SalesProfitChart from "@/components/salesProfitChart";
 import { useState, useEffect, useCallback } from "react";
+import { AiOutlineRise } from "react-icons/ai";
+import { FaClipboardList, FaMoneyBillWave } from "react-icons/fa";
+import { FcSalesPerformance } from "react-icons/fc";
 
 
 interface Product {
@@ -83,30 +86,40 @@ export default function Dashboard() {
 
           {/* Top row boxes */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div className="stats bg-base-100 shadow">
-              <div className="stat">
-                <div className="stat-title">Monthly Sales</div>
-                {/* <div className="stat-value">${0}</div> */}
-                <div className="stat-value">{totalSales} Rs.</div>
+            {/* Monthly Sales */}
+            <div className="bg-base-100 rounded-xl shadow p-4 relative">
+              <div className="absolute top-4 right-4 bg-yellow-100 p-2 rounded-lg">
+                <FcSalesPerformance className="text-purple-600 text-xl" />
               </div>
+              <div className="text-gray-500 text-sm font-medium">Monthly Sales</div>
+              <div className="text-2xl font-bold text-gray-900">{totalSales} Rs.</div>
             </div>
-            <div className="stats bg-base-100 shadow">
-              <div className="stat">
-                <div className="stat-title">Total Profit</div>
-                <div className="stat-value">{totalProfit} Rs.</div>
+
+            {/* Total Profit */}
+            <div className="bg-base-100 rounded-xl shadow p-4 relative">
+              <div className="absolute top-4 right-4 bg-green-100 p-2 rounded-lg">
+                <AiOutlineRise className="text-green-600 text-xl" />
               </div>
+              <div className="text-gray-500 text-sm font-medium">Total Profit</div>
+              <div className="text-2xl font-bold text-gray-900">{totalProfit} Rs.</div>
             </div>
-            <div className="stats bg-base-100 shadow">
-              <div className="stat">
-                <div className="stat-title">Total Expenses</div>
-                <div className="stat-value">{totalExpense} Rs.</div>
+
+            {/* Total Expenses */}
+            <div className="bg-base-100 rounded-xl shadow p-4 relative">
+              <div className="absolute top-4 right-4 bg-red-100 p-2 rounded-lg">
+                <FaMoneyBillWave className="text-red-600 text-xl" />
               </div>
+              <div className="text-gray-500 text-sm font-medium">Total Expenses</div>
+              <div className="text-2xl font-bold text-gray-900">{totalExpense} Rs.</div>
             </div>
-            <div className="stats bg-base-100 shadow">
-              <div className="stat">
-                <div className="stat-title">Total Orders</div>
-                <div className="stat-value">{totalOrders}</div>
+
+            {/* Total Orders */}
+            <div className="bg-base-100 rounded-xl shadow p-4 relative">
+              <div className="absolute top-4 right-4 bg-blue-100 p-2 rounded-lg">
+                <FaClipboardList className="text-blue-600 text-xl" />
               </div>
+              <div className="text-gray-500 text-sm font-medium">Total Orders</div>
+              <div className="text-2xl font-bold text-gray-900">{totalOrders}</div>
             </div>
           </div>
 

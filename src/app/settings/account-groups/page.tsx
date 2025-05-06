@@ -91,8 +91,8 @@ export default function AccountGroups() {
                 </button>
             </div>
 
-            <table className="table w-full table-zebra">
-                <thead>
+            <table className="table w-full table-zebra border-2">
+                <thead className="border-2">
                     <tr>
                         <th>#</th>
                         <th>Name</th>

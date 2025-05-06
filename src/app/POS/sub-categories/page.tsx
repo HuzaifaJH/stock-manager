@@ -121,8 +121,8 @@ export default function SubcategoriesPage() {
             </div>
 
             <div className="overflow-x-auto">
-                <table className="table w-full table-zebra">
-                    <thead>
+                <table className="table w-full table-zebra border-2">
+                    <thead className="border-2">
                         <tr className="bg-base-100 text-base-content">
                             <th>#</th>
                             <th className="cursor-pointer" onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}>Name {sortOrder === "asc" ? "↑" : "↓"}</th>
