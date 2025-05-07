@@ -2,6 +2,8 @@
 
 Stock Manager is a powerful inventory and stock management application built with **Next.js, Electron, and MySQL**. This project can run as a web application or a desktop application, making it a versatile solution for managing inventory efficiently.
 
+Live Demo: http://18.139.84.189
+
 ## Features
 
 - 📦 **Inventory Management** – Track and manage stock levels easily.
