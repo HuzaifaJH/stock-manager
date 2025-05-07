@@ -18,9 +18,9 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, toggleMobileMenu, isSide
     // const { theme, toggleTheme } = useTheme();
     const [theme, setTheme] = useState<string>(() => {
         if (typeof window !== "undefined") {
-            return localStorage.getItem("theme") ||  darkTheme;
+            return localStorage.getItem("theme") || darkTheme;
         }
-        return  darkTheme; // Default theme
+        return darkTheme; // Default theme
     });
 
     useEffect(() => {
@@ -29,7 +29,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, toggleMobileMenu, isSide
     }, [theme]);
 
     const toggleTheme = () => {
-        const newTheme = theme ===  darkTheme ? lightTheme :  darkTheme;
+        const newTheme = theme === darkTheme ? lightTheme : darkTheme;
         setTheme(newTheme);
     };
 
@@ -56,7 +56,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, toggleMobileMenu, isSide
                 </div>
 
                 {/* Dashboard Title */}
-                <h1 className="text-lg font-semibold">Burhani Wooden & Timber Mart</h1>
+                <h1 className="text-lg font-semibold">Inventory Management System</h1>
             </div>
 
             {/* Theme Toggle Button */}
@@ -64,7 +64,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, toggleMobileMenu, isSide
                 onClick={toggleTheme}
                 className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition"
             >
-                {theme ===  darkTheme ? <FiSun size={20} className="text-yellow-500" /> : <FiMoon size={20} className="text-blue-500" />}
+                {theme === darkTheme ? <FiSun size={20} className="text-yellow-500" /> : <FiMoon size={20} className="text-blue-500" />}
             </button>
         </nav>
     );

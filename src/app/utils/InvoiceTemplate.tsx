@@ -27,11 +27,11 @@ export default function InvoiceTemplate({ sale }: InvoiceTemplateProps) {
         >
             <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
                 <h2 style={{ fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase' }}>
-                    Burhani Wooden & Timber Mart
+                    Inventory Management System
                 </h2>
-                <span>Shop # 3 Sector 11-B Up More Near Bohri Masjid, North Karachi, Pakistan</span>
+                <span>Karachi, Pakistan</span>
                 <br />
-                <span>Phone: +92 321 2275956 / +92 3343727466</span>
+                <span>Phone: +92 xxx xxxxxxx / +92 xxx xxxxxxx</span>
                 <br />
                 <br />
                 <hr style={{ margin: '0.5rem 0', borderStyle: 'dashed', borderTop: '1px solid #000' }} />

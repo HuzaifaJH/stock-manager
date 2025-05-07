@@ -38,7 +38,7 @@ export default function SuppliersPage() {
     const fetchLedgerAccounts = async () => {
         setIsLoading(true);
         try {
-            const res = await fetch("/api/account-groups/3");
+            const res = await fetch("/api/account-groups/1");
             const data = await res.json();
             setAccountLedgers(data.LedgerAccounts);
         } catch (error) {
