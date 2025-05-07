@@ -34,10 +34,15 @@ Ensure you have the following installed:
    npm install
    ```
 
-3. **Set Up Environment Variables** Create a `.env.local` file in the root directory and add your database credentials:
+3. **Set Up Environment Variables** Create a `.env` file in the root directory and add your database credentials:
 
    ```env
-   DATABASE_URL=mysql://username:password@localhost:3306/stock_manager
+   DB_NAME=ims
+   DB_USER=root
+   DB_PASS=root
+   DB_HOST=localhost
+   DB_PORT=3306
+   NEXT_PUBLIC_API_URL=http://localhost:5353
    ```
 
 ### Running the Application
