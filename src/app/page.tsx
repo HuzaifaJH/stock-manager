@@ -139,37 +139,41 @@ export default function Dashboard() {
               </select>
 
               <div className="overflow-y-auto no-scrollbar max-h-64">
-                <table className="table table-zebra table-sm">
-                  <thead>
-                    <tr>
-                      <th className="text-base-content">Product</th>
-                      <th className="text-right text-base-content">Stock</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[...lowStockProducts]
-                      .filter((p) => !selectedSubCategory || p.SubCategory?.name === selectedSubCategory)
-                      .sort((a, b) => a.stock - b.stock)
-                      .map((product) => (
-                        <tr key={product.id}>
-                          <td>
-                            <div>
-                              <div className="text-base-content">{product.name}</div>
-                              <div className="text-xs text-base-content/70">{product.SubCategory?.name || "N/A"}</div>
-                            </div>
-                          </td>
-                          <td
-                            className={`text-right ${product.stock === 0
-                              ? "text-red-600 font-semibold"
-                              : "text-base-content"
-                              }`}
-                          >
-                            {product.stock} pcs
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
+                {lowStockProducts.length > 0 ? (
+                  <table className="table table-zebra table-sm">
+                    <thead>
+                      <tr>
+                        <th className="text-base-content">Product</th>
+                        <th className="text-right text-base-content">Stock</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[...lowStockProducts]
+                        .filter((p) => !selectedSubCategory || p.SubCategory?.name === selectedSubCategory)
+                        .sort((a, b) => a.stock - b.stock)
+                        .map((product) => (
+                          <tr key={product.id}>
+                            <td>
+                              <div>
+                                <div className="text-base-content">{product.name}</div>
+                                <div className="text-xs text-base-content/70">{product.SubCategory?.name || "N/A"}</div>
+                              </div>
+                            </td>
+                            <td
+                              className={`text-right ${product.stock === 0
+                                ? "text-red-600 font-semibold"
+                                : "text-base-content"
+                                }`}
+                            >
+                              {product.stock} pcs
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="text-center text-base-content/50 py-4">No products found.</div>
+                )}
               </div>
             </div>
 
