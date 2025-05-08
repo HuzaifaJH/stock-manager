@@ -6,7 +6,8 @@
   "type": "module",
   "author": "Huzaifa",
   "description": "Inventory Management System",
-  "_for-website": "next start -p 3000 -H 0.0.0.0",
+  "_start-website": "next start -p 3000 -H 0.0.0.0",
+  "_start-desktop": "concurrently \"next dev\" \"wait-on http://localhost:3000 && electron .\"",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
