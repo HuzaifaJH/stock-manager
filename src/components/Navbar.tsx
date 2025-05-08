@@ -57,6 +57,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, toggleMobileMenu, isSide
 
                 {/* Dashboard Title */}
                 <h1 className="text-lg font-semibold">Inventory Management System</h1>
+                {/* <h1 className="text-lg font-semibold">Burhani Wooden & Timber Mart</h1> */}
             </div>
 
             {/* Theme Toggle Button */}

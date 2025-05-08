@@ -139,6 +139,7 @@ export interface SalesItem {
   quantity: number | null;
   sellingPrice: number | null;
   costPrice: number | null;
+  lastSellingPrice: number | null;
   Product?: Product;
   filteredSubcategories?: Subcategory[];
   filteredProducts?: Product[];

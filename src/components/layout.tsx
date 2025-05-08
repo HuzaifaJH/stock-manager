@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Sidebar from "@/components/sidebar";
-import Navbar from "@/components/navbar";
+import Sidebar from "@/components/Sidebar";
+import Navbar from "@/components/Navbar";
 import { usePathname } from "next/navigation";
 import Loader from "../app/utils/loader";
 import { Toaster } from "react-hot-toast";

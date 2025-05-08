@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiEye, FiPlusCircle, FiTrash2 } from "react-icons/fi";
 import { Category, Subcategory, Product, Sales, SalesItem } from '@/app/utils/interfaces';
 import dayjs from "dayjs";
+import axios from "axios";
 
 export default function SalesPage() {
 
@@ -100,14 +101,14 @@ export default function SalesPage() {
     );
 
     const addItem = () => {
-        setsalesItems([...salesItems, { productId: "", quantity: null, sellingPrice: null, costPrice: null, categoryId: "", subCategoryId: "" }]);
+        setsalesItems([...salesItems, { productId: "", quantity: null, sellingPrice: null, costPrice: null, categoryId: "", subCategoryId: "", lastSellingPrice: null }]);
     };
 
     const updateItem = (index: number, field: keyof SalesItem, value: number | null) => {
         const newItems = [...salesItems];
 
         // newItems[index][field] = value as never;
-        if (field === "quantity" || field === "sellingPrice" || field === "costPrice") {
+        if (field === "quantity" || field === "sellingPrice" || field === "costPrice" || field === "lastSellingPrice") {
             newItems[index][field] = value;
         } else if (field === "productId" && value !== null) {
             newItems[index][field] = value;
@@ -209,13 +210,22 @@ export default function SalesPage() {
             </body>
           </html>
         `);
-        printWindow?.document.close();
+        // printWindow?.document.close();
     };
 
-    const updatePrice = (index: number, id: number) => {
+    const updatePrice = async (index: number, id: number) => {
         const price = products.find((x) => x.id == id)?.price;
-        updateItem(index, "sellingPrice", price ? Number(price) : null);
+        // updateItem(index, "sellingPrice", price ? Number(price) : null);
         updateItem(index, "costPrice", price ? Number(price) : null);
+
+        const response = await axios.get("/api/sales/last-price", {
+            params: { productId: id },
+        });
+        if (response) {
+            updateItem(index, "lastSellingPrice", Number(response.data.sellingPrice));
+        } else {
+            updateItem(index, "lastSellingPrice", 0);
+        }
     }
 
     return (
@@ -531,20 +541,26 @@ export default function SalesPage() {
                                                     {viewMode ? (
                                                         <span>Rs{item.sellingPrice}</span>
                                                     ) : (
-                                                        <input
-                                                            type="number"
-                                                            className="input input-bordered"
-                                                            value={item.sellingPrice === null ? "" : item.sellingPrice}
-                                                            onChange={(e) => updateItem(index, "sellingPrice", e.target.value ? Number(e.target.value) : null)}
-                                                            onBlur={() => {
-                                                                if (item.sellingPrice === null || item.sellingPrice <= 0) {
-                                                                    toast.error("Selling price must be greater than zero");
-                                                                    updateItem(index, "sellingPrice", null);
-                                                                }
-                                                            }}
-                                                            required
-                                                            placeholder="Enter Price"
-                                                        />
+                                                        <div className="mt-5">
+                                                            <input
+                                                                type="number"
+                                                                className="input input-bordered w-full mb-1"
+                                                                value={item.sellingPrice === null ? "" : item.sellingPrice}
+                                                                onChange={(e) => updateItem(index, "sellingPrice", e.target.value ? Number(e.target.value) : null)}
+                                                                onBlur={() => {
+                                                                    if (item.sellingPrice === null || item.sellingPrice <= 0) {
+                                                                        toast.error("Selling price must be greater than zero");
+                                                                        updateItem(index, "sellingPrice", null);
+                                                                    }
+                                                                }}
+                                                                required
+                                                                placeholder="Enter Price"
+                                                            />
+                                                            <div className="flex justify-between text-xs text-gray-500 font-bold">
+                                                                <span>LSP: {item.lastSellingPrice === null ? "" : item.lastSellingPrice} Rs.</span>
+                                                                <span>CP: {item.costPrice} Rs.</span>
+                                                            </div>
+                                                        </div>
                                                     )}
                                                 </td>
                                                 <td className="p-2">Rs{(item.quantity || 0) * (item.sellingPrice || 0)}</td>

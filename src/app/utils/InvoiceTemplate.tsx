@@ -37,6 +37,18 @@ export default function InvoiceTemplate({ sale }: InvoiceTemplateProps) {
                 <hr style={{ margin: '0.5rem 0', borderStyle: 'dashed', borderTop: '1px solid #000' }} />
             </div>
 
+            {/* <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
+                <h2 style={{ fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                    Burhani Wooden & Timber Mart
+                </h2>
+                <span>Shop # 3 Sector 11-B Up More Near Bohri Masjid, North Karachi, Pakistan</span>
+                <br />
+                <span>Phone: +92 321 2275956 / +92 334 3727466</span>
+                <br />
+                <br />
+                <hr style={{ margin: '0.5rem 0', borderStyle: 'dashed', borderTop: '1px solid #000' }} />
+            </div> */}
+
             <div style={{ fontSize: '12px', marginBottom: '0.25rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Date: {dayjs(sale.date).format("YYYY-MM-DD")}</span>
