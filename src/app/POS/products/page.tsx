@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiTrash2 } from "react-icons/fi";
 import { Category, Subcategory, Product, ProductSort, Transaction } from '@/app/utils/interfaces';
+import { formatPKR } from "@/app/utils/amountFormatter";
 
 export default function ProductList() {
     const [products, setProducts] = useState<Product[]>([]);
@@ -218,6 +219,9 @@ export default function ProductList() {
                             <th className="cursor-pointer" onClick={() => handleSort("price")}>
                                 Price {sortKey === "price" && (sortOrder === "asc" ? "↑" : "↓")}
                             </th>
+                            <th className="cursor-pointer">
+                                Unit
+                            </th>
                             <th className="cursor-pointer" onClick={() => handleSort("category")}>
                                 Category {sortKey === "category" && (sortOrder === "asc" ? "↑" : "↓")}
                             </th>
@@ -229,25 +233,30 @@ export default function ProductList() {
                     </thead>
                     <tbody>
                         {paginatedProducts.map((product, index) => (
-                            <tr key={product.id}>
+                            <tr
+                                key={product.id}
+                                className="border-b border-transparent hover:border-l-4 hover:border-l-blue-500 hover:bg-gray-100 cursor-pointer"
+                                onClick={() => openModal(product.id)}
+                            >
                                 <td className="">{(currentPage - 1) * rowsPerPage + index + 1}</td>
-                                <td className="cursor-pointer" onClick={() => openModal(product.id)}>
+                                <td>
                                     {product.name}
                                 </td>
                                 <td className="">{product.stock}</td>
-                                <td className="">{product.price}</td>
+                                <td className="">{formatPKR(product.price)}</td>
+                                <td className="">{product.unit}</td>
                                 <td className="">{product.Category?.name || "No Category"}</td>
                                 <td className="">{product.SubCategory?.name || "No Subcategory"}</td>
                                 <td className="flex items-center space-x-2">
                                     <FiEdit
                                         className="text-warning cursor-pointer"
                                         size={20}
-                                        onClick={() => { setSelectedProduct(product); setIsModalOpen(true); }}
+                                        onClick={(e) => { e.stopPropagation(); setSelectedProduct(product); setIsModalOpen(true); }}
                                     />
                                     <FiTrash2
                                         className="text-error cursor-pointer"
                                         size={20}
-                                        onClick={() => handleDelete(product.id)}
+                                        onClick={(e) => { e.stopPropagation(); handleDelete(product.id) }}
                                     />
                                 </td>
                             </tr>
@@ -312,6 +321,7 @@ export default function ProductList() {
                                 const formData = new FormData(e.target as HTMLFormElement);
                                 const newProduct = {
                                     name: formData.get("name"),
+                                    unit: formData.get("unit"),
                                     stock: Number(formData.get("stock")),
                                     price: Number(formData.get("price")),
                                     categoryId: Number(formData.get("categoryId")),
@@ -357,9 +367,8 @@ export default function ProductList() {
                             </label>
                             <label className="block my-2">
                                 Stock:
-                                <input name="stock" type="number" defaultValue={selectedProduct?.stock ?? ""} className="input input-bordered w-full" required />
+                                <input name="stock" type="number" step={0.25} defaultValue={selectedProduct?.stock ?? ""} className="input input-bordered w-full" required />
                             </label>
-
                             <label className="block my-2">
                                 Price:
                                 <input name="price" defaultValue={selectedProduct?.price ?? ""} type="number" className="input input-bordered w-full" required
@@ -371,6 +380,22 @@ export default function ProductList() {
                                         }
                                     }}
                                 />
+                            </label>
+
+                            <label className="block my-2">
+                                Unit:
+                                <select
+                                    name="unit"
+                                    defaultValue={selectedProduct?.unit ?? ""}
+                                    className="select select-bordered w-full"
+                                    required
+                                >
+                                    <option value="" disabled>Select unit</option>
+                                    <option value="pcs">pcs</option>
+                                    <option value="kg">kg</option>
+                                    <option value="g">g</option>
+                                    <option value="ft">ft</option>
+                                </select>
                             </label>
 
                             <label className="block my-2">

@@ -8,6 +8,7 @@ import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiEye, FiPlusCircle, FiT
 import { Category, Subcategory, Product, Sales, SalesItem } from '@/app/utils/interfaces';
 import dayjs from "dayjs";
 import axios from "axios";
+import { formatPKR } from "@/app/utils/amountFormatter";
 
 export default function SalesPage() {
 
@@ -101,21 +102,33 @@ export default function SalesPage() {
     );
 
     const addItem = () => {
-        setsalesItems([...salesItems, { productId: "", quantity: null, sellingPrice: null, costPrice: null, categoryId: "", subCategoryId: "", lastSellingPrice: null }]);
+        setsalesItems([...salesItems, { productId: "", quantity: null, sellingPrice: null, costPrice: null, stock: null, unit: "", categoryId: "", subCategoryId: "", lastSellingPrice: null }]);
     };
 
-    const updateItem = (index: number, field: keyof SalesItem, value: number | null) => {
+    const updateItem = (
+        index: number,
+        field: keyof SalesItem,
+        value: string | number | null
+    ) => {
         const newItems = [...salesItems];
 
-        // newItems[index][field] = value as never;
-        if (field === "quantity" || field === "sellingPrice" || field === "costPrice" || field === "lastSellingPrice") {
+        if (
+            field === "quantity" ||
+            field === "sellingPrice" ||
+            field === "costPrice" ||
+            field === "lastSellingPrice" ||
+            field === "stock"
+        ) {
+            newItems[index][field] = value as number;
+        } else if (field === "productId" && typeof value === "number") {
             newItems[index][field] = value;
-        } else if (field === "productId" && value !== null) {
+        } else if (field === "unit" && typeof value === "string") {
             newItems[index][field] = value;
         }
 
         setsalesItems(newItems);
     };
+
 
     const removeItem = (index: number) => {
         setsalesItems(salesItems.filter((_, i) => i !== index));
@@ -214,9 +227,11 @@ export default function SalesPage() {
     };
 
     const updatePrice = async (index: number, id: number) => {
-        const price = products.find((x) => x.id == id)?.price;
+        const { price, stock, unit } = products.find((x) => x.id == id) || {};
         // updateItem(index, "sellingPrice", price ? Number(price) : null);
         updateItem(index, "costPrice", price ? Number(price) : null);
+        updateItem(index, "stock", stock ? stock : null);
+        updateItem(index, "unit", unit ? unit : null);
 
         const response = await axios.get("/api/sales/last-price", {
             params: { productId: id },
@@ -272,7 +287,7 @@ export default function SalesPage() {
                             <th className="cursor-pointer" onClick={handleSort}>
                                 Date {sortOrder === "asc" ? "↑" : "↓"}
                             </th>
-                            <th>Total Price (Rs)</th>
+                            <th>Total Price</th>
                             <th>Payment</th>
                             <th>Actions</th>
                         </tr>
@@ -284,7 +299,7 @@ export default function SalesPage() {
                                 <td>S#{sales.id}</td>
                                 <td>{sales.customerName}</td>
                                 <td>{new Date(sales.date).toLocaleDateString("en-GB")}</td>
-                                <td>{sales.totalPrice}</td>
+                                <td>{formatPKR(sales.totalPrice ?? 0)}</td>
                                 <td>
                                     {sales.isPaymentMethodCash ? (
                                         <span className="badge badge-success">Cash</span>
@@ -461,8 +476,8 @@ export default function SalesPage() {
                                             <th className="w-[14.28%]">Sub Category</th>
                                             <th className="w-[14.28%]">Product</th>
                                             <th className="w-[14.28%]">Quantity</th>
-                                            <th className="w-[14.28%]">Price (Rs)</th>
-                                            <th className="w-[14.28%]">Total Price (Rs)</th>
+                                            <th className="w-[14.28%]">Price</th>
+                                            <th className="w-[14.28%]">Total Price</th>
                                             {!viewMode && <th className="w-[14.28%]">Actions</th>}
                                         </tr>
                                     </thead>
@@ -519,27 +534,35 @@ export default function SalesPage() {
                                                 </td>
                                                 <td className="p-2">
                                                     {viewMode ? (
-                                                        <span>{item.quantity}</span>
+                                                        <span>{item.quantity} {item.Product?.unit}</span>
                                                     ) : (
-                                                        <input
-                                                            type="number"
-                                                            className="input input-bordered"
-                                                            value={item.quantity === null ? "" : item.quantity}
-                                                            onChange={(e) => updateItem(index, "quantity", e.target.value ? Number(e.target.value) : null)}
-                                                            onBlur={() => {
-                                                                if (item.quantity === null || item.quantity <= 0) {
-                                                                    toast.error("Quantity must be greater than zero");
-                                                                    updateItem(index, "quantity", null);
-                                                                }
-                                                            }}
-                                                            required
-                                                            placeholder="Enter Quantity"
-                                                        />
+                                                        <div className="mt-5">
+                                                            <input
+                                                                step={0.25}
+                                                                type="number"
+                                                                className="input input-bordered"
+                                                                value={item.quantity === null ? "" : item.quantity}
+                                                                onChange={(e) => updateItem(index, "quantity", e.target.value ? Number(e.target.value) : null)}
+                                                                onBlur={() => {
+                                                                    if (item.quantity === null || item.quantity <= 0) {
+                                                                        toast.error("Quantity must be greater than zero");
+                                                                        updateItem(index, "quantity", null);
+                                                                    }
+                                                                }}
+                                                                required
+                                                                placeholder="Enter Quantity"
+                                                            />
+                                                            <div className="flex justify-between text-xs text-gray-500 font-bold">
+                                                                <span>
+                                                                    Stock: {(item.Product?.stock ?? item.stock) ?? ""} {(item.Product?.unit ?? item.unit) ?? ""}
+                                                                </span>
+                                                            </div>
+                                                        </div>
                                                     )}
                                                 </td>
                                                 <td className="p-2">
                                                     {viewMode ? (
-                                                        <span>Rs{item.sellingPrice}</span>
+                                                        <span>{formatPKR(item.sellingPrice ?? 0)}</span>
                                                     ) : (
                                                         <div className="mt-5">
                                                             <input
@@ -557,13 +580,13 @@ export default function SalesPage() {
                                                                 placeholder="Enter Price"
                                                             />
                                                             <div className="flex justify-between text-xs text-gray-500 font-bold">
-                                                                <span>LSP: {item.lastSellingPrice === null ? "" : item.lastSellingPrice} Rs.</span>
-                                                                <span>CP: {item.costPrice} Rs.</span>
+                                                                <span>LSP: Rs {item.lastSellingPrice === null ? "" : item.lastSellingPrice}</span>
+                                                                <span>CP: Rs {item.costPrice}</span>
                                                             </div>
                                                         </div>
                                                     )}
                                                 </td>
-                                                <td className="p-2">Rs{(item.quantity || 0) * (item.sellingPrice || 0)}</td>
+                                                <td className="p-2">{formatPKR((item.quantity || 0) * (item.sellingPrice || 0))}</td>
                                                 {!viewMode && (
                                                     <td className="p-2">
                                                         <FiTrash2 className="text-error cursor-pointer" size={20} onClick={() => removeItem(index)} />
@@ -579,7 +602,7 @@ export default function SalesPage() {
                                 <div className="font-semibold">
                                     Discount:
                                     {viewMode ? (
-                                        <span className="ml-2">{selectedSale.discount} Rs.</span>
+                                        <span className="ml-2">{formatPKR(selectedSale.discount)}</span>
                                     ) : (
                                         <input
                                             type="number"
@@ -600,14 +623,16 @@ export default function SalesPage() {
 
                                 <div className="font-semibold">
                                     Total:
-                                    {(
-                                        Number(
-                                            salesItems.reduce(
-                                                (acc, item) => acc + (item.quantity || 0) * (item.sellingPrice || 0),
-                                                0
-                                            ).toFixed(2)
-                                        ) - (discount || 0)
-                                    ).toFixed(2)} Rs
+                                    <span className="ml-2">{
+                                        formatPKR(
+                                            Number(
+                                                salesItems.reduce(
+                                                    (acc, item) => acc + (item.quantity || 0) * (item.sellingPrice || 0),
+                                                    0
+                                                ).toFixed(2)
+                                            ) - (discount || 0)
+                                        )}
+                                    </span>
                                 </div>
                             </div>
 

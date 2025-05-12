@@ -15,8 +15,8 @@ const Product = sequelize.define(
       allowNull: false,
     },
     stock: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0,
+      type: DataTypes.FLOAT,
+      allowNull: false,
     },
     categoryId: {
       type: DataTypes.INTEGER,
@@ -34,9 +34,21 @@ const Product = sequelize.define(
         key: "id",
       },
     },
+    unit: {
+      type: DataTypes.ENUM,
+      allowNull: false,
+      values: ["pcs", "kg", "g", "ft"],
+    },
   },
   {
     timestamps: true,
+    indexes: [
+      {
+        unique: true,
+        fields: ["name", "subCategoryId"],
+        name: "unique_name_per_subcategory",
+      },
+    ],
   }
 );
 

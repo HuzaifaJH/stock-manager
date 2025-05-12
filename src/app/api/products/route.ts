@@ -25,13 +25,15 @@ export async function GET() {
 // POST create a new product
 export async function POST(req: Request) {
   try {
-    const { name, stock, categoryId, subCategoryId, price } = await req.json();
+    const { name, stock, categoryId, subCategoryId, price, unit } =
+      await req.json();
     const newProduct = await Product.create({
       name,
       stock,
       categoryId,
       subCategoryId,
-      price
+      price,
+      unit,
     });
     return NextResponse.json(newProduct, { status: 201 });
   } catch (error) {

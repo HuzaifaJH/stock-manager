@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { accountTypes } from "@/app/utils/accountType";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { LedgerAccount, LedgerEntries } from '@/app/utils/interfaces';
+import { formatPKR } from "@/app/utils/amountFormatter";
 
 export default function TrialBalancePage() {
 
@@ -118,16 +119,16 @@ export default function TrialBalancePage() {
                         {trialBalance.map((row, idx) => (
                             <tr key={idx}>
                                 <td>{row.name}</td>
-                                <td>{row.debit ? row.debit.toFixed(2) : "-"}</td>
-                                <td>{row.credit ? row.credit.toFixed(2) : "-"}</td>
+                                <td>{row.debit ? formatPKR(row.debit) : "-"}</td>
+                                <td>{row.credit ? formatPKR(row.credit) : "-"}</td>
                             </tr>
                         ))}
                     </tbody>
                     <tfoot>
                         <tr className="font-bold bg-base-200">
                             <td>Total</td>
-                            <td>{totalDebit.toFixed(2)}</td>
-                            <td>{totalCredit.toFixed(2)}</td>
+                            <td>{formatPKR(totalDebit)}</td>
+                            <td>{formatPKR(totalCredit)}</td>
                         </tr>
                     </tfoot>
                 </table>

@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiTrash2 } from "react-icons/fi";
 import { TbCreditCardPay } from "react-icons/tb";
 import { LedgerAccount, Supplier } from '@/app/utils/interfaces';
+import { formatPKR } from "@/app/utils/amountFormatter";
 
 export default function SuppliersPage() {
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -16,6 +17,7 @@ export default function SuppliersPage() {
     const [showPayoutModal, setShowPayoutModal] = useState<boolean>(false);
     const [accountLedgers, setAccountLedgers] = useState<LedgerAccount[]>([]);
     const [accountLedger, setAccountLedger] = useState<number | "">("");
+    const [sortKey, setSortKey] = useState<keyof Supplier | null>(null);
 
     useEffect(() => {
         fetchSuppliers();
@@ -48,7 +50,12 @@ export default function SuppliersPage() {
         }
     };
 
-    const handleSort = () => {
+    // const handleSort = () => {
+    //     setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    // };
+
+    const handleSort = (key: keyof Supplier) => {
+        setSortKey(key);
         setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     };
 
@@ -56,9 +63,15 @@ export default function SuppliersPage() {
         supplier.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const sortedSuppliers = [...filteredSuppliers].sort((a, b) =>
-        sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
-    );
+    // const sortedSuppliers = [...filteredSuppliers].sort((a, b) =>
+    //     sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+    // );
+
+    const sortedSuppliers = filteredSuppliers.sort((a, b) => {
+        if (a.payableAmount > 0 && b.payableAmount === 0) return -1;
+        if (a.payableAmount === 0 && b.payableAmount > 0) return 1;
+        return 0;
+    });
 
     const totalPages = Math.ceil(sortedSuppliers.length / rowsPerPage);
     const paginatedSuppliers = sortedSuppliers.slice(
@@ -112,11 +125,13 @@ export default function SuppliersPage() {
                     <thead className="border-2">
                         <tr className="bg-base-100 text-base-content">
                             <th className="">#</th>
-                            <th className="cursor-pointer" onClick={handleSort}>
-                                Name {sortOrder === "asc" ? "↑" : "↓"}
+                            <th className="cursor-pointer" onClick={() => handleSort("name")}>
+                                Name {sortKey === "name" && (sortOrder === "asc" ? "↑" : "↓")}
                             </th>
                             <th className="">Phone</th>
-                            <th className="">Payable Amount (Rs)</th>
+                            <th className="cursor-pointer" onClick={() => handleSort("payableAmount")}>
+                                Payable Amount (Rs) {sortKey === "payableAmount" && (sortOrder === "asc" ? "↑" : "↓")}
+                            </th>
                             <th className="">Actions</th>
                         </tr>
                     </thead>
@@ -126,7 +141,7 @@ export default function SuppliersPage() {
                                 <td>{(currentPage - 1) * rowsPerPage + index + 1}</td>
                                 <td>{supplier.name}</td>
                                 <td>{supplier.phoneNumber}</td>
-                                <td>{supplier.payableAmount}</td>
+                                <td>{formatPKR(supplier.payableAmount)}</td>
                                 <td className="flex items-center space-x-2">
                                     <FiEdit
                                         className="text-warning cursor-pointer mx-1"

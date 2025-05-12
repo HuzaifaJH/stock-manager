@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { LedgerEntries } from '@/app/utils/interfaces';
+import { formatPKR } from "@/app/utils/amountFormatter";
 
 // const accountTypes = [
 //     { code: 1, account: "Asset" },
@@ -91,7 +92,7 @@ export default function BalanceSheet() {
                         <thead className="border-2">
                             <tr>
                                 <th>Account</th>
-                                <th className="text-right">Amount (Rs)</th>
+                                <th className="text-right">Amount</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -99,13 +100,13 @@ export default function BalanceSheet() {
                                 <tr key={name}>
                                     <td>{name}</td>
                                     <td className="text-right">
-                                        {calcBalance(data.debit, data.credit).toFixed(2)}
+                                        {formatPKR(calcBalance(data.debit, data.credit))}
                                     </td>
                                 </tr>
                             ))}
                             <tr className="font-bold bg-base-200">
                                 <td>Total Assets</td>
-                                <td className="text-right">{totalAssets.toFixed(2)}</td>
+                                <td className="text-right">{formatPKR(totalAssets)}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -118,7 +119,7 @@ export default function BalanceSheet() {
                         <thead className="border-2">
                             <tr>
                                 <th>Account</th>
-                                <th className="text-right">Amount (Rs)</th>
+                                <th className="text-right">Amount</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -126,13 +127,13 @@ export default function BalanceSheet() {
                                 <tr key={name}>
                                     <td>{name}</td>
                                     <td className="text-right">
-                                        {calcBalance(data.credit, data.debit).toFixed(2)}
+                                        {formatPKR(calcBalance(data.credit, data.debit))}
                                     </td>
                                 </tr>
                             ))}
                             <tr className="font-bold bg-base-200">
                                 <td>Total Liabilities</td>
-                                <td className="text-right">{totalLiabilities.toFixed(2)}</td>
+                                <td className="text-right">{formatPKR(totalLiabilities)}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -142,7 +143,7 @@ export default function BalanceSheet() {
                         <thead className="border-2">
                             <tr>
                                 <th>Account</th>
-                                <th className="text-right">Amount (Rs)</th>
+                                <th className="text-right">Amount</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -150,17 +151,17 @@ export default function BalanceSheet() {
                                 <tr key={name}>
                                     <td>{name}</td>
                                     <td className="text-right">
-                                        {calcBalance(data.credit, data.debit).toFixed(2)}
+                                        {formatPKR(calcBalance(data.credit, data.debit))}
                                     </td>
                                 </tr>
                             ))}
                             <tr className="font-bold bg-base-200">
                                 <td>Total Equity</td>
-                                <td className="text-right">{totalEquity.toFixed(2)}</td>
+                                <td className="text-right">{formatPKR(totalEquity)}</td>
                             </tr>
                             <tr className="font-bold bg-base-300">
                                 <td>Total Liabilities & Equity</td>
-                                <td className="text-right">{totalLiabilitiesAndEquity.toFixed(2)}</td>
+                                <td className="text-right">{formatPKR(totalLiabilitiesAndEquity)}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -173,7 +174,7 @@ export default function BalanceSheet() {
                     <p className="text-success">Balanced ✅</p>
                 ) : (
                     <p className="text-error">
-                        Not Balanced ❌ — Difference: {(totalAssets - totalLiabilitiesAndEquity).toFixed(2)} Rs
+                        Not Balanced ❌ — Difference: {formatPKR(totalAssets - totalLiabilitiesAndEquity)}
                     </p>
                 )}
             </div>

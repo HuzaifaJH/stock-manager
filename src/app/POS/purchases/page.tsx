@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiEye, FiPlusCircle, FiTrash2 } from "react-icons/fi";
 import { Category, Subcategory, Product, Supplier, Purchase, PurchaseItem } from '@/app/utils/interfaces';
 import dayjs from "dayjs";
+import { formatPKR } from "@/app/utils/amountFormatter";
 
 export default function PurchasesPage() {
 
@@ -208,7 +209,7 @@ export default function PurchasesPage() {
                             <th className="cursor-pointer" onClick={handleSort}>
                                 Date {sortOrder === "asc" ? "↑" : "↓"}
                             </th>
-                            <th>Total Price (Rs)</th>
+                            <th>Total Price</th>
                             <th>Payment</th>
                             <th>Actions</th>
                         </tr>
@@ -220,7 +221,7 @@ export default function PurchasesPage() {
                                 <td>P#{purchase.id}</td>
                                 <td>{purchase.Supplier?.name}</td>
                                 <td>{new Date(purchase.date).toLocaleDateString("en-GB")}</td>
-                                <td>{purchase.totalPrice}</td>
+                                <td>{formatPKR(purchase.totalPrice ?? 0)}</td>
                                 <td>
                                     {purchase.isPaymentMethodCash ? (
                                         <span className="badge badge-success">Cash</span>
@@ -398,8 +399,8 @@ export default function PurchasesPage() {
                                             <th className="w-[14.28%]">Sub Category</th>
                                             <th className="w-[14.28%]">Product</th>
                                             <th className="w-[14.28%]">Quantity</th>
-                                            <th className="w-[14.28%]">Price (Rs)</th>
-                                            <th className="w-[14.28%]">Total Price (Rs)</th>
+                                            <th className="w-[14.28%]">Price</th>
+                                            <th className="w-[14.28%]">Total Price</th>
                                             {!viewMode && <th className="w-[14.28%]">Actions</th>}
                                         </tr>
                                     </thead>
@@ -459,6 +460,7 @@ export default function PurchasesPage() {
                                                         <span>{item.quantity}</span>
                                                     ) : (
                                                         <input
+                                                            step={0.25}
                                                             type="number"
                                                             className="input input-bordered w-full"
                                                             value={item.quantity === null ? "" : item.quantity}
@@ -476,7 +478,7 @@ export default function PurchasesPage() {
                                                 </td>
                                                 <td className="p-2">
                                                     {viewMode ? (
-                                                        <span>Rs {item.purchasePrice}</span>
+                                                        <span>{formatPKR(item.purchasePrice ?? 0)}</span>
                                                     ) : (
                                                         <input
                                                             type="number"
@@ -494,7 +496,7 @@ export default function PurchasesPage() {
                                                         />
                                                     )}
                                                 </td>
-                                                <td className="p-2">Rs {(item.quantity || 0) * (item.purchasePrice || 0)}</td>
+                                                <td className="p-2">{formatPKR((item.quantity || 0) * (item.purchasePrice || 0))}</td>
                                                 {!viewMode && (
                                                     <td className="p-2">
                                                         <FiTrash2 className="text-error cursor-pointer" size={20} onClick={() => removeItem(index)} />
@@ -507,8 +509,10 @@ export default function PurchasesPage() {
                             </div>
 
                             <div className="mt-4 font-semibold text-right">
-                                Total: Rs
-                                {purchaseItems.reduce((acc, item) => acc + (item.quantity || 0) * (item.purchasePrice || 0), 0).toFixed(2)}
+                                Total:
+                                <span className="ml-2">
+                                    {formatPKR(purchaseItems.reduce((acc, item) => acc + (item.quantity || 0) * (item.purchasePrice || 0), 0))}
+                                </span>
                             </div>
 
                             <div className="modal-action mt-auto">

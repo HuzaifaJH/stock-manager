@@ -1,12 +1,3 @@
-// export default function Dashboard() {
-//   return (
-//     <main className="p-6">
-//       <h1 className="text-2xl font-bold">Dashboard</h1>
-//       <p>Welcome to your stock management system!</p>
-//     </main>
-//   );
-// }
-
 "use client"
 
 import SalesProfitChart from "@/components/salesProfitChart";
@@ -15,6 +6,7 @@ import { AiOutlineRise } from "react-icons/ai";
 import { FaClipboardList, FaMoneyBillWave } from "react-icons/fa";
 import { FcSalesPerformance } from "react-icons/fc";
 import { Product, SalesItem } from "./utils/interfaces";
+import { formatPKR } from '@/app/utils/amountFormatter';
 
 export default function Dashboard() {
 
@@ -73,7 +65,7 @@ export default function Dashboard() {
                 <FcSalesPerformance className="text-purple-600 text-xl" />
               </div>
               <div className="text-base-content text-sm font-medium">Monthly Sales</div>
-              <div className="text-2xl font-bold text-base-content">{totalSales} Rs.</div>
+              <div className="text-2xl font-bold text-base-content">{formatPKR(totalSales)}</div>
             </div>
 
             {/* Total Profit */}
@@ -82,7 +74,7 @@ export default function Dashboard() {
                 <AiOutlineRise className="text-green-600 text-xl" />
               </div>
               <div className="text-base-content text-sm font-medium">Total Profit</div>
-              <div className="text-2xl font-bold text-base-content">{totalProfit} Rs.</div>
+              <div className="text-2xl font-bold text-base-content">{formatPKR(totalProfit)}</div>
             </div>
 
             {/* Total Expenses */}
@@ -91,7 +83,7 @@ export default function Dashboard() {
                 <FaMoneyBillWave className="text-red-600 text-xl" />
               </div>
               <div className="text-base-content text-sm font-medium">Total Expenses</div>
-              <div className="text-2xl font-bold text-base-content">{totalExpense} Rs.</div>
+              <div className="text-2xl font-bold text-base-content">{formatPKR(totalExpense)}</div>
             </div>
 
             {/* Total Orders */}
@@ -165,7 +157,7 @@ export default function Dashboard() {
                                 : "text-base-content"
                                 }`}
                             >
-                              {product.stock} pcs
+                              {product.stock} {product.unit}
                             </td>
                           </tr>
                         ))}
@@ -201,7 +193,7 @@ export default function Dashboard() {
                             </div>
                           </td>
                           <td className="text-right text-base-content">
-                            {salesItem.totalSold} pcs
+                            {salesItem.totalSold} {salesItem.Product?.unit}
                           </td>
                         </tr>
                       ))}

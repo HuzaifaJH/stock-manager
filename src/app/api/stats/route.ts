@@ -59,7 +59,7 @@ export async function GET(req: Request) {
       include: [
         {
           model: Product,
-          attributes: ["name"],
+          attributes: ["name", "unit"],
           include: [{ model: SubCategory, attributes: ["id", "name"] }],
         },
       ],
@@ -68,7 +68,7 @@ export async function GET(req: Request) {
     // Low on Stock Products
     const lowStockProducts = await Product.findAll({
       where: { stock: { [Op.lt]: 5 } },
-      attributes: ["id", "name", "stock"],
+      attributes: ["id", "name", "stock", "unit"],
       include: [{ model: SubCategory, attributes: ["id", "name"] }],
     });
 

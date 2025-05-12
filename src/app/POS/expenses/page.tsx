@@ -5,6 +5,7 @@ import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiTrash2 } from "react-i
 import { Expense, LedgerAccount } from '@/app/utils/interfaces';
 import axios from "axios";
 import { accountTypes } from "@/app/utils/accountType";
+import { formatPKR } from "@/app/utils/amountFormatter";
 
 export default function ExpensesPage() {
     const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -142,7 +143,7 @@ export default function ExpensesPage() {
                                 <td className="">{(currentPage - 1) * rowsPerPage + index + 1}</td>
                                 <td className="">{expense.LedgerAccount?.name}</td>
                                 <td className="">{new Date(expense.date).toLocaleDateString("en-GB")}</td>
-                                <td className="">{expense.amount}</td>
+                                <td className="">{formatPKR(expense.amount)}</td>
                                 <td className="">{expense.description}</td>
                                 <td className="flex items-center space-x-2">
                                     <FiEdit
@@ -266,7 +267,7 @@ export default function ExpensesPage() {
                                     defaultValue={selectedExpense.date}
                                     required
                                     max={new Date().toISOString().split("T")[0]}
-                                    disabled
+                                    readOnly
                                 />
                             </label>
                             <label className="block my-2">

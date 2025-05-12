@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
 import { LedgerEntries, LedgerAccount } from '@/app/utils/interfaces';
+import { formatPKR } from "@/app/utils/amountFormatter";
 // import jsPDF from "jspdf";
 // import html2canvas from "html2canvas";
 
@@ -97,7 +98,7 @@ export default function JournalEntries() {
                                         {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
                                         Ref: {referenceId} |{" "}
                                         {/* {new Date(entries[0].Transaction?.date || entries[0].createdAt).toLocaleDateString("en-GB")}| */}
-                                        Total:{" "} {entries[0].Transaction?.totalAmount || "N/A"} Rs
+                                        {" "} {formatPKR(entries[0].Transaction?.totalAmount ?? 0) || "N/A"}
                                     </td>
                                 </tr>
                             );
@@ -133,8 +134,8 @@ export default function JournalEntries() {
                                                         : ""}
                                                 </td>
                                                 <td className="td-bordered">{entry.description}</td>
-                                                <td className="td-bordered">{isDebit ? entry.amount : "-"}</td>
-                                                <td className="td-bordered">{!isDebit ? entry.amount : "-"}</td>
+                                                <td className="td-bordered">{isDebit ? formatPKR(entry.amount) : "-"}</td>
+                                                <td className="td-bordered">{!isDebit ? formatPKR(entry.amount) : "-"}</td>
                                                 {accountFilter != "" && (
                                                     <td className="td-bordered">
                                                         {counterAccount || "-"}
@@ -142,7 +143,7 @@ export default function JournalEntries() {
                                                 )}
                                                 {accountFilter != "" && (
                                                     <td className="td-bordered">
-                                                        {runningBalance >= 0 ? Math.abs(runningBalance) : "(" + Math.abs(runningBalance) + ")"}
+                                                        {runningBalance >= 0 ? Math.abs(runningBalance) : "(" + formatPKR(Math.abs(runningBalance)) + ")"}
                                                         {/* {Math.abs(runningBalance)} {runningBalance >= 0 ? "Dr" : "Cr"} */}
                                                     </td>
                                                 )}
@@ -157,10 +158,10 @@ export default function JournalEntries() {
             </div>
             <div className="flex justify-end gap-4 mt-4 text-sm font-medium text-right">
                 <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full">
-                    Debit: {totalDebit.toFixed(2)}
+                    Debit: {formatPKR(totalDebit)}
                 </div>
                 <div className="bg-red-100 text-red-800 px-3 py-1 rounded-full">
-                    Credit: {totalCredit.toFixed(2)}
+                    Credit: {formatPKR(totalCredit)}
                 </div>
             </div>
             <div className="flex gap-3 mb-4 print:hidden">

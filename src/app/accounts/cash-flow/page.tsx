@@ -1,4 +1,5 @@
 "use client";
+import { formatPKR } from "@/app/utils/amountFormatter";
 import { LedgerEntries } from "@/app/utils/interfaces";
 import { useEffect, useState } from "react";
 
@@ -42,7 +43,7 @@ export default function CashFlowStatement() {
 
         data.forEach((entry: LedgerEntries) => {
             const type = entry.type; // Debit or Credit
-            const amount = entry.amount;
+            const amount = Number(entry.amount);
             const acctType = entry.LedgerAccount?.AccountGroup?.accountType;
 
             if (!acctType) return;
@@ -99,48 +100,48 @@ export default function CashFlowStatement() {
                 <h2 className="text-lg font-semibold mb-2">Operating Activities</h2>
                 <div className="flex justify-between">
                     <p>Cash Inflows from Operating Activities</p>
-                    <p>{totals.operatingIn.toFixed(2)} Rs</p>
+                    <p>{formatPKR(totals.operatingIn)} Rs</p>
                 </div>
                 <div className="flex justify-between">
                     <p>Cash Outflows from Operating Activities</p>
-                    <p>({totals.operatingOut.toFixed(2)}) Rs</p>
+                    <p>({formatPKR(totals.operatingOut)}) Rs</p>
                 </div>
                 <div className="flex justify-between font-bold border-t mt-2 pt-2">
                     <p>Net Cash from Operating Activities</p>
-                    <p>{netOperating.toFixed(2)} Rs</p>
+                    <p>{formatPKR(netOperating)} Rs</p>
                 </div>
 
                 <h2 className="text-lg font-semibold mt-6 mb-2">Investing Activities</h2>
                 <div className="flex justify-between">
                     <p>Cash Inflows from Investing Activities</p>
-                    <p>{totals.investingIn.toFixed(2)} Rs</p>
+                    <p>{formatPKR(totals.investingIn)} Rs</p>
                 </div>
                 <div className="flex justify-between">
                     <p>Cash Outflows from Investing Activities</p>
-                    <p>({totals.investingOut.toFixed(2)}) Rs</p>
+                    <p>({formatPKR(totals.investingOut)}) Rs</p>
                 </div>
                 <div className="flex justify-between font-bold border-t mt-2 pt-2">
                     <p>Net Cash from Investing Activities</p>
-                    <p>{netInvesting.toFixed(2)} Rs</p>
+                    <p>{formatPKR(netInvesting)} Rs</p>
                 </div>
 
                 <h2 className="text-lg font-semibold mt-6 mb-2">Financing Activities</h2>
                 <div className="flex justify-between">
                     <p>Cash Inflows from Financing Activities</p>
-                    <p>{totals.financingIn.toFixed(2)} Rs</p>
+                    <p>{formatPKR(totals.financingIn)} Rs</p>
                 </div>
                 <div className="flex justify-between">
                     <p>Cash Outflows from Financing Activities</p>
-                    <p>({totals.financingOut.toFixed(2)}) Rs</p>
+                    <p>({formatPKR(totals.financingOut)}) Rs</p>
                 </div>
                 <div className="flex justify-between font-bold border-t mt-2 pt-2">
                     <p>Net Cash from Financing Activities</p>
-                    <p>{netFinancing.toFixed(2)} Rs</p>
+                    <p>{formatPKR(netFinancing)} Rs</p>
                 </div>
 
                 <div className="flex justify-between text-xl font-bold mt-6 pt-4 border-t">
                     <p>Total Net Cash Flow</p>
-                    <p>{netCashFlow.toFixed(2)} Rs</p>
+                    <p>{formatPKR(netCashFlow)} Rs</p>
                 </div>
             </div>
         </div>

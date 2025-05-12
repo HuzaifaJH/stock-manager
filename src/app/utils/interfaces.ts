@@ -9,6 +9,8 @@ export interface AccountGroup {
 export interface Category {
   id: number;
   name: string;
+  SubCategories?: Subcategory[];
+  categoryTotalValue?: number;
 }
 
 export interface Expense {
@@ -69,6 +71,8 @@ export interface Product {
   price: number;
   Category: Category;
   SubCategory: Subcategory;
+  unit: string;
+  stockValue?: number;
 }
 
 export interface ProductSort {
@@ -139,6 +143,8 @@ export interface SalesItem {
   quantity: number | null;
   sellingPrice: number | null;
   costPrice: number | null;
+  stock: number | null;
+  unit: string | null;
   lastSellingPrice: number | null;
   Product?: Product;
   filteredSubcategories?: Subcategory[];
@@ -172,6 +178,8 @@ export interface Subcategory {
   name: string;
   categoryId: number;
   Category?: Category;
+  Products?: Product[];
+  subTotalValue?: number;
 }
 
 export interface Supplier {

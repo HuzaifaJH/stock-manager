@@ -41,14 +41,14 @@ export async function PUT(
   }
 
   try {
-    const { name, stock, price } = await req.json();
+    const { name, stock, price, unit } = await req.json();
     const product = await Product.findByPk(Number(id));
 
     if (!product) {
       return Response.json({ error: "Product not found" }, { status: 404 });
     }
 
-    await product.update({ name, stock, price });
+    await product.update({ name, stock, price, unit });
     return Response.json(product);
   } catch (error) {
     return Response.json(

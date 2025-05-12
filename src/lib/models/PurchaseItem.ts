@@ -14,13 +14,22 @@ const PurchaseItem = sequelize.define("PurchaseItem", {
   quantity: {
     type: DataTypes.FLOAT,
     allowNull: false,
+    validate: {
+      min: 0.25,
+    },
   },
   purchasePrice: {
     type: DataTypes.FLOAT,
     allowNull: false,
+    validate: {
+      min: 0,
+    },
   },
 });
 
-PurchaseItem.belongsTo(Product, { foreignKey: "productId", onDelete: "RESTRICT" });
+PurchaseItem.belongsTo(Product, {
+  foreignKey: "productId",
+  onDelete: "RESTRICT",
+});
 
 export default PurchaseItem;

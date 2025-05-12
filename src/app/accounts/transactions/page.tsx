@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { FiArrowLeftCircle, FiArrowRightCircle, FiEye, FiPlusCircle, FiTrash2 } from "react-icons/fi";
 import { accountTypes } from "@/app/utils/accountType";
 import { AccountGroup, JournalEntry, LedgerAccount, Transaction } from '@/app/utils/interfaces';
+import { formatPKR } from "@/app/utils/amountFormatter";
 
 export default function TransactionsPage() {
 
@@ -204,7 +205,7 @@ export default function TransactionsPage() {
                                 Date {sortOrder === "asc" ? "↑" : "↓"}
                             </th>
                             <th>Reference ID</th>
-                            <th>Total Amount (Rs)</th>
+                            <th>Total Amount</th>
                             <th>View Details</th>
                         </tr>
                     </thead>
@@ -215,7 +216,7 @@ export default function TransactionsPage() {
                                 <td>{transaction.type}</td>
                                 <td>{new Date(transaction.date).toLocaleDateString("en-GB")}</td>
                                 <td>{transaction.referenceId}</td>
-                                <td>{transaction.totalAmount}</td>
+                                <td>{formatPKR(transaction.totalAmount ?? 0)}</td>
                                 <td className="flex items-center space-x-2">
                                     <FiEye
                                         className="text-blue-500 cursor-pointer mx-1"
@@ -376,15 +377,15 @@ export default function TransactionsPage() {
                                     <label className="font-medium whitespace-nowrap">Total Amount:</label>
                                     <div className="w-full">
                                         {viewMode ? (
-                                            <span>{Number(selectedTransaction.totalAmount)}</span>
+                                            <span>{formatPKR(selectedTransaction.totalAmount ?? 0)}</span>
                                         ) : (
                                             <input
-                                                type="number"
+                                                type="text"
                                                 name="totalAmount"
                                                 className="input input-bordered w-full"
-                                                value={Number(selectedTransaction.totalAmount) ?? ""}
+                                                value={formatPKR(selectedTransaction.totalAmount ?? 0) ?? ""}
                                                 placeholder="Total Amount"
-                                                disabled
+                                                readOnly
                                             />
                                         )}
                                     </div>
@@ -404,7 +405,7 @@ export default function TransactionsPage() {
                                         <th className="w-[14.28%]">Account Group</th>
                                         <th className="w-[14.28%]">Account Ledger</th>
                                         <th className="w-[14.28%]">Description</th>
-                                        <th className="w-[14.28%]">Amount (Rs)</th>
+                                        <th className="w-[14.28%]">Amount</th>
                                         <th className="w-[14.28%]">Type</th>
                                         {!viewMode && <th className="w-[14.28%]">Actions</th>}
                                     </tr>
@@ -487,7 +488,7 @@ export default function TransactionsPage() {
                                             </td>
                                             <td className="p-2">
                                                 {viewMode ? (
-                                                    <span>{item.amount}</span>
+                                                    <span>{formatPKR(item.amount ?? 0)}</span>
                                                 ) : (
                                                     <input
                                                         type="number"

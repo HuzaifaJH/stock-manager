@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiEye, FiPlusCircle, FiTrash2 } from "react-icons/fi";
 import { Category, Subcategory, Product, SalesReturn, SalesReturnItem } from '@/app/utils/interfaces';
+import { formatPKR } from "@/app/utils/amountFormatter";
 
 export default function SalesReturnPage() {
 
@@ -185,7 +186,7 @@ export default function SalesReturnPage() {
                             <th className="cursor-pointer" onClick={handleSort}>
                                 Date {sortOrder === "asc" ? "↑" : "↓"}
                             </th>
-                            <th>Total Price (Rs)</th>
+                            <th>Total Price</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -196,7 +197,7 @@ export default function SalesReturnPage() {
                                 <td>SR#{salesReturn.id}</td>
                                 <td>{salesReturn.customerName}</td>
                                 <td>{new Date(salesReturn.date).toLocaleDateString("en-GB")}</td>
-                                <td>{salesReturn.totalPrice}</td>
+                                <td>{formatPKR(salesReturn.totalPrice ?? 0)}</td>
                                 <td className="flex items-center space-x-2">
                                     <FiEye
                                         className="text-blue-500 cursor-pointer mx-1"
@@ -380,8 +381,8 @@ export default function SalesReturnPage() {
                                         <th className="w-[14.28%]">Sub Category</th>
                                         <th className="w-[14.28%]">Product</th>
                                         <th className="w-[14.28%]">Quantity</th>
-                                        <th className="w-[14.28%]">Price (Rs)</th>
-                                        <th className="w-[14.28%]">Total Price (Rs)</th>
+                                        <th className="w-[14.28%]">Price</th>
+                                        <th className="w-[14.28%]">Total Price</th>
                                         {!viewMode && <th className="w-[14.28%]">Actions</th>}
                                     </tr>
                                 </thead>
@@ -441,6 +442,7 @@ export default function SalesReturnPage() {
                                                     <span>{item.quantity}</span>
                                                 ) : (
                                                     <input
+                                                        step={0.25}
                                                         type="number"
                                                         className="input input-bordered"
                                                         value={item.quantity === null ? "" : item.quantity}
@@ -458,7 +460,7 @@ export default function SalesReturnPage() {
                                             </td>
                                             <td className="p-2">
                                                 {viewMode ? (
-                                                    <span>Rs{item.returnPrice}</span>
+                                                    <span>{formatPKR(item.returnPrice ?? 0)}</span>
                                                 ) : (
                                                     <input
                                                         type="number"
@@ -476,7 +478,7 @@ export default function SalesReturnPage() {
                                                     />
                                                 )}
                                             </td>
-                                            <td className="p-2">Rs{(item.quantity || 0) * (item.returnPrice || 0)}</td>
+                                            <td className="p-2">{formatPKR((item.quantity || 0) * (item.returnPrice || 0))}</td>
                                             {!viewMode && (
                                                 <td className="p-2">
                                                     <FiTrash2 className="text-error cursor-pointer" size={20} onClick={() => removeItem(index)} />
@@ -488,8 +490,10 @@ export default function SalesReturnPage() {
                             </table>
 
                             <div className="mt-4 font-semibold text-right">
-                                Total: Rs
-                                {salesReturnItems.reduce((acc, item) => acc + (item.quantity || 0) * (item.returnPrice || 0), 0).toFixed(2)}
+                                Total:
+                                <span className="ml-2">{
+                                    formatPKR(salesReturnItems.reduce((acc, item) => acc + (item.quantity || 0) * (item.returnPrice || 0), 0))}
+                                </span>
                             </div>
 
                             <div className="modal-action mt-auto">

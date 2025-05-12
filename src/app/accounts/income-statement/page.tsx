@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { LedgerEntries } from '@/app/utils/interfaces';
+import { formatPKR } from "@/app/utils/amountFormatter";
 
 const accountTypes = [
     { code: 4, account: "Income" },
@@ -130,7 +131,7 @@ export default function IncomeStatement() {
                         <thead className="border-2">
                             <tr>
                                 <th>Account</th>
-                                <th className="text-right">Amount (Rs)</th>
+                                <th className="text-right">Amount</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -138,13 +139,13 @@ export default function IncomeStatement() {
                                 <tr key={name}>
                                     <td>{name}</td>
                                     <td className="text-right">
-                                        {(data.credit - data.debit).toFixed(2)}
+                                        {formatPKR(data.credit - data.debit)}
                                     </td>
                                 </tr>
                             ))}
                             <tr className="font-bold bg-base-200">
                                 <td>Total Income</td>
-                                <td className="text-right">{totalIncome.toFixed(2)}</td>
+                                <td className="text-right">{formatPKR(totalIncome)}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -157,7 +158,7 @@ export default function IncomeStatement() {
                         <thead className="border-2">
                             <tr>
                                 <th>Account</th>
-                                <th className="text-right">Amount (Rs)</th>
+                                <th className="text-right">Amount</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -165,13 +166,13 @@ export default function IncomeStatement() {
                                 <tr key={name}>
                                     <td>{name}</td>
                                     <td className="text-right">
-                                        {(data.debit - data.credit).toFixed(2)}
+                                        {formatPKR(data.debit - data.credit)}
                                     </td>
                                 </tr>
                             ))}
                             <tr className="font-bold bg-base-200">
                                 <td>Total Expense</td>
-                                <td className="text-right">{totalExpense.toFixed(2)}</td>
+                                <td className="text-right">{formatPKR(totalExpense)}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -181,7 +182,7 @@ export default function IncomeStatement() {
             {/* Net Profit/Loss */}
             <div className="mt-8 text-xl font-bold text-right">
                 Net {netProfit >= 0 ? "Profit" : "Loss"}:{" "}
-                {Math.abs(netProfit).toFixed(2)} Rs
+                {formatPKR(netProfit)}
             </div>
         </div>
     );
