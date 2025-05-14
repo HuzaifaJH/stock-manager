@@ -1,5 +1,6 @@
 import { Sales, SalesItem } from '@/app/utils/interfaces';
 import dayjs from "dayjs";
+import { formatPKR } from './amountFormatter';
 
 interface InvoiceTemplateProps {
     sale: Sales;
@@ -74,13 +75,23 @@ export default function InvoiceTemplate({ sale }: InvoiceTemplateProps) {
                     {(sale.SalesItems ?? []).map((item: SalesItem) => (
                         <tr key={item.productId}>
                             <td>{item.Product?.name || "N/A"}</td>
-                            <td style={{ textAlign: 'right' }}>{item.quantity}</td>
-                            <td style={{ textAlign: 'right' }}>{item.sellingPrice?.toFixed(2)}</td>
+                            <td style={{ textAlign: 'right' }}>{item.quantity} {item.Product?.unit}</td>
+                            <td style={{ textAlign: 'right' }}>{
+                                new Intl.NumberFormat("en-IN", {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                }).format(item.sellingPrice ?? 0)
+                            }</td>
                             <td style={{ textAlign: 'right' }}>
-                                {(item.quantity && item.sellingPrice
-                                    ? item.quantity * item.sellingPrice
-                                    : 0
-                                ).toFixed(2)}
+                                {
+                                    new Intl.NumberFormat("en-IN", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                    }).format(item.quantity && item.sellingPrice
+                                        ? item.quantity * item.sellingPrice
+                                        : 0
+                                    )
+                                }
                             </td>
                         </tr>
                     ))}
@@ -95,25 +106,30 @@ export default function InvoiceTemplate({ sale }: InvoiceTemplateProps) {
             <div style={{ fontSize: '12px', margin: '0.5rem 0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Subtotal:</span>
-                    <span>{totalBeforeDiscount.toFixed(2)}</span>
+                    <span>{formatPKR(totalBeforeDiscount)}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Discount:</span>
-                    <span>-{discount.toFixed(2)}</span>
+                    <span>-{formatPKR(discount)}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600' }}>
                     <span>Total:</span>
-                    <span>{totalAfterDiscount.toFixed(2)}</span>
+                    <span>{formatPKR(totalAfterDiscount)}</span>
                 </div>
             </div>
 
             <p>Payment Mode: {sale.isPaymentMethodCash ? "CASH" : "CREDIT"}</p>
 
             <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                <span>No returns accepted after 3 days from the date of purchase.</span>
+                <span>No returns/exchange accepted after 3 days from the date of purchase.</span>
                 <br />
                 <span>Thank you for your purchase!</span>
             </div>
-        </div>
+            <pre style={{ color: 'white', textAlign: 'center' }}>
+                {'\n\n\n'}
+                {'\n\n\n'}
+                {'.'}
+            </pre>
+        </div >
     );
 }

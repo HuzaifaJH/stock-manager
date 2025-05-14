@@ -5,6 +5,7 @@ import { SearchDropdown } from "@/components/search-dropdown";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiArrowLeftCircle, FiArrowRightCircle, FiEdit, FiEye, FiPlusCircle, FiTrash2 } from "react-icons/fi";
+import { FaPrint, FaRegFilePdf } from "react-icons/fa6";
 import { Category, Subcategory, Product, Sales, SalesItem } from '@/app/utils/interfaces';
 import dayjs from "dayjs";
 import axios from "axios";
@@ -22,7 +23,6 @@ export default function SalesPage() {
 
     const [salesItems, setsalesItems] = useState<SalesItem[]>([]);
     const [customerName, setCustomerName] = useState<string>("Walk-in Customer");
-    // const [date, setDate] = useState<string>(new Date().toISOString().split("T")[0]);
     const [date, setDate] = useState(dayjs().format("YYYY-MM-DDTHH:mm"));
     const [isPaymentMethodCash, setIsPaymentMethodCash] = useState<boolean>(true);
     const [discount, setDiscount] = useState<number>(0);
@@ -129,7 +129,6 @@ export default function SalesPage() {
         setsalesItems(newItems);
     };
 
-
     const removeItem = (index: number) => {
         setsalesItems(salesItems.filter((_, i) => i !== index));
     };
@@ -200,6 +199,7 @@ export default function SalesPage() {
         setsalesItems(newItems);
     };
 
+    // PRINT For WEB
     const handlePrintInvoice = () => {
         const printContents = document.getElementById("invoice")?.innerHTML;
         const printWindow = window.open("", "", "width=400,height=600");
@@ -223,7 +223,113 @@ export default function SalesPage() {
             </body>
           </html>
         `);
-        // printWindow?.document.close();
+    };
+
+    // PRINT For DESKTOP
+    const handlePrintInvoiceDesktop = () => {
+        const printContents = document.getElementById("invoice")?.innerHTML;
+        if (!printContents) return;
+
+        const html = `
+            <html>
+            <head>
+                <style>
+                body {
+                    font-family: monospace;
+                    font-size: 10px;
+                    padding: 10px;
+                }
+                table { width: 100%; border-collapse: collapse; }
+                th, td { padding: 2px 0; }
+                hr { border-top: 1px dashed #000; margin: 4px 0; }
+                </style>
+            </head>
+            <body>
+                ${printContents}
+            </body>
+            </html>
+        `;
+
+        if (window?.electron?.ipcRenderer) {
+            window.electron.ipcRenderer.send("print-content", html).catch((e) => console.error("Error in invoke:", e));
+        } else {
+            console.warn("Electron IPC not available.");
+        }
+    };
+
+    // const handlePrintInvoiceDesktop = () => {
+    //     const printContents = document.getElementById("invoice")?.innerHTML;
+
+    //     if (!printContents) return;
+
+    //     const html = `
+    //       <html>
+    //         <head>
+    //           <title>Invoice</title>
+    //           <style>
+    //             body {
+    //               font-family: monospace;
+    //               font-size: 10px;
+    //               padding: 10px;
+    //             }
+    //             table { width: 100%; border-collapse: collapse; }
+    //             th, td { padding: 2px 0; }
+    //             hr { border-top: 1px dashed #000; margin: 4px 0; }
+    //           </style>
+    //         </head>
+    //         <body>
+    //           ${printContents}
+    //         </body>
+    //       </html>
+    //     `;
+
+    //     // Use Electron's IPC renderer
+    //     // if (window?.electron?.ipcRenderer) {
+    //     //     console.log("request sent to IPC")
+    //     //     window.electron.ipcRenderer.invoke('print-invoice-html', html);
+    //     // } else {
+    //     // fallback to browser printing
+    //     // console.log("Not working")
+    //     // }
+    //     const printWindow = window.open('', '', 'width=400,height=600');
+
+    //     if (printWindow) {
+    //         printWindow.document.write(html);
+    //         printWindow.document.close();
+
+    //         printWindow.focus();
+
+    //         printWindow.onload = () => {
+    //             printWindow.print();
+
+    //             printWindow.onafterprint = () => {
+    //                 printWindow.close();
+    //             };
+    //         };
+    //     }
+    // };
+
+    // Save PDF For DESKTOP
+    
+    const handleSaveAsPDFDesktop = () => {
+        const printContents = document.getElementById("invoice")?.innerHTML;
+        if (!printContents) {
+            console.warn("No invoice content found");
+            return;
+        }
+
+        const html = `
+          <html>
+            <head><style>body{font-size:10px;}</style></head>
+            <body>${printContents}</body>
+          </html>
+        `;
+
+        if (window?.electron?.ipcRenderer) {
+            window.electron.ipcRenderer.invoke("save-invoice-pdf", html).catch((e) => console.error("Error in invoke:", e));
+        } else {
+            console.warn("Electron IPC not available.");
+        }
     };
 
     const updatePrice = async (index: number, id: number) => {
@@ -636,11 +742,45 @@ export default function SalesPage() {
                                 </div>
                             </div>
 
-                            <div className="modal-action mt-2">
-                                {!viewMode && <button type="submit" className="btn btn-primary" disabled={isLoading}>Save</button>}
+                            <div className="modal-action mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                {viewMode ? (
+                                    <div className="flex items-center gap-4">
+                                        {typeof window !== "undefined" && (
+                                            <>
+                                                {!window.electron?.ipcRenderer && (
+                                                    <FaPrint
+                                                        className="cursor-pointer text-primary"
+                                                        size={25}
+                                                        onClick={handlePrintInvoice}
+                                                    />
+                                                )}
+
+                                                {window.electron?.ipcRenderer && (
+                                                    <>
+                                                        <FaPrint
+                                                            className="cursor-pointer text-primary"
+                                                            size={25}
+                                                            onClick={handlePrintInvoiceDesktop}
+                                                        />
+                                                        <FaRegFilePdf
+                                                            className="cursor-pointer text-primary"
+                                                            size={25}
+                                                            onClick={handleSaveAsPDFDesktop}
+                                                        />
+                                                    </>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+
+                                ) : (
+                                    <button type="submit" className="btn btn-primary" disabled={isLoading} >
+                                        Save
+                                    </button>
+                                )}
+
                                 <button
-                                    type="button"
-                                    className="btn"
+                                    type="button" className="btn"
                                     onClick={() => {
                                         setSelectedSale(null);
                                         setsalesItems([]);
@@ -653,14 +793,6 @@ export default function SalesPage() {
                                 >
                                     {viewMode ? "Close" : "Cancel"}
                                 </button>
-                                {viewMode &&
-                                    <button
-                                        className="btn btn-primary"
-                                        onClick={handlePrintInvoice}
-                                    >
-                                        🖨️ Print Invoice
-                                    </button>
-                                }
                             </div>
                         </form>
                     </div>

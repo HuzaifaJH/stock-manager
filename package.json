@@ -1,6 +1,6 @@
 {
   "name": "stock-manager",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "main": "main.js",
   "type": "module",
@@ -54,6 +54,7 @@
   "build": {
     "asar": true,
     "compression": "maximum",
+    "productName": "Stock Manager",
     "appId": "com.hj.stockmanager",
     "win": {
       "target": "nsis",
