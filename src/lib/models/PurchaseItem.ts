@@ -15,7 +15,7 @@ const PurchaseItem = sequelize.define("PurchaseItem", {
     type: DataTypes.FLOAT,
     allowNull: false,
     validate: {
-      min: 0.25,
+      min: 0,
     },
   },
   purchasePrice: {

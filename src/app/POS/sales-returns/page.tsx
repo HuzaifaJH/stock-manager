@@ -442,7 +442,6 @@ export default function SalesReturnPage() {
                                                     <span>{item.quantity}</span>
                                                 ) : (
                                                     <input
-                                                        step={0.25}
                                                         type="number"
                                                         className="input input-bordered"
                                                         value={item.quantity === null ? "" : item.quantity}

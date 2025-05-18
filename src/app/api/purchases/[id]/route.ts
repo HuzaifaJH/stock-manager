@@ -83,14 +83,17 @@ export async function PUT(
 
   try {
     const purchaseId = Number(id);
-    const { supplierId, date, items, isPaymentMethodCash } = await req.json();
+    const { supplierId, date, items, isPaymentMethodCash, discount } =
+      await req.json();
 
     // Calculate total purchase amount
-    const totalAmount = items.reduce(
+    let totalAmount = items.reduce(
       (sum: number, item: { purchasePrice: number; quantity: number }) =>
         sum + item.purchasePrice * item.quantity,
       0
     );
+
+    totalAmount -= discount;
 
     const existingPurchase = await Purchase.findByPk(purchaseId, {
       include: [{ model: PurchaseItem }],
@@ -121,6 +124,8 @@ export async function PUT(
       oldTotalAmount +=
         item.getDataValue("quantity") * item.getDataValue("purchasePrice");
     }
+
+    oldTotalAmount -= existingPurchase.getDataValue("discount");
 
     // Delete old PurchaseItems
     await PurchaseItem.destroy({ where: { purchaseId }, transaction });
@@ -157,7 +162,7 @@ export async function PUT(
 
     // Update the main Purchase record
     await existingPurchase.update(
-      { supplierId, date, isPaymentMethodCash },
+      { supplierId, date, isPaymentMethodCash, discount },
       { transaction }
     );
 

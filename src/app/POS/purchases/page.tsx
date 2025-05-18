@@ -22,6 +22,7 @@ export default function PurchasesPage() {
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [discount, setDiscount] = useState<number>(0);
 
     const [purchaseItems, setPurchaseItems] = useState<PurchaseItem[]>([]);
     const [supplierId, setSupplierId] = useState<number | "">("");
@@ -133,7 +134,7 @@ export default function PurchasesPage() {
                 {
                     method: selectedPurchase?.id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ supplierId, date, items: purchaseItems, isPaymentMethodCash }),
+                    body: JSON.stringify({ supplierId, date, items: purchaseItems, isPaymentMethodCash, discount }),
                 });
             if (res.ok) {
                 toast.success(`Purchase ${selectedPurchase?.id ? "updated" : "added"} successfully`);
@@ -142,6 +143,7 @@ export default function PurchasesPage() {
                 setDate(dayjs().format("YYYY-MM-DDTHH:mm"));
                 setPurchaseItems([]);
                 setSelectedPurchase(null);
+                setDiscount(0);
                 fetchData();
             } else {
                 toast.error("Failed to add purchase");
@@ -180,7 +182,7 @@ export default function PurchasesPage() {
         <div className="p-6">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Purchases</h2>
-                <button className="btn btn-primary" onClick={() => setSelectedPurchase({ id: 0, supplierId: supplierId, date: date, isPaymentMethodCash: isPaymentMethodCash })}>
+                <button className="btn btn-primary" onClick={() => setSelectedPurchase({ id: 0, supplierId: supplierId, date: date, isPaymentMethodCash: isPaymentMethodCash, discount: discount })}>
                     Add Purchase
                 </button>
             </div>
@@ -240,6 +242,7 @@ export default function PurchasesPage() {
                                             setSupplierId(purchase.supplierId);
                                             setIsPaymentMethodCash(purchase.isPaymentMethodCash);
                                             setDate(dayjs(purchase.date).format("YYYY-MM-DDTHH:mm"));
+                                            setDiscount(purchase.discount);
                                         }}
                                     />
                                     <FiEdit
@@ -268,6 +271,7 @@ export default function PurchasesPage() {
                                             setSupplierId(purchase.supplierId);
                                             setIsPaymentMethodCash(purchase.isPaymentMethodCash);
                                             setDate(dayjs(purchase.date).format("YYYY-MM-DDTHH:mm"));
+                                            setDiscount(purchase.discount);
                                         }
                                         }
                                     />
@@ -460,10 +464,9 @@ export default function PurchasesPage() {
                                                         <span>{item.quantity}</span>
                                                     ) : (
                                                         <input
-                                                            step={0.25}
                                                             type="number"
                                                             className="input input-bordered w-full"
-                                                            value={item.quantity === null ? "" : item.quantity}
+                                                            value={item.quantity ?? ""}
                                                             onChange={(e) => updateItem(index, "quantity", e.target.value ? Number(e.target.value) : null)}
                                                             onBlur={() => {
                                                                 if (item.quantity === null || item.quantity <= 0) {
@@ -508,11 +511,35 @@ export default function PurchasesPage() {
                                 </table>
                             </div>
 
-                            <div className="mt-4 font-semibold text-right">
-                                Total:
-                                <span className="ml-2">
-                                    {formatPKR(purchaseItems.reduce((acc, item) => acc + (item.quantity || 0) * (item.purchasePrice || 0), 0))}
-                                </span>
+                            <div className="mt-4 flex flex-col items-end space-y-2">
+                                <div className="font-semibold">
+                                    Discount:
+                                    {viewMode ? (
+                                        <span className="ml-2">{formatPKR(selectedPurchase.discount)}</span>
+                                    ) : (
+                                        <input
+                                            type="number"
+                                            className="input input-bordered w-40 ml-2"
+                                            value={discount || ""}
+                                            onChange={(e) => setDiscount(Number(e.target.value))}
+                                            onBlur={(e) => {
+                                                const amount = Number(e.target.value);
+                                                if (amount < 0) {
+                                                    toast.error("Discount must be greater than zero");
+                                                    e.target.value = "";
+                                                }
+                                            }}
+                                            placeholder="Enter Discount"
+                                        />
+                                    )}
+                                </div>
+                                <div className="font-semibold">
+                                    Total:
+                                    <span className="ml-2">
+                                        {formatPKR(Number(purchaseItems.reduce((acc, item) => acc + (item.quantity || 0) * (item.purchasePrice || 0), 0).toFixed(2)
+                                        ) - (discount || 0))}
+                                    </span>
+                                </div>
                             </div>
 
                             <div className="modal-action mt-auto">
@@ -527,6 +554,7 @@ export default function PurchasesPage() {
                                         setIsPaymentMethodCash(true);
                                         setDate(dayjs().format("YYYY-MM-DDTHH:mm"));
                                         setViewMode(false);
+                                        setDiscount(0);
                                     }}
                                 >
                                     {viewMode ? "Close" : "Cancel"}

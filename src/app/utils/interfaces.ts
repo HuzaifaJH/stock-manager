@@ -91,6 +91,7 @@ export interface Purchase {
   isPaymentMethodCash: boolean;
   Supplier?: { name: string };
   PurchaseItems?: PurchaseItem[];
+  discount: number;
 }
 
 export interface PurchaseItem {

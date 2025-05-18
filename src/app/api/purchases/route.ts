@@ -44,7 +44,7 @@ export async function GET() {
           ],
         },
       ],
-      attributes: ["id", "supplierId", "date", "isPaymentMethodCash"],
+      attributes: ["id", "supplierId", "date", "isPaymentMethodCash", "discount"],
       // order: [["createdAt", "DESC"]],
     });
 
@@ -80,6 +80,8 @@ export async function GET() {
         }
       );
 
+      totalPrice -= purchase.discount;
+
       return {
         ...purchase,
         PurchaseItems: updatedPurchaseItems,
@@ -100,18 +102,21 @@ export async function POST(req: Request) {
   const transaction = await sequelize.transaction();
 
   try {
-    const { supplierId, date, items, isPaymentMethodCash } = await req.json();
+    const { supplierId, date, items, isPaymentMethodCash, discount } =
+      await req.json();
 
     // Calculate total purchase amount
-    const totalAmount = items.reduce(
+    let totalAmount = items.reduce(
       (sum: number, item: { purchasePrice: number; quantity: number }) =>
         sum + item.purchasePrice * item.quantity,
       0
     );
 
+    totalAmount -= discount;
+
     // Create the main Purchase record
     const newPurchase = await Purchase.create(
-      { supplierId, date, isPaymentMethodCash },
+      { supplierId, date, isPaymentMethodCash, discount },
       { returning: true, transaction }
     );
 

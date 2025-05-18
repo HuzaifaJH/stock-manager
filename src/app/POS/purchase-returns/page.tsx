@@ -449,7 +449,6 @@ export default function PurchaseReturnPage() {
                                                     <span>{item.quantity}</span>
                                                 ) : (
                                                     <input
-                                                        step={0.25}
                                                         type="number"
                                                         className="input input-bordered w-full"
                                                         value={item.quantity === null ? "" : item.quantity}

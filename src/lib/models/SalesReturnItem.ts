@@ -17,7 +17,7 @@ const SalesReturnItem = sequelize.define(
       type: DataTypes.FLOAT,
       allowNull: false,
       validate: {
-        min: 0.25,
+        min: 0,
       },
     },
     returnPrice: {

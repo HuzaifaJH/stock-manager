@@ -15,7 +15,15 @@ const Purchase = sequelize.define("Purchase", {
   isPaymentMethodCash: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
-  }
+  },
+  discount: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+    defaultValue: 0,
+    validate: {
+      min: 0,
+    },
+  },
 });
 
 // Associations

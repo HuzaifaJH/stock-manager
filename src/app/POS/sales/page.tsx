@@ -310,7 +310,7 @@ export default function SalesPage() {
     // };
 
     // Save PDF For DESKTOP
-    
+
     const handleSaveAsPDFDesktop = () => {
         const printContents = document.getElementById("invoice")?.innerHTML;
         if (!printContents) {
@@ -644,10 +644,9 @@ export default function SalesPage() {
                                                     ) : (
                                                         <div className="mt-5">
                                                             <input
-                                                                step={0.25}
                                                                 type="number"
                                                                 className="input input-bordered"
-                                                                value={item.quantity === null ? "" : item.quantity}
+                                                                value={item.quantity ?? ""}
                                                                 onChange={(e) => updateItem(index, "quantity", e.target.value ? Number(e.target.value) : null)}
                                                                 onBlur={() => {
                                                                     if (item.quantity === null || item.quantity <= 0) {
@@ -742,8 +741,10 @@ export default function SalesPage() {
                                 </div>
                             </div>
 
-                            <div className="modal-action mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                {viewMode ? (
+                            <div
+                                className={"modal-action mt-4 flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-end"}
+                            >
+                                {viewMode && (
                                     <div className="flex items-center gap-4">
                                         {typeof window !== "undefined" && (
                                             <>
@@ -754,7 +755,6 @@ export default function SalesPage() {
                                                         onClick={handlePrintInvoice}
                                                     />
                                                 )}
-
                                                 {window.electron?.ipcRenderer && (
                                                     <>
                                                         <FaPrint
@@ -772,28 +772,33 @@ export default function SalesPage() {
                                             </>
                                         )}
                                     </div>
-
-                                ) : (
-                                    <button type="submit" className="btn btn-primary" disabled={isLoading} >
-                                        Save
-                                    </button>
                                 )}
 
-                                <button
-                                    type="button" className="btn"
-                                    onClick={() => {
-                                        setSelectedSale(null);
-                                        setsalesItems([]);
-                                        setDate(dayjs().format("YYYY-MM-DDTHH:mm"));
-                                        setViewMode(false);
-                                        setCustomerName("Walk-in Customer");
-                                        setDiscount(0);
-                                        setIsPaymentMethodCash(true);
-                                    }}
-                                >
-                                    {viewMode ? "Close" : "Cancel"}
-                                </button>
+                                {/* Buttons for both modes */}
+                                <div className="flex gap-4">
+                                    {!viewMode && (
+                                        <button type="submit" className="btn btn-primary" disabled={isLoading}>
+                                            Save
+                                        </button>
+                                    )}
+                                    <button
+                                        type="button"
+                                        className="btn"
+                                        onClick={() => {
+                                            setSelectedSale(null);
+                                            setsalesItems([]);
+                                            setDate(dayjs().format("YYYY-MM-DDTHH:mm"));
+                                            setViewMode(false);
+                                            setCustomerName("Walk-in Customer");
+                                            setDiscount(0);
+                                            setIsPaymentMethodCash(true);
+                                        }}
+                                    >
+                                        {viewMode ? "Close" : "Cancel"}
+                                    </button>
+                                </div>
                             </div>
+
                         </form>
                     </div>
                 </div >
