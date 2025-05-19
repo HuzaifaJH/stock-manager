@@ -63,16 +63,28 @@ export async function PUT(
       transaction,
     });
 
+    let oldTotalAmount = 0;
     for (const item of oldItems) {
       await Product.increment("stock", {
         by: item.getDataValue("quantity"),
         where: { id: item.getDataValue("productId") },
         transaction,
       });
+      oldTotalAmount +=
+        item.getDataValue("quantity") * item.getDataValue("sellingPrice");
     }
+
+    oldTotalAmount -= existingSale.getDataValue("discount");
 
     // Delete old sales items
     await SalesItem.destroy({ where: { salesId }, transaction });
+
+    if (!existingSale.getDataValue("isPaymentMethodCash")) {
+      await existingSale.decrement("payableAmount", {
+        by: oldTotalAmount,
+        transaction,
+      });
+    }
 
     // Recreate sales items
     let totalAmount = 0;
@@ -117,6 +129,13 @@ export async function PUT(
       { date, customerName, isPaymentMethodCash, discount },
       { transaction }
     );
+
+    if (!isPaymentMethodCash) {
+      await existingSale.increment("payableAmount", {
+        by: totalAmount,
+        transaction,
+      });
+    }
 
     // Delete old transaction and journal entries
     const oldTransaction = await Transaction.findOne({
@@ -216,12 +235,12 @@ export async function DELETE(
 
   try {
     const salesId = Number(id);
-    const sale = await Sales.findByPk(salesId, {
+    const existingSale = await Sales.findByPk(salesId, {
       include: [SalesItem],
       transaction,
     });
 
-    if (!sale) {
+    if (!existingSale) {
       await transaction.rollback();
       return NextResponse.json({ error: "Sale not found" }, { status: 404 });
     }
@@ -232,16 +251,29 @@ export async function DELETE(
     });
 
     // Restore stock for each sale item
+    let oldTotalAmount = 0;
     for (const item of salesItems) {
       await Product.increment("stock", {
         by: item.getDataValue("quantity"),
         where: { id: item.getDataValue("productId") },
         transaction,
       });
+      oldTotalAmount +=
+        item.getDataValue("quantity") * item.getDataValue("sellingPrice");
     }
 
-    // Delete SalesItems
+    oldTotalAmount -= existingSale.getDataValue("discount");
+
+    // Delete old sales items
     await SalesItem.destroy({ where: { salesId }, transaction });
+
+    if (!existingSale.getDataValue("isPaymentMethodCash")) {
+      await existingSale.decrement("payableAmount", {
+        by: oldTotalAmount,
+        transaction,
+      });
+    }
+
     await Sales.destroy({ where: { id: salesId }, transaction });
 
     // Delete associated journal entries

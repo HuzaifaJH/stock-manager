@@ -26,6 +26,10 @@ const Sales = sequelize.define(
         min: 0,
       },
     },
+    payableAmount: {
+      type: DataTypes.FLOAT,
+      defaultValue: 0,
+    },
   },
   {
     timestamps: true,

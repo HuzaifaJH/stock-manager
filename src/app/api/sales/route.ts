@@ -148,6 +148,10 @@ export async function POST(req: Request) {
 
     totalAmount -= discount;
 
+    if (!isPaymentMethodCash) {
+      await newSale.update({ payableAmount: totalAmount }, { transaction });
+    }
+
     // Create transaction record
     const newTransaction = await Transaction.create(
       {

@@ -1,5 +1,5 @@
 import { JSX } from "react";
-import { FiHome, FiCopy, FiCreditCard, FiPieChart, FiUsers, FiBox, FiBook, FiSettings, FiDollarSign, FiLayers, FiCornerDownLeft, FiCornerUpLeft } from "react-icons/fi";
+import { FiHome, FiCopy, FiCreditCard, FiPieChart, FiUsers, FiBox, FiBook, FiSettings, FiDollarSign, FiLayers, FiCornerDownLeft, FiCornerUpLeft, FiInbox } from "react-icons/fi";
 import { GiExpense } from "react-icons/gi";
 
 export interface MenuItem {
@@ -55,6 +55,11 @@ export const menuItems: MenuItem[] = [
         name: "Expenses",
         href: "/POS/expenses",
         icon: <GiExpense />
+    },
+    {
+        name: "Receivable",
+        href: "/POS/receivable",
+        icon: <FiInbox />
     },
     {
         name: "Transactions",
