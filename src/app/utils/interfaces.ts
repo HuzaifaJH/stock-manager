@@ -237,3 +237,57 @@ export interface _SalesReturnItem {
   quantity: number;
   returnPrice: number;
 }
+
+export interface SalesReportProduct {
+  id: number;
+  name: string;
+  quantity: number;
+  revenue: number;
+  profit: number;
+}
+
+export interface SalesReportSubCategory {
+  id: number;
+  name: string;
+  revenue: number;
+  profit: number;
+  products: Map<number, SalesReportProduct>;
+}
+
+export interface SalesReportCategory {
+  id: number;
+  name: string;
+  revenue: number;
+  profit: number;
+  subcategories: Map<number, SalesReportSubCategory>;
+}
+
+export interface FinalSalesReportProduct {
+  id: number;
+  name: string;
+  quantity: number;
+  revenue: number;
+  profit: number;
+}
+
+export interface FinalSalesReportSubCategory {
+  id: number;
+  name: string;
+  revenue: number;
+  profit: number;
+  products: FinalSalesReportProduct[];
+}
+
+export interface FinalSalesReportCategory {
+  id: number;
+  name: string;
+  revenue: number;
+  profit: number;
+  subcategories: FinalSalesReportSubCategory[];
+}
+
+export interface SalesReportResponse {
+  totalRevenue: number;
+  totalProfit: number;
+  byCategory: FinalSalesReportCategory[];
+}

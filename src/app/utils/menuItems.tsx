@@ -77,6 +77,7 @@ export const menuItems: MenuItem[] = [
         icon: <FiBook />,
         subItems: [
             { name: "Inventory Report", href: "/accounts/inventory-report" },
+            { name: "Sales Report", href: "/accounts/sales-report" },
             { name: "Journal Entries", href: "/accounts/journal-entries" },
             { name: "Trial Balance", href: "/accounts/trial-balance" },
             { name: "Income Statement", href: "/accounts/income-statement" },
