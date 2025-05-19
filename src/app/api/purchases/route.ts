@@ -44,7 +44,13 @@ export async function GET() {
           ],
         },
       ],
-      attributes: ["id", "supplierId", "date", "isPaymentMethodCash", "discount"],
+      attributes: [
+        "id",
+        "supplierId",
+        "date",
+        "isPaymentMethodCash",
+        "discount",
+      ],
       // order: [["createdAt", "DESC"]],
     });
 
@@ -142,11 +148,36 @@ export async function POST(req: Request) {
         );
 
         // Increase stock in Product table
-        await Product.increment("stock", {
-          by: item.quantity ?? 0,
-          where: { id: item.productId },
-          transaction,
-        });
+        // await Product.increment("stock", {
+        //   by: item.quantity ?? 0,
+        //   where: { id: item.productId },
+        //   transaction,
+        // });
+
+        // Update Product with stock and weighted average cost price
+        const product = await Product.findByPk(item.productId, { transaction });
+        if (!product) throw new Error("Product not found");
+
+        const existingStock = product.getDataValue("stock") ?? 0;
+        const existingPrice = product.getDataValue("price") ?? 0;
+
+        const newQty = item.quantity ?? 0;
+        const newPrice = item.purchasePrice ?? 0;
+
+        const totalQty = existingStock + newQty;
+        const totalCost = existingStock * existingPrice + newQty * newPrice;
+        const weightedAvgCost =
+          totalQty > 0
+            ? Math.round(totalCost / totalQty)
+            : Math.round(newPrice);
+
+        await product.update(
+          {
+            stock: totalQty,
+            price: weightedAvgCost,
+          },
+          { transaction }
+        );
 
         return purchaseItem;
       })

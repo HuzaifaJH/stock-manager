@@ -115,11 +115,31 @@ export async function PUT(
 
     let oldTotalAmount = 0;
     for (const item of oldItems) {
-      await Product.increment("stock", {
-        by: -item.getDataValue("quantity"),
-        where: { id: item.getDataValue("productId") },
+      const product = await Product.findByPk(item.getDataValue("productId"), {
         transaction,
       });
+      if (!product) throw new Error("Product not found");
+
+      const currentStock = product.getDataValue("stock") ?? 0;
+      const currentPrice = product.getDataValue("price") ?? 0;
+
+      const reverseQty = item.getDataValue("quantity");
+      const reverseCost = item.getDataValue("purchasePrice");
+
+      const remainingQty = currentStock - reverseQty;
+      const remainingTotalCost =
+        currentStock * currentPrice - reverseQty * reverseCost;
+
+      const adjustedPrice =
+        remainingQty > 0 ? Math.round(remainingTotalCost / remainingQty) : 0;
+
+      await product.update(
+        {
+          stock: remainingQty,
+          price: adjustedPrice,
+        },
+        { transaction }
+      );
 
       oldTotalAmount +=
         item.getDataValue("quantity") * item.getDataValue("purchasePrice");
@@ -153,11 +173,33 @@ export async function PUT(
 
       // totalAmount += item.quantity * item.purchasePrice;
 
-      await Product.increment("stock", {
-        by: item.quantity,
-        where: { id: item.productId },
-        transaction,
-      });
+      // await Product.increment("stock", {
+      //   by: item.quantity,
+      //   where: { id: item.productId },
+      //   transaction,
+      // });
+
+      const product = await Product.findByPk(item.productId, { transaction });
+      if (!product) throw new Error("Product not found");
+
+      const currentStock = product.getDataValue("stock") ?? 0;
+      const currentPrice = product.getDataValue("price") ?? 0;
+
+      const newQty = item.quantity ?? 0;
+      const newPrice = item.purchasePrice ?? 0;
+
+      const totalQty = currentStock + newQty;
+      const totalCost = currentStock * currentPrice + newQty * newPrice;
+      const weightedAvgCost =
+        totalQty > 0 ? Math.round(totalCost / totalQty) : Math.round(newPrice);
+
+      await product.update(
+        {
+          stock: totalQty,
+          price: weightedAvgCost,
+        },
+        { transaction }
+      );
     }
 
     // Update the main Purchase record
@@ -259,11 +301,37 @@ export async function DELETE(
     });
 
     for (const item of purchaseItems) {
-      await Product.increment("stock", {
-        by: -item.getDataValue("quantity"),
-        where: { id: item.getDataValue("productId") },
+      // await Product.increment("stock", {
+      //   by: -item.getDataValue("quantity"),
+      //   where: { id: item.getDataValue("productId") },
+      //   transaction,
+      // });
+
+      const product = await Product.findByPk(item.getDataValue("productId"), {
         transaction,
       });
+      if (!product) throw new Error("Product not found");
+
+      const currentStock = product.getDataValue("stock") ?? 0;
+      const currentPrice = product.getDataValue("price") ?? 0;
+
+      const reverseQty = item.getDataValue("quantity");
+      const reverseCost = item.getDataValue("purchasePrice");
+
+      const remainingQty = currentStock - reverseQty;
+      const remainingTotalCost =
+        currentStock * currentPrice - reverseQty * reverseCost;
+
+      const adjustedPrice =
+        remainingQty > 0 ? Math.round(remainingTotalCost / remainingQty) : 0;
+
+      await product.update(
+        {
+          stock: remainingQty,
+          price: adjustedPrice,
+        },
+        { transaction }
+      );
     }
 
     await PurchaseItem.destroy({ where: { purchaseId }, transaction });
