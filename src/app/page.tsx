@@ -95,7 +95,7 @@ export default function Dashboard() {
         </div>
 
         {!isLoading && (<div className="p-2 rounded-lg cursor-pointer" onClick={handleEyeClick}>
-          {isVisible || pinCorrect ? (
+          {!isVisible ? (
             <div className="flex items-center gap-2">
               <span>Show Balance:</span>
               <FaEye className="text-purple-600 text-xl" />
