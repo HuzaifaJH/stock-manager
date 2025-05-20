@@ -97,12 +97,12 @@ export default function Dashboard() {
         {!isLoading && (<div className="p-2 rounded-lg cursor-pointer" onClick={handleEyeClick}>
           {!isVisible ? (
             <div className="flex items-center gap-2">
-              <span>Show Balance:</span>
+              <span>Show Stats:</span>
               <FaEye className="text-purple-600 text-xl" />
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <span>Hide Balance:</span>
+              <span>Hide Stats:</span>
               <FaEyeSlash className="text-purple-600 text-xl" />
             </div>
           )}
@@ -335,40 +335,3 @@ export default function Dashboard() {
     </main>
   );
 }
-
-
-
-{/* Top Selling Products */ }
-{/* <div className="bg-base-100 p-4 rounded shadow">
-  <h2 className="text-lg font-semibold mb-2">Top Selling (This Month)</h2>
-
-  <div className="overflow-y-auto max-h-64">
-    {topSellingProducts.length > 0 ? (
-      <table className="table table-zebra table-sm">
-        <thead>
-          <tr>
-            <th>Product</th>
-            <th className="text-right">Sold</th>
-          </tr>
-        </thead>
-        <tbody>
-          {[...topSellingProducts]
-            .sort((a, b) => b.totalSold - a.totalSold)
-            .map((salesItem) => (
-              <tr key={salesItem.productId}>
-                <td>
-                  <div>
-                    <div>{salesItem.Product.name}</div>
-                    <div className="text-xs text-gray-500">{salesItem.Product?.SubCategory?.name || "N/A"}</div>
-                  </div>
-                </td>
-                <td className="text-right">{salesItem.totalSold} pcs</td>
-              </tr>
-            ))}
-        </tbody>
-      </table>
-    ) : (
-      <div className="text-center text-gray-400 py-4">No products found.</div>
-    )}
-  </div>
-</div> */}

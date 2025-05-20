@@ -15,7 +15,7 @@ export async function GET() {
     return NextResponse.json(creditSales);
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to fetch credit sales" },
+      { error: "Failed to fetch credit sales: " + error },
       { status: 500 }
     );
   }
