@@ -251,66 +251,22 @@ export default function SalesPage() {
         `;
 
         if (window?.electron?.ipcRenderer) {
-            window.electron.ipcRenderer.send("print-content", html).catch((e) => console.error("Error in invoke:", e));
+            setIsLoading(true);
+            window.electron.ipcRenderer
+                .invoke("print-content", html)
+                .catch((e) => console.error("Error in invoke:", e))
+                .finally(() => {
+                    setTimeout(() => {
+                        setIsLoading(false);
+                    }, 3000);
+                });
+            setIsLoading(false);
         } else {
             console.warn("Electron IPC not available.");
         }
     };
 
-    // const handlePrintInvoiceDesktop = () => {
-    //     const printContents = document.getElementById("invoice")?.innerHTML;
-
-    //     if (!printContents) return;
-
-    //     const html = `
-    //       <html>
-    //         <head>
-    //           <title>Invoice</title>
-    //           <style>
-    //             body {
-    //               font-family: monospace;
-    //               font-size: 10px;
-    //               padding: 10px;
-    //             }
-    //             table { width: 100%; border-collapse: collapse; }
-    //             th, td { padding: 2px 0; }
-    //             hr { border-top: 1px dashed #000; margin: 4px 0; }
-    //           </style>
-    //         </head>
-    //         <body>
-    //           ${printContents}
-    //         </body>
-    //       </html>
-    //     `;
-
-    //     // Use Electron's IPC renderer
-    //     // if (window?.electron?.ipcRenderer) {
-    //     //     console.log("request sent to IPC")
-    //     //     window.electron.ipcRenderer.invoke('print-invoice-html', html);
-    //     // } else {
-    //     // fallback to browser printing
-    //     // console.log("Not working")
-    //     // }
-    //     const printWindow = window.open('', '', 'width=400,height=600');
-
-    //     if (printWindow) {
-    //         printWindow.document.write(html);
-    //         printWindow.document.close();
-
-    //         printWindow.focus();
-
-    //         printWindow.onload = () => {
-    //             printWindow.print();
-
-    //             printWindow.onafterprint = () => {
-    //                 printWindow.close();
-    //             };
-    //         };
-    //     }
-    // };
-
     // Save PDF For DESKTOP
-
     const handleSaveAsPDFDesktop = () => {
         const printContents = document.getElementById("invoice")?.innerHTML;
         if (!printContents) {
@@ -326,7 +282,16 @@ export default function SalesPage() {
         `;
 
         if (window?.electron?.ipcRenderer) {
-            window.electron.ipcRenderer.invoke("save-invoice-pdf", html).catch((e) => console.error("Error in invoke:", e));
+            setIsLoading(true);
+            window.electron.ipcRenderer
+                .invoke("save-invoice-pdf", html)
+                .catch((e) => console.error("Error in invoke:", e))
+                .finally(() => {
+                    setTimeout(() => {
+                        setIsLoading(false);
+                    }, 3000);
+                });
+            setIsLoading(false);
         } else {
             console.warn("Electron IPC not available.");
         }

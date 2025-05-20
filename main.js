@@ -6,6 +6,7 @@ import killPort from "kill-port";
 import fs from "fs";
 import dayjs from "dayjs";
 import { fileURLToPath } from "url";
+import { fork } from "child_process";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -100,77 +101,18 @@ app.whenReady().then(async () => {
 
   waitForServer(port, createMainWindow);
 
-  ipcMain.on("print-content", (event, htmlContent) => {
-    const timestamp = dayjs().format("YYYYMMDD_HHmmss");
+  const printServicePath = path.join(__dirname, "printService.js");
+
+  fork(printServicePath);
+
+  ipcMain.handle("print-content", (event, htmlContent) => {
     const tempPath = path.join(
       app.getPath("temp"),
       `invoice_${timestamp}.html`
     );
     fs.writeFileSync(tempPath, htmlContent);
-    console.log("[PRINT] Temp path:", tempPath);
-
-    const printWindow = new BrowserWindow({
-      width: 400,
-      height: 600,
-      show: true,
-      frame: false,
-      webPreferences: {
-        contextIsolation: true,
-      },
-    });
-
-    printWindow.loadURL("file:///" + tempPath.replace(/\\/g, "/"));
-
-    setTimeout(() => {
-      printWindow.webContents.print(
-        {
-          silent: true,
-          printBackground: true,
-          deviceName: "Black Copper 80",
-        },
-        (success, errorType) => {
-          if (!success) console.error("Print failed:", errorType);
-          printWindow.close();
-          fs.unlink(tempPath, () => {});
-        }
-      );
-    }, 1500);
-
-    // 👇 Wait for page to finish loading before printing
-    // printWindow.webContents.once("did-stop-load", () => {
-    //   // 👇 Wait a short time to ensure rendering is complete
-    //   setTimeout(async () => {
-    //     try {
-    //       const printers = await printWindow.webContents.getPrintersAsync();
-    //       console.log("🖨️ Available Printers:", printers);
-
-    //       printWindow.webContents.print(
-    //         {
-    //           silent: false,
-    //           printBackground: true,
-    //           deviceName: "Black Copper 80",
-    //         },
-    //         (success, errorType) => {
-    //           if (!success) console.error("Print failed:", errorType);
-    //           else console.log("✅ Print success");
-
-    //           printWindow.close();
-
-    //           fs.unlink(tempPath, (err) => {
-    //             if (err) console.warn("❌ Failed to delete temp file:", err);
-    //           });
-    //         }
-    //       );
-    //     } catch (err) {
-    //       console.error("❌ Failed to fetch printers or print:", err);
-    //       printWindow.close();
-    //     }
-    //   }, 1000); // 500ms delay to ensure layout calculation
-    // });
-
-    // printWindow.webContents.on("did-fail-load", (_, __, err) => {
-    //   console.error("Failed to load print content:", err);
-    // });
+    fs.writeFileSync(tempPath + ".ready", "");
+    // console.log("[PRINT] Temp path:", tempPath);
   });
 
   const ENABLE_LOGS = false; // Toggle this to enable/disable logs
