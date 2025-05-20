@@ -86,3 +86,11 @@ export const menuItems: MenuItem[] = [
         ],
     },
 ];
+
+export const menuItems2: MenuItem[] = [
+    {
+        name: "Sales",
+        href: "/POS/sales",
+        icon: <FiPieChart />
+    }
+];

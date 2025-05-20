@@ -4,16 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { FiMinus } from "react-icons/fi";
-import { menuItems } from "../app/utils/menuItems";
+import { menuItems, menuItems2 } from "../app/utils/menuItems";
 import { FaLevelDownAlt } from "react-icons/fa";
 
 interface SidebarProps {
     isExpanded: boolean;
     isMobileOpen: boolean;
     setIsMobileOpen: Dispatch<SetStateAction<boolean>>;
+    isLocked: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isExpanded, isMobileOpen, setIsMobileOpen }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isExpanded, isMobileOpen, setIsMobileOpen, isLocked }) => {
     const pathname = usePathname();
     const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
     const [isHovered, setIsHovered] = useState(false);
@@ -25,6 +26,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, isMobileOpen, setIsMobile
     };
 
     useEffect(() => { if (!isExpanded) setExpandedMenu(null); }, [isExpanded]);
+
+    const currentMenu = isLocked ? menuItems2 : menuItems;
 
     return (
         <>
@@ -39,7 +42,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, isMobileOpen, setIsMobile
             >
                 {/* Menu Items */}
                 <nav className="mt-4 space-y-2">
-                    {menuItems.map((item) => {
+                    {currentMenu.map((item) => {
                         const isActive = pathname === item.href || item.subItems?.some(subItem => subItem.href === pathname);
                         const isMenuExpanded = expandedMenu === item.name;
 

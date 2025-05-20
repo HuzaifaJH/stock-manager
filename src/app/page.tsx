@@ -7,8 +7,11 @@ import { FaClipboardList, FaMoneyBillWave, FaEye, FaEyeSlash } from "react-icons
 import { FcSalesPerformance } from "react-icons/fc";
 import { Product, SalesItem } from "./utils/interfaces";
 import { formatPKR } from '@/app/utils/amountFormatter';
+import { useLock } from "@/components/lock-context";
 
 export default function Dashboard() {
+
+  const { isLocked } = useLock();
 
   const [isLoading, setIsLoading] = useState(false);
   const [topSellingProducts, setTopSellingProducts] = useState<SalesItem[]>([]);
@@ -25,35 +28,6 @@ export default function Dashboard() {
   });
 
   const [filter, setFilter] = useState("month");
-
-  const [isVisible, setIsVisible] = useState(false);
-  const [isPinModalVisible, setIsPinModalVisible] = useState(false);
-  const [enteredPin, setEnteredPin] = useState("");
-  const [pinCorrect, setPinCorrect] = useState(false);
-  const pinInputRef = useRef<HTMLInputElement>(null);
-
-  const handleEyeClick = () => {
-    if (pinCorrect) {
-      setIsVisible(!isVisible);
-      if (isVisible) {
-        setPinCorrect(false);
-        setEnteredPin("");
-      }
-    } else {
-      setIsPinModalVisible(true);
-    }
-  };
-
-  const handlePinSubmit = () => {
-    if (enteredPin === "5253") {
-      setPinCorrect(true);
-      setIsVisible(!isVisible);
-      setIsPinModalVisible(false);
-    } else {
-      alert("Incorrect PIN! Please try again.");
-      setEnteredPin("");
-    }
-  };
 
   // Memoize fetchStats with useCallback
   const fetchStats = useCallback(async () => {
@@ -80,12 +54,6 @@ export default function Dashboard() {
     fetchStats();
   }, [fetchStats]); // Re-run useEffect when fetchStats changes (only when filter changes)
 
-  useEffect(() => {
-    if (isPinModalVisible && pinInputRef.current) {
-      pinInputRef.current.focus();
-    }
-  }, [isPinModalVisible]);
-
   return (
     <main className="p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -93,41 +61,10 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold">Dashboard</h1>
           <p>Welcome to your stock management system!</p>
         </div>
-
-        {!isLoading && (<div className="p-2 rounded-lg cursor-pointer" onClick={handleEyeClick}>
-          {!isVisible ? (
-            <div className="flex items-center gap-2">
-              <span>Show Stats:</span>
-              <FaEye className="text-purple-600 text-xl" />
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <span>Hide Stats:</span>
-              <FaEyeSlash className="text-purple-600 text-xl" />
-            </div>
-          )}
-        </div>)}
       </div>
 
       {!isLoading && (
         <div>
-          {/* <div
-            className="p-2 rounded-lg cursor-pointer"
-            onClick={handleEyeClick}
-          >
-            {isVisible || pinCorrect ? (
-              <div>
-                Show Balance:
-                <FaEye className="text-purple-600 text-xl" />
-              </div>
-            ) : (
-              <div>
-                Hide Balance:
-                <FaEyeSlash className="text-purple-600 text-xl" />
-              </div>
-            )}
-          </div> */}
-
           <div className="w-full space-y-6 mt-5">
             {/* Top row boxes */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -138,7 +75,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-base-content text-sm font-medium">Monthly Sales</div>
                 <div className="text-2xl font-bold text-base-content">
-                  {isVisible ? formatPKR(totalSales) : "x".repeat(String(totalSales).length)}
+                  {isLocked ? "x".repeat(String(totalSales).length) : formatPKR(totalSales)}
                 </div>
               </div>
 
@@ -149,7 +86,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-base-content text-sm font-medium">Total Profit</div>
                 <div className="text-2xl font-bold text-base-content">
-                  {isVisible ? formatPKR(totalProfit) : "x".repeat(String(totalProfit).length)}
+                  {isLocked ? "x".repeat(String(totalProfit).length) : formatPKR(totalProfit)}
                 </div>
               </div>
 
@@ -160,7 +97,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-base-content text-sm font-medium">Total Expenses</div>
                 <div className="text-2xl font-bold text-base-content">
-                  {isVisible ? formatPKR(totalExpense) : "x".repeat(String(totalExpense).length)}
+                  {isLocked ? "x".repeat(String(totalExpense).length) : formatPKR(totalExpense)}
                 </div>
               </div>
 
@@ -171,7 +108,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-base-content text-sm font-medium">Total Orders</div>
                 <div className="text-2xl font-bold text-base-content">
-                  {isVisible ? totalOrders : "x".repeat(String(totalOrders).length)}
+                  {isLocked ? "x".repeat(String(totalOrders).length) : totalOrders}
                 </div>
               </div>
             </div>
@@ -192,11 +129,11 @@ export default function Dashboard() {
                     <option value="year">Year</option>
                   </select>
                 </div>
-                <SalesProfitChart data={isVisible ? chartData : {
+                <SalesProfitChart data={isLocked ? {
                   labels: [],
                   sales: [],
                   profit: [],
-                }} />
+                } : chartData} />
               </div>
 
               {/* Low Stock Products Table */}
@@ -292,44 +229,6 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-
-          {/* Pin Modal */}
-          {isPinModalVisible && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault(); // Prevent default form submission
-                  handlePinSubmit();  // Call your existing pin submit handler
-                }}
-                className="bg-white p-6 rounded-xl w-80 shadow-lg"
-              >
-                <h2 className="text-lg font-semibold mb-4">Enter 4-Digit PIN</h2>
-                <input
-                  type="password"
-                  maxLength={4}
-                  value={enteredPin}
-                  onChange={(e) => setEnteredPin(e.target.value)}
-                  ref={pinInputRef}
-                  className="input input-bordered w-full mb-4"
-                  placeholder="Enter PIN"
-                />
-                <div className="flex justify-between">
-                  <button type="submit" className="btn btn-primary">
-                    Submit
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-ghost"
-                    onClick={() => setIsPinModalVisible(false)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-
-          )}
-
         </div>
       )}
     </main>

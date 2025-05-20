@@ -4,6 +4,7 @@ import "./globals.css";
 import LayoutProvider from "@/components/layout";
 import ThemeSetup from "@/app/utils/themeSetup";
 import { syncDatabase } from "@/lib/sync";
+import { LockProvider } from "@/components/lock-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,7 +38,11 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col h-screen`}
       >
         <ThemeSetup />
-        <LayoutProvider>{children}</LayoutProvider>
+        <LockProvider>
+          <LayoutProvider>
+            {children}
+          </LayoutProvider>
+        </LockProvider>
       </body>
     </html>
   );

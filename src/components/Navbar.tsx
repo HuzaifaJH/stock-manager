@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { FiSun, FiMoon, FiMenu, FiX } from "react-icons/fi";
+import { FaLock, FaLockOpen } from "react-icons/fa";
 import "theme-change";
 
 interface NavbarProps {
@@ -9,12 +10,14 @@ interface NavbarProps {
     toggleMobileMenu: () => void;
     isSidebarExpanded: boolean;
     isMobileOpen: boolean;
+    isLocked: boolean
+    onLockToggle: () => void;
 }
 
 const darkTheme = "dark"
 const lightTheme = "winter"
 
-const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, toggleMobileMenu, isSidebarExpanded, isMobileOpen }) => {
+const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, toggleMobileMenu, isSidebarExpanded, isMobileOpen, onLockToggle, isLocked }) => {
     // const { theme, toggleTheme } = useTheme();
     const [theme, setTheme] = useState<string>(() => {
         if (typeof window !== "undefined") {
@@ -60,13 +63,21 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, toggleMobileMenu, isSide
                 {/* <h1 className="text-lg font-semibold">Burhani Wooden & Timber Mart</h1> */}
             </div>
 
-            {/* Theme Toggle Button */}
-            <button
-                onClick={toggleTheme}
-                className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition"
-            >
-                {theme === darkTheme ? <FiSun size={20} className="text-yellow-500" /> : <FiMoon size={20} className="text-blue-500" />}
-            </button>
+            <div className="flex flex-wrap gap-4">
+                <div className="ml-auto flex items-center gap-4">
+                    {/* Other Navbar Content */}
+                    <button onClick={onLockToggle} className="">
+                        {isLocked ? <FaLock size={20} /> : <FaLockOpen size={20} />}
+                    </button>
+                </div>
+                {/* Theme Toggle Button */}
+                <button
+                    onClick={toggleTheme}
+                    className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition"
+                >
+                    {theme === darkTheme ? <FiSun size={20} className="text-yellow-500" /> : <FiMoon size={20} className="text-blue-500" />}
+                </button>
+            </div>
         </nav>
     );
 };
