@@ -9,7 +9,7 @@ interface LockContextType {
 const LockContext = createContext<LockContextType | undefined>(undefined);
 
 export const LockProvider = ({ children }: PropsWithChildren) => {
-    const [isLocked, setIsLocked] = useState(false);
+    const [isLocked, setIsLocked] = useState(true);
 
     return (
         <LockContext.Provider value={{ isLocked, setIsLocked }}>

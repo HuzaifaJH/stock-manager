@@ -75,7 +75,13 @@ export default function Dashboard() {
                 </div>
                 <div className="text-base-content text-sm font-medium">Monthly Sales</div>
                 <div className="text-2xl font-bold text-base-content">
-                  {isLocked ? "x".repeat(String(totalSales).length) : formatPKR(totalSales)}
+                  {/* {isLocked ? "x".repeat(String(totalSales).length) : formatPKR(totalSales)} */}
+                  <span
+                    className={`transition-all duration-300 ${isLocked ? "blur-md select-none pointer-events-none" : "blur-0"
+                      }`}
+                  >
+                    {formatPKR(totalSales)}
+                  </span>
                 </div>
               </div>
 
@@ -86,7 +92,13 @@ export default function Dashboard() {
                 </div>
                 <div className="text-base-content text-sm font-medium">Total Profit</div>
                 <div className="text-2xl font-bold text-base-content">
-                  {isLocked ? "x".repeat(String(totalProfit).length) : formatPKR(totalProfit)}
+                  {/* {isLocked ? "x".repeat(String(totalProfit).length) : formatPKR(totalProfit)} */}
+                  <span
+                    className={`transition-all duration-300 ${isLocked ? "blur-md select-none pointer-events-none" : "blur-0"
+                      }`}
+                  >
+                    {formatPKR(totalProfit)}
+                  </span>
                 </div>
               </div>
 
@@ -97,7 +109,13 @@ export default function Dashboard() {
                 </div>
                 <div className="text-base-content text-sm font-medium">Total Expenses</div>
                 <div className="text-2xl font-bold text-base-content">
-                  {isLocked ? "x".repeat(String(totalExpense).length) : formatPKR(totalExpense)}
+                  {/* {isLocked ? "x".repeat(String(totalExpense).length) : formatPKR(totalExpense)} */}
+                  <span
+                    className={`transition-all duration-300 ${isLocked ? "blur-md select-none pointer-events-none" : "blur-0"
+                      }`}
+                  >
+                    {formatPKR(totalExpense)}
+                  </span>
                 </div>
               </div>
 
@@ -108,7 +126,13 @@ export default function Dashboard() {
                 </div>
                 <div className="text-base-content text-sm font-medium">Total Orders</div>
                 <div className="text-2xl font-bold text-base-content">
-                  {isLocked ? "x".repeat(String(totalOrders).length) : totalOrders}
+                  {/* {isLocked ? "x".repeat(String(totalOrders).length) : totalOrders} */}
+                  <span
+                    className={`transition-all duration-300 ${isLocked ? "blur-md select-none pointer-events-none" : "blur-0"
+                      }`}
+                  >
+                    {formatPKR(totalOrders)}
+                  </span>
                 </div>
               </div>
             </div>
