@@ -32,6 +32,7 @@ export default function SalesPage() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
     const [hideWalkIn, setHideWalkIn] = useState(false);
+    const [isPrinting, setIsPrinting] = useState(false);
 
     const fetchData = async () => {
         setIsLoading(true);
@@ -201,6 +202,10 @@ export default function SalesPage() {
 
     // PRINT For WEB
     const handlePrintInvoice = () => {
+
+        if (isPrinting) return;
+        setIsPrinting(true);
+
         const printContents = document.getElementById("invoice")?.innerHTML;
         const printWindow = window.open("", "", "width=400,height=600");
         printWindow?.document.write(`
@@ -223,10 +228,18 @@ export default function SalesPage() {
             </body>
           </html>
         `);
+
+        setTimeout(() => {
+            setIsPrinting(false);
+        }, 4000);
     };
 
     // PRINT For DESKTOP
     const handlePrintInvoiceDesktop = () => {
+
+        if (isPrinting) return;
+        setIsPrinting(true);
+
         const printContents = document.getElementById("invoice")?.innerHTML;
         if (!printContents) return;
 
@@ -237,7 +250,6 @@ export default function SalesPage() {
                 body {
                     font-family: monospace;
                     font-size: 10px;
-                    padding: 10px;
                 }
                 table { width: 100%; border-collapse: collapse; }
                 th, td { padding: 2px 0; }
@@ -251,23 +263,26 @@ export default function SalesPage() {
         `;
 
         if (window?.electron?.ipcRenderer) {
-            setIsLoading(true);
             window.electron.ipcRenderer
                 .invoke("print-content", html)
-                .catch((e) => console.error("Error in invoke:", e))
-                .finally(() => {
-                    setTimeout(() => {
-                        setIsLoading(false);
-                    }, 3000);
+                .catch((e) => {
+                    console.error("Error in invoke:", e);
                 });
-            setIsLoading(false);
         } else {
             console.warn("Electron IPC not available.");
         }
+
+        setTimeout(() => {
+            setIsPrinting(false);
+        }, 4000);
     };
 
     // Save PDF For DESKTOP
     const handleSaveAsPDFDesktop = () => {
+
+        if (isPrinting) return;
+        setIsPrinting(true);
+
         const printContents = document.getElementById("invoice")?.innerHTML;
         if (!printContents) {
             console.warn("No invoice content found");
@@ -282,19 +297,16 @@ export default function SalesPage() {
         `;
 
         if (window?.electron?.ipcRenderer) {
-            setIsLoading(true);
             window.electron.ipcRenderer
                 .invoke("save-invoice-pdf", html)
-                .catch((e) => console.error("Error in invoke:", e))
-                .finally(() => {
-                    setTimeout(() => {
-                        setIsLoading(false);
-                    }, 3000);
-                });
-            setIsLoading(false);
+                .catch((e) => console.error("Error in invoke:", e));
         } else {
             console.warn("Electron IPC not available.");
         }
+
+        setTimeout(() => {
+            setIsPrinting(false);
+        }, 4000);
     };
 
     const updatePrice = async (index: number, id: number) => {
@@ -715,26 +727,27 @@ export default function SalesPage() {
                                             <>
                                                 {!window.electron?.ipcRenderer && (
                                                     <FaPrint
-                                                        className="cursor-pointer text-primary"
+                                                        className={`cursor-pointer text-primary ${isPrinting ? 'opacity-50 pointer-events-none' : ''}`}
                                                         size={25}
-                                                        onClick={handlePrintInvoice}
+                                                        onClick={!isPrinting ? handlePrintInvoice : undefined}
                                                     />
                                                 )}
                                                 {window.electron?.ipcRenderer && (
                                                     <>
                                                         <FaPrint
-                                                            className="cursor-pointer text-primary"
+                                                            className={`cursor-pointer text-primary ${isPrinting ? 'opacity-50 pointer-events-none' : ''}`}
                                                             size={25}
-                                                            onClick={handlePrintInvoiceDesktop}
+                                                            onClick={!isPrinting ? handlePrintInvoiceDesktop : undefined}
                                                         />
                                                         <FaRegFilePdf
-                                                            className="cursor-pointer text-primary"
+                                                            className={`cursor-pointer text-primary ${isPrinting ? 'opacity-50 pointer-events-none' : ''}`}
                                                             size={25}
-                                                            onClick={handleSaveAsPDFDesktop}
+                                                            onClick={!isPrinting ? handleSaveAsPDFDesktop : undefined}
                                                         />
                                                     </>
                                                 )}
                                             </>
+
                                         )}
                                     </div>
                                 )}
