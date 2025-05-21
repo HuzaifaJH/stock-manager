@@ -1,16 +1,17 @@
 import { Op } from "sequelize";
 import SalesItemModel from "@/lib/models/SalesItem";
+import SalesReturnItemModel from "@/lib/models/SalesReturnItem";
 import Product from "@/lib/models/Product";
 import Sales from "@/lib/models/Sales";
+import SalesReturn from "@/lib/models/SalesReturn";
 import Category from "@/lib/models/Category";
 import SubCategory from "@/lib/models/SubCategory";
 import {
   FinalSalesReportCategory,
   SalesItem,
   SalesReportCategory,
-  SalesReportProduct,
   SalesReportResponse,
-  SalesReportSubCategory,
+  SalesReturnItem,
 } from "@/app/utils/interfaces";
 
 export async function POST(req: Request) {
@@ -46,7 +47,7 @@ export async function POST(req: Request) {
         {
           model: Sales,
           where: { createdAt: { [Op.gte]: startDate } },
-          attributes: [],
+          attributes: ["id", "discount"],
         },
         {
           model: Product,
@@ -60,64 +61,144 @@ export async function POST(req: Request) {
       ],
     })) as unknown as SalesItem[];
 
+    console.log("SALES REPORT STARTDATE", startDate);
+
     let totalRevenue = 0;
     let totalProfit = 0;
 
     const reportMap: Map<number, SalesReportCategory> = new Map();
+    const saleGroups = new Map<
+      number,
+      { discount: number; items: SalesItem[] }
+    >();
 
     for (const item of salesItems) {
-      const quantity = item.quantity!;
-      const revenue = item.sellingPrice! * quantity;
-      const profit = (item.sellingPrice! - item.costPrice!) * quantity;
-      totalRevenue += revenue;
-      totalProfit += profit;
+      const sale = item.Sale!;
+      if (!saleGroups.has(sale.id)) {
+        saleGroups.set(sale.id, { discount: sale.discount ?? 0, items: [] });
+      }
+      saleGroups.get(sale.id)!.items.push(item);
+    }
 
-      const product = item.Product!;
+    for (const { discount, items } of saleGroups.values()) {
+      const totalSaleRevenue = items.reduce((sum, item) => {
+        return sum + item.sellingPrice! * item.quantity!;
+      }, 0);
+
+      for (const item of items) {
+        const quantity = item.quantity!;
+        const rawRevenue = item.sellingPrice! * quantity;
+        const rawProfit = (item.sellingPrice! - item.costPrice!) * quantity;
+
+        // Apply proportional discount
+        const discountShare = totalSaleRevenue
+          ? (rawRevenue / totalSaleRevenue) * discount
+          : 0;
+        const revenue = rawRevenue - discountShare;
+        const profit = rawProfit - discountShare;
+
+        totalRevenue += revenue;
+        totalProfit += profit;
+
+        const product = item.Product!;
+        const subCategory = product.SubCategory!;
+        const category = subCategory.Category!;
+
+        // Your existing nested mapping logic
+        if (!reportMap.has(category.id)) {
+          reportMap.set(category.id, {
+            id: category.id,
+            name: category.name,
+            revenue: 0,
+            profit: 0,
+            subcategories: new Map(),
+          });
+        }
+
+        const catEntry = reportMap.get(category.id)!;
+        catEntry.revenue += revenue;
+        catEntry.profit += profit;
+
+        if (!catEntry.subcategories.has(subCategory.id)) {
+          catEntry.subcategories.set(subCategory.id, {
+            id: subCategory.id,
+            name: subCategory.name,
+            revenue: 0,
+            profit: 0,
+            products: new Map(),
+          });
+        }
+
+        const subEntry = catEntry.subcategories.get(subCategory.id)!;
+        subEntry.revenue += revenue;
+        subEntry.profit += profit;
+
+        if (!subEntry.products.has(product.id)) {
+          subEntry.products.set(product.id, {
+            id: product.id,
+            name: product.name,
+            quantity: 0,
+            revenue: 0,
+            profit: 0,
+          });
+        }
+
+        const prodEntry = subEntry.products.get(product.id)!;
+        prodEntry.quantity += quantity;
+        prodEntry.revenue += revenue;
+        prodEntry.profit += profit;
+      }
+    }
+
+    const returnItems = (await SalesReturnItemModel.findAll({
+      include: [
+        {
+          model: SalesReturn,
+          where: { createdAt: { [Op.gte]: startDate } },
+        },
+        {
+          model: Product,
+          include: [
+            {
+              model: SubCategory,
+              include: [Category],
+            },
+          ],
+        },
+      ],
+    })) as unknown as SalesReturnItem[];
+
+    for (const returnItem of returnItems) {
+      const quantity = returnItem.quantity!;
+      const revenue = returnItem.returnPrice! * quantity;
+      const profit =
+        (returnItem.returnPrice! - returnItem.returnPrice!) * quantity;
+
+      totalRevenue -= revenue;
+      totalProfit -= profit;
+
+      const product = returnItem.Product!;
       const subCategory = product.SubCategory!;
       const category = subCategory.Category!;
 
-      if (!reportMap.has(category.id)) {
-        reportMap.set(category.id, {
-          id: category.id,
-          name: category.name,
-          revenue: 0,
-          profit: 0,
-          subcategories: new Map<number, SalesReportSubCategory>(),
-        });
-      }
+      const catEntry = reportMap.get(category.id);
+      if (!catEntry) continue;
 
-      const catEntry = reportMap.get(category.id)!;
-      catEntry.revenue += revenue;
-      catEntry.profit += profit;
+      catEntry.revenue -= revenue;
+      catEntry.profit -= profit;
 
-      if (!catEntry.subcategories.has(subCategory.id)) {
-        catEntry.subcategories.set(subCategory.id, {
-          id: subCategory.id,
-          name: subCategory.name,
-          revenue: 0,
-          profit: 0,
-          products: new Map<number, SalesReportProduct>(),
-        });
-      }
+      const subEntry = catEntry.subcategories.get(subCategory.id);
+      if (!subEntry) continue;
 
-      const subEntry = catEntry.subcategories.get(subCategory.id)!;
-      subEntry.revenue += revenue;
-      subEntry.profit += profit;
+      subEntry.revenue -= revenue;
+      subEntry.profit -= profit;
 
-      if (!subEntry.products.has(product.id)) {
-        subEntry.products.set(product.id, {
-          id: product.id,
-          name: product.name,
-          quantity: 0,
-          revenue: 0,
-          profit: 0,
-        });
-      }
+      const prodEntry = subEntry.products.get(product.id);
+      if (!prodEntry) continue;
 
-      const prodEntry = subEntry.products.get(product.id)!;
-      prodEntry.quantity += quantity;
-      prodEntry.revenue += revenue;
-      prodEntry.profit += profit;
+      prodEntry.quantity -= quantity;
+      prodEntry.revenue -= revenue;
+      prodEntry.profit -= profit;
     }
 
     const byCategory: FinalSalesReportCategory[] = Array.from(
