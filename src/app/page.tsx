@@ -1,19 +1,22 @@
 "use client"
 
 import SalesProfitChart from "@/components/salesProfitChart";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AiOutlineRise } from "react-icons/ai";
-import { FaClipboardList, FaMoneyBillWave, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaClipboardList, FaMoneyBillWave } from "react-icons/fa";
 import { FcSalesPerformance } from "react-icons/fc";
 import { Product, SalesItem } from "./utils/interfaces";
 import { formatPKR } from '@/app/utils/amountFormatter';
 import { useLock } from "@/components/lock-context";
+import { MdBackup } from "react-icons/md";
+import toast from "react-hot-toast";
 
 export default function Dashboard() {
 
   const { isLocked } = useLock();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isBackingUp, setIsBackingUp] = useState(false);
   const [topSellingProducts, setTopSellingProducts] = useState<SalesItem[]>([]);
   const [lowStockProducts, setLowStockProducts] = useState<Product[]>([]);
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
@@ -61,6 +64,36 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold">Dashboard</h1>
           <p>Welcome to your stock management system!</p>
         </div>
+        {typeof window !== "undefined" && (
+          <>
+            {window.electron?.ipcRenderer && !isBackingUp && (
+              <div className="flex items-center gap-4">
+                <p className="font-bold">Backup DB</p>
+                <MdBackup
+                  className="cursor-pointer"
+                  size={30}
+                  onClick={async () => {
+                    setIsBackingUp(true);
+                    try {
+                      const result = await window.electron.ipcRenderer.invoke("backup-db");
+
+                      if (result.success) {
+                        toast.success("Backup complete!");
+                      } else {
+                        toast.error(`Failed: ${result.error || "Unknown error"}`);
+                      }
+                    } catch (error) {
+                      toast.error("Backup failed unexpectedly");
+                      console.error(error);
+                    } finally {
+                      setIsBackingUp(false);
+                    }
+                  }}
+                />
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {!isLoading && (

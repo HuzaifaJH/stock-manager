@@ -7,9 +7,16 @@ import fs from "fs";
 import dayjs from "dayjs";
 import { fileURLToPath } from "url";
 import { fork } from "child_process";
+import { google } from "googleapis";
+import dotenv from "dotenv";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+const dbUser = process.env.DB_USER;
+const dbPass = process.env.DB_PASS;
+const dbName = process.env.DB_NAME;
 
 let mainWindow, splashWindow, nextServer;
 const port = 5353;
@@ -186,6 +193,55 @@ app.whenReady().then(async () => {
       pdfWindow.close();
     } catch (err) {
       error("❌ [PDF] Failed to generate or save PDF:", err);
+    }
+  });
+
+  ipcMain.handle("backup-db", async () => {
+    try {
+      const dumpPath = path.join(
+        app.getPath("temp"),
+        `db-backup_${timestamp}.sql`
+      );
+
+      // const dumpCommand = `mysqldump -u root -proot ims > "${dumpPath}"`;
+      const dumpCommand = `mysqldump -u ${dbUser} -p${dbPass} ${dbName} > "${dumpPath}"`;
+
+      await new Promise((resolve, reject) => {
+        exec(dumpCommand, (err) => {
+          if (err) reject(err);
+          else resolve(true);
+        });
+      });
+
+      const auth = new google.auth.GoogleAuth({
+        keyFile: path.join(__dirname, "ims-ali-bhai-data-7ba33b968f24.json"),
+        scopes: ["https://www.googleapis.com/auth/drive.file"],
+      });
+
+      const drive = google.drive({ version: "v3", auth });
+
+      const fileMetadata = {
+        name: `backup-${new Date().toISOString()}.sql`,
+        parents: ["17ko7BtdZwWK-0NTzM7OnUKauLW278Wje"],
+      };
+
+      const media = {
+        mimeType: "application/sql",
+        body: fs.createReadStream(dumpPath),
+      };
+
+      await drive.files.create({
+        requestBody: fileMetadata,
+        media,
+        fields: "id",
+      });
+
+      fs.unlinkSync(dumpPath);
+
+      return { success: true };
+    } catch (error) {
+      console.error("Backup failed:", error);
+      return { success: false, error: error.message };
     }
   });
 });
