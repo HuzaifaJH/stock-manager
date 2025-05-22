@@ -77,7 +77,9 @@ export default function JournalEntries() {
                     <thead className="border-2">
                         <tr>
                             <th>Date</th>
-                            <th>Account</th>
+                            {accountFilter == "" && (
+                                <th>Account</th>
+                            )}
                             <th>Description</th>
                             <th>Debit</th>
                             <th>Credit</th>
@@ -127,12 +129,14 @@ export default function JournalEntries() {
                                         return (
                                             <tr className="border-b border-base-300" key={entry.id}>
                                                 <td className="td-bordered">{new Date(entry.Transaction.date).toLocaleDateString("en-GB")}</td>
-                                                <td className="td-bordered">
-                                                    {entry.LedgerAccount.name}
-                                                    {entry?.Transaction?.purchaseDetails?.Supplier?.name
-                                                        ? ` (${entry.Transaction.purchaseDetails.Supplier.name})`
-                                                        : ""}
-                                                </td>
+                                                {accountFilter == "" && (
+                                                    <td className="td-bordered">
+                                                        {entry.LedgerAccount.name}
+                                                        {entry?.Transaction?.purchaseDetails?.Supplier?.name
+                                                            ? ` (${entry.Transaction.purchaseDetails.Supplier.name})`
+                                                            : ""}
+                                                    </td>
+                                                )}
                                                 <td className="td-bordered">{entry.description}</td>
                                                 <td className="td-bordered">{isDebit ? formatPKR(entry.amount) : "-"}</td>
                                                 <td className="td-bordered">{!isDebit ? formatPKR(entry.amount) : "-"}</td>

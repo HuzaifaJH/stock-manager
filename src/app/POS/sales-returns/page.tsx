@@ -18,7 +18,7 @@ export default function SalesReturnPage() {
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
     const [salesReturnItems, setsalesReturnItems] = useState<SalesReturnItem[]>([]);
-    const [customerName, setCustomerName] = useState<string>("");
+    const [customerName, setCustomerName] = useState<string>("Walk-in Customer");
     const [reason, setReason] = useState<string>("");
     const [date, setDate] = useState<string>(new Date().toISOString().split("T")[0]);
     const [isPaymentMethodCash, setIsPaymentMethodCash] = useState<boolean>(true);
@@ -128,7 +128,7 @@ export default function SalesReturnPage() {
             if (res.ok) {
                 toast.success(`Sales Return ${selectedSaleReturn?.id ? "updated" : "added"} successfully`);
                 setDate(new Date().toISOString().split("T")[0]);
-                setCustomerName("");
+                setCustomerName("Walk-in Customer");
                 setReason("");
                 setIsPaymentMethodCash(true);
                 setsalesReturnItems([]);
@@ -505,7 +505,7 @@ export default function SalesReturnPage() {
                                         setsalesReturnItems([]);
                                         setDate(new Date().toISOString().split("T")[0]);
                                         setViewMode(false);
-                                        setCustomerName("");
+                                        setCustomerName("Walk-in Customer");
                                         setIsPaymentMethodCash(true);
                                         setReason("");
                                     }}
