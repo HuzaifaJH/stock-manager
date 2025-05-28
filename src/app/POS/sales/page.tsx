@@ -10,8 +10,11 @@ import { Category, Subcategory, Product, Sales, SalesItem } from '@/app/utils/in
 import dayjs from "dayjs";
 import axios from "axios";
 import { formatPKR } from "@/app/utils/amountFormatter";
+import { useLock } from "@/components/lock-context";
 
 export default function SalesPage() {
+
+    const { isLocked } = useLock();
 
     const [sales, setSales] = useState<Sales[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
@@ -438,42 +441,46 @@ export default function SalesPage() {
                                             setDiscount(sales.discount);
                                         }}
                                     />
-                                    <FiEdit
-                                        className="text-warning cursor-pointer mx-1"
-                                        size={18}
-                                        onClick={() => {
-                                            setSelectedSale(sales);
-                                            setViewMode(false);
+                                    {!isLocked &&
+                                        <>
+                                            <FiEdit
+                                                className="text-warning cursor-pointer mx-1"
+                                                size={18}
+                                                onClick={() => {
+                                                    setSelectedSale(sales);
+                                                    setViewMode(false);
 
-                                            const enrichedItems = sales.SalesItems?.map((item) => {
-                                                const itemFilteredSubcategories = subcategories.filter(
-                                                    (sc) => sc.categoryId === item.categoryId
-                                                );
+                                                    const enrichedItems = sales.SalesItems?.map((item) => {
+                                                        const itemFilteredSubcategories = subcategories.filter(
+                                                            (sc) => sc.categoryId === item.categoryId
+                                                        );
 
-                                                const itemFilteredProducts = products.filter(
-                                                    (p) => p.subCategoryId === item.subCategoryId
-                                                );
+                                                        const itemFilteredProducts = products.filter(
+                                                            (p) => p.subCategoryId === item.subCategoryId
+                                                        );
 
-                                                return {
-                                                    ...item,
-                                                    filteredSubcategories: itemFilteredSubcategories,
-                                                    filteredProducts: itemFilteredProducts,
-                                                };
-                                            });
+                                                        return {
+                                                            ...item,
+                                                            filteredSubcategories: itemFilteredSubcategories,
+                                                            filteredProducts: itemFilteredProducts,
+                                                        };
+                                                    });
 
-                                            setsalesItems(enrichedItems || []);
-                                            setDate(dayjs(sales.date).format("YYYY-MM-DDTHH:mm"));
-                                            setIsPaymentMethodCash(sales.isPaymentMethodCash);
-                                            setCustomerName(sales.customerName);
-                                            setDiscount(sales.discount);
-                                        }
-                                        }
-                                    />
-                                    <FiTrash2
-                                        className="text-error cursor-pointer mx-1"
-                                        size={18}
-                                        onClick={() => handleDelete(sales.id)}
-                                    />
+                                                    setsalesItems(enrichedItems || []);
+                                                    setDate(dayjs(sales.date).format("YYYY-MM-DDTHH:mm"));
+                                                    setIsPaymentMethodCash(sales.isPaymentMethodCash);
+                                                    setCustomerName(sales.customerName);
+                                                    setDiscount(sales.discount);
+                                                }
+                                                }
+                                            />
+                                            <FiTrash2
+                                                className="text-error cursor-pointer mx-1"
+                                                size={18}
+                                                onClick={() => handleDelete(sales.id)}
+                                            />
+                                        </>
+                                    }
                                 </td>
 
                             </tr>
