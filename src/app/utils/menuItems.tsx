@@ -78,6 +78,7 @@ export const menuItems: MenuItem[] = [
         subItems: [
             { name: "Inventory Report", href: "/accounts/inventory-report" },
             { name: "Sales Report", href: "/accounts/sales-report" },
+            { name: "Expense Report", href: "/accounts/expense-report" },
             { name: "Journal Entries", href: "/accounts/journal-entries" },
             { name: "Trial Balance", href: "/accounts/trial-balance" },
             { name: "Income Statement", href: "/accounts/income-statement" },
