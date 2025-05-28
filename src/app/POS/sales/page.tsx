@@ -263,17 +263,47 @@ export default function SalesPage() {
 
                 html, body {
                     width: 80mm;
+                    font-family: monospace;
                     margin: 0;
                     padding: 0;
-                    font-family: monospace;
-                    font-size: 10px;
+                }
+
+                #invoice {
+                    width: 100%;
+                    padding: 0;
+                    margin: 0;
                 }
 
                 @page {
                     size: 80mm auto;
                     margin: 0;
                 }
+
+                @media print {
+                    body {
+                    width: 80mm;
+                    margin: 0;
+                    padding: 0;
+                    }
+
+                    #invoice {
+                    width: 100%;
+                    margin: 0;
+                    }
+                }
                 </style>
+                <script>
+                    window.onload = function () {
+                    setTimeout(() => {
+                        window.print();
+                    }, 500); // small delay to ensure DOM is ready
+
+                    // Detect print end and close window
+                    window.onafterprint = function () {
+                        window.close(); // works in kiosk mode
+                    };
+                    };
+                </script>
             </head>
             <body>
                 ${printContents}

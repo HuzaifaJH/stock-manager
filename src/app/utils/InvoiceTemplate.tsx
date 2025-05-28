@@ -19,11 +19,10 @@ export default function InvoiceTemplate({ sale }: InvoiceTemplateProps) {
         <div
             id="invoice"
             style={{
-                padding: '2rem 1rem',
-                fontSize: '12px',
+                fontSize: '10px',
                 fontFamily: 'monospace',
-                width: '280px',
-                color: 'black',
+                margin: 0,
+                padding: 0,
             }}
         >
             <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
@@ -125,11 +124,6 @@ export default function InvoiceTemplate({ sale }: InvoiceTemplateProps) {
                 <br />
                 <span>Thank you for your purchase!</span>
             </div>
-            <pre style={{ color: 'white', textAlign: 'center' }}>
-                {'\n\n\n'}
-                {'\n\n\n'}
-                {'.'}
-            </pre>
         </div >
     );
 }

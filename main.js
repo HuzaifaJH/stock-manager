@@ -108,9 +108,9 @@ app.whenReady().then(async () => {
 
   waitForServer(port, createMainWindow);
 
-  const printServicePath = path.join(__dirname, "printService.js");
+  // const printServicePath = path.join(__dirname, "printService.js");
 
-  fork(printServicePath);
+  // fork(printServicePath);
 
   ipcMain.handle("print-content", (event, htmlContent) => {
     const tempPath = path.join(
@@ -118,8 +118,25 @@ app.whenReady().then(async () => {
       `invoice_${timestamp}.html`
     );
     fs.writeFileSync(tempPath, htmlContent);
-    fs.writeFileSync(tempPath + ".ready", "");
+    // fs.writeFileSync(tempPath + ".ready", "");
     // console.log("[PRINT] Temp path:", tempPath);
+
+    const chromePath =
+      "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+
+    const command = `"${chromePath}" --kiosk --kiosk-printing --disable-gpu --no-sandbox "file:///${tempPath.replace(
+      /\\/g,
+      "/"
+    )}"`;
+
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Printing failed: ${error.message}`);
+        return;
+      }
+      console.log("Printed silently using Chrome.");
+      // fs.unlinkSync(tempPath);
+    });
   });
 
   const ENABLE_LOGS = false; // Toggle this to enable/disable logs
