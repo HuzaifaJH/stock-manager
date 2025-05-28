@@ -31,7 +31,7 @@ export default function ExpenseReport() {
             const result = await res.json();
             setData(result);
         } catch (err) {
-            setError('Something went wrong');
+            setError('Something went wrong: ' + err);
         } finally {
             setLoading(false);
         }

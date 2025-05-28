@@ -51,8 +51,10 @@ export async function POST(req: Request) {
     > = {};
 
     for (const exp of expenses) {
-      const ledgerId = exp.LedgerAccount?.id!;
-      const ledgerName = exp.LedgerAccount?.name!;
+      if (!exp.LedgerAccount) continue;
+
+      const ledgerId = exp.LedgerAccount.id;
+      const ledgerName = exp.LedgerAccount.name;
       const amount = exp.amount;
 
       if (!summaryMap[ledgerId]) {
