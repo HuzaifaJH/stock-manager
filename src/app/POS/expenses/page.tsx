@@ -11,7 +11,7 @@ export default function ExpensesPage() {
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
-    // const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+    // const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [searchQuery, setSearchQuery] = useState("");
@@ -277,6 +277,7 @@ export default function ExpensesPage() {
                                     defaultValue={selectedExpense.amount === 0 ? "" : selectedExpense.amount}
                                     className="input input-bordered w-full"
                                     type="number"
+                                    step="any"
                                     required
                                 />
                             </label>

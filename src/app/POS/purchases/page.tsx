@@ -19,7 +19,7 @@ export default function PurchasesPage() {
     // const [filteredSubcategories, setFilteredSubcategories] = useState<Subcategory[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
-    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [discount, setDiscount] = useState<number>(0);
@@ -28,6 +28,7 @@ export default function PurchasesPage() {
     const [supplierId, setSupplierId] = useState<number | "">("");
     const [isPaymentMethodCash, setIsPaymentMethodCash] = useState<boolean>(true);
     const [date, setDate] = useState(dayjs().format("YYYY-MM-DDTHH:mm"));
+    const [selectedDate, setSelectedDate] = useState<string>('');
     const [viewMode, setViewMode] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -82,9 +83,12 @@ export default function PurchasesPage() {
         }
     };
 
-    const filteredPurchases = purchases.filter(purchase =>
-        purchase.Supplier?.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredPurchases = purchases.filter((purchase) => {
+        const matchesSearch = purchase.Supplier?.name.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesDate = selectedDate ? purchase.date.startsWith(selectedDate) : true;
+
+        return matchesSearch && matchesDate;
+    });
 
     const handleSort = () => {
         setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -188,7 +192,7 @@ export default function PurchasesPage() {
             </div>
 
             {/* Filters Section */}
-            <div className="flex flex-wrap gap-4 mb-4 items-center">
+            <div className="flex flex-wrap gap-6 mb-4 items-center">
                 <input
                     type="text"
                     placeholder="Search by supplier name"
@@ -199,6 +203,26 @@ export default function PurchasesPage() {
                         setCurrentPage(1);
                     }}
                 />
+                <input
+                    type="date"
+                    className="input input-bordered"
+                    value={selectedDate}
+                    onChange={(e) => {
+                        setSelectedDate(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                />
+                {selectedDate && (
+                    <button
+                        className="btn btn-sm btn-outline"
+                        onClick={() => {
+                            setSelectedDate('');
+                            setCurrentPage(1);
+                        }}
+                    >
+                        Clear Date
+                    </button>
+                )}
             </div>
 
             <div className="overflow-x-auto">
@@ -465,6 +489,7 @@ export default function PurchasesPage() {
                                                     ) : (
                                                         <input
                                                             type="number"
+                                                            step="any"
                                                             className="input input-bordered w-full"
                                                             value={item.quantity ?? ""}
                                                             onChange={(e) => updateItem(index, "quantity", e.target.value ? Number(e.target.value) : null)}
@@ -485,6 +510,7 @@ export default function PurchasesPage() {
                                                     ) : (
                                                         <input
                                                             type="number"
+                                                            step="any"
                                                             className="input input-bordered w-full"
                                                             value={item.purchasePrice === null ? "" : item.purchasePrice}
                                                             onChange={(e) => updateItem(index, "purchasePrice", e.target.value ? Number(e.target.value) : null)}
@@ -519,6 +545,7 @@ export default function PurchasesPage() {
                                     ) : (
                                         <input
                                             type="number"
+                                            step="any"
                                             className="input input-bordered w-40 ml-2"
                                             value={discount || ""}
                                             onChange={(e) => setDiscount(Number(e.target.value))}

@@ -13,7 +13,7 @@ export default function SalesReturnPage() {
     const [products, setProducts] = useState<Product[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedSaleReturn, setSelectedSaleReturn] = useState<SalesReturn | null>(null);
-    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -21,6 +21,7 @@ export default function SalesReturnPage() {
     const [customerName, setCustomerName] = useState<string>("Walk-in Customer");
     const [reason, setReason] = useState<string>("");
     const [date, setDate] = useState<string>(new Date().toISOString().split("T")[0]);
+    const [selectedDate, setSelectedDate] = useState<string>('');
     const [isPaymentMethodCash, setIsPaymentMethodCash] = useState<boolean>(true);
     const [viewMode, setViewMode] = useState(false);
 
@@ -75,11 +76,17 @@ export default function SalesReturnPage() {
         }
     };
 
+    const filteredSalesReturn = salesReturn.filter((salesReturn) => {
+        const matchesDate = selectedDate ? salesReturn.date.startsWith(selectedDate) : true;
+
+        return matchesDate;
+    });
+
     const handleSort = () => {
         setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     };
 
-    const sortedSalesReturn = [...salesReturn].sort((a, b) => {
+    const sortedSalesReturn = [...filteredSalesReturn].sort((a, b) => {
         return sortOrder === "asc" ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date);
     });
 
@@ -174,6 +181,30 @@ export default function SalesReturnPage() {
                 <button className="btn btn-primary" onClick={() => setSelectedSaleReturn({ id: 0, date: date, customerName: "", isPaymentMethodCash: isPaymentMethodCash, reason: reason })}>
                     Add Sales Return
                 </button>
+            </div>
+
+            {/* Filters Section */}
+            <div className="flex flex-wrap gap-6 mb-4 items-center">
+                <input
+                    type="date"
+                    className="input input-bordered"
+                    value={selectedDate}
+                    onChange={(e) => {
+                        setSelectedDate(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                />
+                {selectedDate && (
+                    <button
+                        className="btn btn-sm btn-outline"
+                        onClick={() => {
+                            setSelectedDate('');
+                            setCurrentPage(1);
+                        }}
+                    >
+                        Clear Date
+                    </button>
+                )}
             </div>
 
             <div className="overflow-x-auto">
@@ -443,6 +474,7 @@ export default function SalesReturnPage() {
                                                 ) : (
                                                     <input
                                                         type="number"
+                                                        step="any"
                                                         className="input input-bordered"
                                                         value={item.quantity === null ? "" : item.quantity}
                                                         onChange={(e) => updateItem(index, "quantity", e.target.value ? Number(e.target.value) : null)}
@@ -463,6 +495,7 @@ export default function SalesReturnPage() {
                                                 ) : (
                                                     <input
                                                         type="number"
+                                                        step="any"
                                                         className="input input-bordered"
                                                         value={item.returnPrice === null ? "" : item.returnPrice}
                                                         onChange={(e) => updateItem(index, "returnPrice", e.target.value ? Number(e.target.value) : null)}

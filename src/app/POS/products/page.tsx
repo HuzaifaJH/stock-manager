@@ -14,7 +14,7 @@ export default function ProductList() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [sortKey, setSortKey] = useState<keyof ProductSort | null>(null);
-    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [searchQuery, setSearchQuery] = useState("");
@@ -367,11 +367,11 @@ export default function ProductList() {
                             </label>
                             <label className="block my-2">
                                 Stock:
-                                <input name="stock" type="number" step={0.25} defaultValue={selectedProduct?.stock ?? ""} className="input input-bordered w-full" required />
+                                <input name="stock" type="number" step="any" defaultValue={selectedProduct?.stock ?? ""} className="input input-bordered w-full" required />
                             </label>
                             <label className="block my-2">
                                 Price:
-                                <input name="price" defaultValue={selectedProduct?.price ?? ""} type="number" className="input input-bordered w-full" required
+                                <input name="price" defaultValue={selectedProduct?.price ?? ""} type="number" step="any" className="input input-bordered w-full" required
                                     onBlur={(e) => {
                                         const price = Number(e.target.value);
                                         if (!price || price <= 0) {

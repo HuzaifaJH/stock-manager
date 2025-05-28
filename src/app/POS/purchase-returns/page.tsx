@@ -18,7 +18,7 @@ export default function PurchaseReturnPage() {
     // const [filteredSubcategories, setFilteredSubcategories] = useState<Subcategory[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedPurchaseReturn, setSelectedPurchaseReturn] = useState<PurchaseReturn | null>(null);
-    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -26,6 +26,7 @@ export default function PurchaseReturnPage() {
     const [supplierId, setSupplierId] = useState<number | "">("");
     const [isPaymentMethodCash, setIsPaymentMethodCash] = useState<boolean>(true);
     const [date, setDate] = useState<string>(new Date().toISOString().split("T")[0]);
+    const [selectedDate, setSelectedDate] = useState<string>('');
     const [viewMode, setViewMode] = useState(false);
     const [reason, setReason] = useState<string>("");
 
@@ -80,11 +81,17 @@ export default function PurchaseReturnPage() {
         }
     };
 
+    const filteredPurchaseReturn = purchaseReturns.filter((purchaseReturns) => {
+        const matchesDate = selectedDate ? purchaseReturns.date.startsWith(selectedDate) : true;
+
+        return matchesDate;
+    });
+
     const handleSort = () => {
         setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     };
 
-    const sortedPurchaseReturns = [...purchaseReturns].sort((a, b) => {
+    const sortedPurchaseReturns = [...filteredPurchaseReturn].sort((a, b) => {
         return sortOrder === "asc" ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date);
     });
 
@@ -178,6 +185,30 @@ export default function PurchaseReturnPage() {
                 <button className="btn btn-primary" onClick={() => setSelectedPurchaseReturn({ id: 0, supplierId: supplierId, date: date, isPaymentMethodCash: isPaymentMethodCash, reason: reason })}>
                     Add Purchase Return
                 </button>
+            </div>
+
+            {/* Filters Section */}
+            <div className="flex flex-wrap gap-6 mb-4 items-center">
+                <input
+                    type="date"
+                    className="input input-bordered"
+                    value={selectedDate}
+                    onChange={(e) => {
+                        setSelectedDate(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                />
+                {selectedDate && (
+                    <button
+                        className="btn btn-sm btn-outline"
+                        onClick={() => {
+                            setSelectedDate('');
+                            setCurrentPage(1);
+                        }}
+                    >
+                        Clear Date
+                    </button>
+                )}
             </div>
 
             <div className="overflow-x-auto">
@@ -450,6 +481,7 @@ export default function PurchaseReturnPage() {
                                                 ) : (
                                                     <input
                                                         type="number"
+                                                        step="any"
                                                         className="input input-bordered w-full"
                                                         value={item.quantity === null ? "" : item.quantity}
                                                         onChange={(e) => updateItem(index, "quantity", e.target.value ? Number(e.target.value) : null)}
@@ -470,6 +502,7 @@ export default function PurchaseReturnPage() {
                                                 ) : (
                                                     <input
                                                         type="number"
+                                                        step="any"
                                                         className="input input-bordered w-full"
                                                         value={item.purchaseReturnPrice === null ? "" : item.purchaseReturnPrice}
                                                         onChange={(e) => updateItem(index, "purchaseReturnPrice", e.target.value ? Number(e.target.value) : null)}

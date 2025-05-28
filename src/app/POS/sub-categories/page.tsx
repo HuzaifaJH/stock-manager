@@ -9,7 +9,7 @@ export default function SubcategoriesPage() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedSubcategory, setSelectedSubcategory] = useState<Subcategory | null>(null);
-    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [searchQuery, setSearchQuery] = useState("");

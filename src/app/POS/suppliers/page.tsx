@@ -10,7 +10,7 @@ export default function SuppliersPage() {
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
-    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [searchQuery, setSearchQuery] = useState("");

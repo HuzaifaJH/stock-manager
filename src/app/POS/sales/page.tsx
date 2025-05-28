@@ -17,13 +17,14 @@ export default function SalesPage() {
     const [products, setProducts] = useState<Product[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedSale, setSelectedSale] = useState<Sales | null>(null);
-    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
     const [salesItems, setsalesItems] = useState<SalesItem[]>([]);
     const [customerName, setCustomerName] = useState<string>("Walk-in Customer");
     const [date, setDate] = useState(dayjs().format("YYYY-MM-DDTHH:mm"));
+    const [selectedDate, setSelectedDate] = useState<string>('');
     const [isPaymentMethodCash, setIsPaymentMethodCash] = useState<boolean>(true);
     const [discount, setDiscount] = useState<number>(0);
     const [viewMode, setViewMode] = useState(false);
@@ -85,7 +86,9 @@ export default function SalesPage() {
     const filteredSales = sales.filter((sale) => {
         const matchesSearch = sale.customerName.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesCheckBox = hideWalkIn ? sale.customerName.toLowerCase() !== "walk-in customer" : true;
-        return matchesSearch && matchesCheckBox;
+        const matchesDate = selectedDate ? sale.date.startsWith(selectedDate) : true;
+
+        return matchesSearch && matchesCheckBox && matchesDate;
     });
 
     const handleSort = () => {
@@ -247,13 +250,24 @@ export default function SalesPage() {
             <html>
             <head>
                 <style>
-                body {
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+
+                html, body {
+                    width: 80mm;
+                    margin: 0;
+                    padding: 0;
                     font-family: monospace;
                     font-size: 10px;
                 }
-                table { width: 100%; border-collapse: collapse; }
-                th, td { padding: 2px 0; }
-                hr { border-top: 1px dashed #000; margin: 4px 0; }
+
+                @page {
+                    size: 80mm auto;
+                    margin: 0;
+                }
                 </style>
             </head>
             <body>
@@ -336,7 +350,7 @@ export default function SalesPage() {
             </div>
 
             {/* Filters Section */}
-            <div className="flex flex-wrap gap-4 mb-4 items-center">
+            <div className="flex flex-wrap gap-6 mb-4 items-center">
                 <input
                     type="text"
                     placeholder="Search by customer name"
@@ -358,6 +372,26 @@ export default function SalesPage() {
                     />
                     <span>Hide Walk-in Customers</span>
                 </label>
+                <input
+                    type="date"
+                    className="input input-bordered"
+                    value={selectedDate}
+                    onChange={(e) => {
+                        setSelectedDate(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                />
+                {selectedDate && (
+                    <button
+                        className="btn btn-sm btn-outline"
+                        onClick={() => {
+                            setSelectedDate('');
+                            setCurrentPage(1);
+                        }}
+                    >
+                        Clear Date
+                    </button>
+                )}
             </div>
 
             <div className="overflow-x-auto">
@@ -622,6 +656,7 @@ export default function SalesPage() {
                                                         <div className="mt-5">
                                                             <input
                                                                 type="number"
+                                                                step="any"
                                                                 className="input input-bordered"
                                                                 value={item.quantity ?? ""}
                                                                 onChange={(e) => updateItem(index, "quantity", e.target.value ? Number(e.target.value) : null)}
@@ -649,6 +684,7 @@ export default function SalesPage() {
                                                         <div className="mt-5">
                                                             <input
                                                                 type="number"
+                                                                step="any"
                                                                 className="input input-bordered w-full mb-1"
                                                                 value={item.sellingPrice === null ? "" : item.sellingPrice}
                                                                 onChange={(e) => updateItem(index, "sellingPrice", e.target.value ? Number(e.target.value) : null)}
@@ -688,6 +724,7 @@ export default function SalesPage() {
                                     ) : (
                                         <input
                                             type="number"
+                                            step="any"
                                             className="input input-bordered w-40 ml-2"
                                             value={discount || ""}
                                             onChange={(e) => setDiscount(Number(e.target.value))}

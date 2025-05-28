@@ -14,7 +14,7 @@ export default function TransactionsPage() {
     const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
     const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
     const [viewMode, setViewMode] = useState(false);
 
