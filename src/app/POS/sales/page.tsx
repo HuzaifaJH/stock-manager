@@ -11,6 +11,7 @@ import dayjs from "dayjs";
 import axios from "axios";
 import { formatPKR } from "@/app/utils/amountFormatter";
 import { useLock } from "@/components/lock-context";
+import { MdNavigateBefore, MdNavigateNext } from "react-icons/md";
 
 export default function SalesPage() {
 
@@ -23,6 +24,7 @@ export default function SalesPage() {
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
     const [salesItems, setsalesItems] = useState<SalesItem[]>([]);
     const [customerName, setCustomerName] = useState<string>("Walk-in Customer");
@@ -343,6 +345,19 @@ export default function SalesPage() {
         }
     }
 
+    const loadSale = (index: number) => {
+        const sale = sortedSales[index];
+        if (!sale) return;
+
+        setSelectedIndex(index);
+        setSelectedSale(sale);
+        setsalesItems(sale.SalesItems || []);
+        setDate(dayjs(sale.date).format("YYYY-MM-DDTHH:mm"));
+        setIsPaymentMethodCash(sale.isPaymentMethodCash);
+        setCustomerName(sale.customerName);
+        setDiscount(sale.discount);
+    }
+
     return (
         <div className="p-6">
             <div className="flex justify-between items-center mb-4">
@@ -432,6 +447,8 @@ export default function SalesPage() {
                                         className="text-blue-500 cursor-pointer mx-1"
                                         size={18}
                                         onClick={() => {
+                                            const salesIndex = sortedSales.findIndex((s) => s.id === sales.id);
+                                            setSelectedIndex(salesIndex);
                                             setSelectedSale(sales);
                                             setViewMode(true);
                                             setsalesItems(sales.SalesItems || []);
@@ -522,71 +539,97 @@ export default function SalesPage() {
 
             {selectedSale && (
                 <div className="modal modal-open flex items-center justify-center">
-                    <div className="modal-box w-[90%] h-[90%] max-w-[90vw] max-h-[90vh] flex flex-col">
+                    <div className="modal-box w-[90%] h-[90%] max-w-[90vw] max-h-[90vh] flex flex-col overflow-y-scroll scrollbar-hide">
                         <h3 className="font-bold text-lg">
                             {viewMode ? "View Sales" + " - S#" + selectedSale.id : selectedSale.id ? "Edit Sales" + " - S#" + selectedSale.id : "Add Sales"}
                         </h3>
 
                         <form onSubmit={handleSubmit} className="flex flex-col flex-grow">
-                            <div className="flex flex-wrap gap-6 mt-3 items-center">
-                                {/* Customer Name*/}
-                                <div className="flex items-center gap-2">
-                                    <span className="font-medium">Customer Name:</span>
-                                    {viewMode ? (
-                                        <span>{selectedSale.customerName || "N/A"}</span>
-                                    ) : (
-                                        <input
-                                            type="text"
-                                            value={customerName}
-                                            onChange={(e) => setCustomerName(e.target.value)}
-                                            required
-                                            className="input input-bordered w-full"
-                                        />
-                                    )}
+
+                            <div className="flex justify-between">
+                                <div className="flex flex-wrap gap-6 mt-3 items-center">
+                                    {/* Customer Name*/}
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium">Customer Name:</span>
+                                        {viewMode ? (
+                                            <span>{selectedSale.customerName || "N/A"}</span>
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                value={customerName}
+                                                onChange={(e) => setCustomerName(e.target.value)}
+                                                required
+                                                className="input input-bordered w-full"
+                                            />
+                                        )}
+                                    </div>
+
+                                    {/* Date */}
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium">Date:</span>
+                                        {viewMode ? (
+                                            <span>{dayjs(selectedSale.date).format("YYYY-MM-DD HH:mm")}</span>
+                                        ) : (
+                                            <input
+                                                type="datetime-local"
+                                                className="input input-bordered w-full"
+                                                value={date}
+                                                onChange={(e) => setDate(e.target.value)}
+                                                required
+                                                min={new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().split("T")[0]}
+                                                max={new Date().toISOString().split("T")[0]}
+                                            />
+                                        )}
+                                    </div>
+
+                                    {/* Payment Method */}
+                                    <div className="flex items-center gap-4">
+                                        <span className="font-medium">Payment Method:</span>
+                                        {viewMode ? (
+                                            <span>{isPaymentMethodCash ? "CASH" : "CREDIT"}</span>
+                                        ) : (
+                                            <div className="form-control">
+                                                <label className="label cursor-pointer gap-4">
+                                                    <span className="label-text">Credit</span>
+                                                    <input
+                                                        type="checkbox"
+                                                        className="toggle toggle-primary"
+                                                        checked={isPaymentMethodCash === true}
+                                                        onChange={(e) =>
+                                                            setIsPaymentMethodCash(e.target.checked ? true : false)
+                                                        }
+                                                    />
+                                                    <span className="label-text">Cash</span>
+                                                </label>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
-                                {/* Date */}
-                                <div className="flex items-center gap-2">
-                                    <span className="font-medium">Date:</span>
-                                    {viewMode ? (
-                                        <span>{dayjs(selectedSale.date).format("YYYY-MM-DD HH:mm")}</span>
-                                    ) : (
-                                        <input
-                                            type="datetime-local"
-                                            className="input input-bordered w-full"
-                                            value={date}
-                                            onChange={(e) => setDate(e.target.value)}
-                                            required
-                                            min={new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().split("T")[0]}
-                                            max={new Date().toISOString().split("T")[0]}
+                                {viewMode && selectedIndex !== null && (
+                                    <div className="flex flex-wrap gap-4">
+                                        <MdNavigateBefore
+                                            size={25}
+                                            className={`cursor-pointer ${selectedIndex === 0 ? 'text-gray-400 cursor-not-allowed' : 'text-black'
+                                                }`}
+                                            onClick={() => {
+                                                if (selectedIndex > 0) loadSale(selectedIndex - 1);
+                                            }}
                                         />
-                                    )}
-                                </div>
+                                        <MdNavigateNext
+                                            size={25}
+                                            className={`cursor-pointer ${selectedIndex === sortedSales.length - 1
+                                                ? 'text-gray-400 cursor-not-allowed'
+                                                : 'text-black'
+                                                }`}
+                                            onClick={() => {
+                                                if (selectedIndex < sortedSales.length - 1) loadSale(selectedIndex + 1);
+                                            }}
+                                        />
+                                    </div>
 
-                                {/* Payment Method */}
-                                <div className="flex items-center gap-4">
-                                    <span className="font-medium">Payment Method:</span>
-                                    {viewMode ? (
-                                        <span>{isPaymentMethodCash ? "CASH" : "CREDIT"}</span>
-                                    ) : (
-                                        <div className="form-control">
-                                            <label className="label cursor-pointer gap-4">
-                                                <span className="label-text">Credit</span>
-                                                <input
-                                                    type="checkbox"
-                                                    className="toggle toggle-primary"
-                                                    checked={isPaymentMethodCash === true}
-                                                    onChange={(e) =>
-                                                        setIsPaymentMethodCash(e.target.checked ? true : false)
-                                                    }
-                                                />
-                                                <span className="label-text">Cash</span>
-                                            </label>
-                                        </div>
-                                    )}
-                                </div>
+                                )}
                             </div>
-
                             <div className="flex mt-4">
                                 <h4 className="font-semibold">Sales Items</h4>
                                 {!viewMode && <FiPlusCircle className="cursor-pointer text-green-500 ml-4" size={25} onClick={addItem} />}
